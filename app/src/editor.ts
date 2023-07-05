@@ -48,7 +48,8 @@ export function setupMonaco(
     wordWrap: 'on',
     scrollBeyondLastLine: false,
     glyphMargin: true,
-    value: `#![no_std]
+    value: `// src/lib.rs
+#![no_std]
 use soroban_sdk::{contractimpl, vec, Env, Symbol, Vec};
 
 pub struct Contract;
