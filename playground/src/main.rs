@@ -40,7 +40,8 @@ async fn run(RawBody(body): RawBody) -> Result<Vec<u8>, error::Error> {
     let cmd = cmd
         .arg("build")
         .arg("--target")
-        .arg("wasm32-unknown-unknown");
+        .arg("wasm32-unknown-unknown")
+        .arg("--release");
     debug!(?cmd, "running command");
     let output = cmd.current_dir(&contract_dir).output().await?;
     if !output.status.success() {
@@ -49,7 +50,7 @@ async fn run(RawBody(body): RawBody) -> Result<Vec<u8>, error::Error> {
     let dist = contract_dir
         .join("target")
         .join("wasm32-unknown-unknown")
-        .join("debug");
+        .join("release");
     let wasm = fs::read(dist.join("sample_contract.wasm")).await?;
 
     Ok(wasm)

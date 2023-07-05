@@ -8,7 +8,6 @@ if (app != null) {
   <div style="display:flex;flex-direction:column">
     <div class="card">
       <button id="build" type="button">Build</button>
-      <button id="download type="button">Download</button>
     </div>
     <div id="editor"></div>
   </div>
@@ -18,5 +17,5 @@ if (app != null) {
 
 const editor = document.querySelector<HTMLDivElement>('#editor')
 if (editor != null) {
-  setupMonaco(editor, document.querySelector<HTMLButtonElement>('#build')!, document.querySelector<HTMLButtonElement>('#download')!)
+  setupMonaco(editor, document.querySelector<HTMLButtonElement>('#build')!, document.querySelector<HTMLDivElement>('.card')!)
 }

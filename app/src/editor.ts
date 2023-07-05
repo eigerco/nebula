@@ -40,7 +40,7 @@ window.MonacoEnvironment = {
 export function setupMonaco(
   element: HTMLElement,
   build: HTMLButtonElement,
-  download: HTMLButtonElement
+  holder: HTMLDivElement
 ): monaco.editor.IStandaloneCodeEditor {
   const editor = monaco.editor.create(element, {
     language: 'rust',
@@ -61,13 +61,29 @@ impl Contract {
 }`,
   })
 
-  build.addEventListener('click', event => {
-    const code =  editor.getValue();
-    let utf8Encode = new TextEncoder();
-    fetch("http://0.0.0.0:4000/run", {
-      method: "POST",
-      body: utf8Encode.encode(code)
-    }).then(console.log)
+  build.addEventListener('click', _ => {
+    const code = editor.getValue()
+    let utf8Encode = new TextEncoder()
+    document.getElementById('download')?.remove()
+    fetch('http://0.0.0.0:4000/run', {
+      method: 'POST',
+      body: utf8Encode.encode(code),
+    })
+      .then(res => res.arrayBuffer())
+      .then(bytes => {
+        const button = document.createElement('button')
+        button.innerHTML = 'Download'
+        button.setAttribute('id', 'download')
+        button.addEventListener('click', _e => {
+          const blob = new Blob([bytes], { type: 'application/wasm' }) // change resultByte to bytes
+
+          const link = document.createElement('a')
+          link.href = window.URL.createObjectURL(blob)
+          link.download = 'sample_contract.wasm'
+          link.click()
+        })
+        holder.appendChild(button)
+      })
   })
 
   return editor
