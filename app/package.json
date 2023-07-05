@@ -8,6 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "highlight.js" : "^11.8.0",
+    "bootstrap" : "^5.3.0"
+  },
   "devDependencies": {
     "typescript": "^5.0.2",
     "vite": "^4.3.9"

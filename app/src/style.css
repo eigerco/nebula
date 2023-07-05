@@ -26,7 +26,7 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  /* place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
@@ -37,10 +37,10 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .logo {
@@ -56,8 +56,24 @@ h1 {
   filter: drop-shadow(0 0 2em #3178c6aa);
 }
 
+#toolbox {
+  padding: 2rem;
+  width: 30%;  
+  min-width: 200px;
+  max-width: 400px;
+  background-color: #343434;
+  float: left;
+  height: 100%;
+}
+
+#editor {
+  width: 70%;  
+  float: right;
+}
+
+
 .card {
-  padding: 2em;
+  padding: 2em;  
 }
 
 .read-the-docs {
