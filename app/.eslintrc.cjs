@@ -17,8 +17,7 @@ module.exports = {
   ],
   parserOptions: {
     ecmaVersion: "latest",
-    sourceType: "module",
-    project: true
+    sourceType: "module"
   },
   rules: {},
 };

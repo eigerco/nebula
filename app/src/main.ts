@@ -1,13 +1,22 @@
 import './style.css'
+import './editor'
+import { setupMonaco } from './editor'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (app != null) {
   app.innerHTML = `
-  <div>
-    <h1>Nebula Frontend</h1>
+  <div style="display:flex;flex-direction:column">
     <div class="card">
-      <button onclick="alert('It works!');" type="button">Click Me</button>
+      <button id="build" type="button">Build</button>
+      <button id="download type="button">Download</button>
     </div>
+    <div id="editor"></div>
   </div>
+
 `
+}
+
+const editor = document.querySelector<HTMLDivElement>('#editor')
+if (editor != null) {
+  setupMonaco(editor, document.querySelector<HTMLButtonElement>('#build')!, document.querySelector<HTMLButtonElement>('#download')!)
 }

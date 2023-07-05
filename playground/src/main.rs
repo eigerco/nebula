@@ -3,16 +3,17 @@ pub mod error;
 use std::net::SocketAddr;
 use std::time::Duration;
 
+use axum::error_handling::HandleErrorLayer;
 use axum::extract::RawBody;
-use axum::routing::{post, get};
+use axum::routing::post;
 use axum::Router;
-use axum::{error_handling::HandleErrorLayer, Json};
+use hyper::Method;
 use lazy_static::lazy_static;
-use serde::Serialize;
 use tokio::fs;
 use tokio::process::Command;
 use tower::limit::GlobalConcurrencyLimitLayer;
 use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::{debug, info};
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
@@ -27,14 +28,7 @@ lazy_static! {
         .unwrap_or(4000);
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Response {
-    Wasm(Vec<u8>),
-    CompileError(String),
-}
-
-async fn run(RawBody(body): RawBody) -> Result<Json<Response>, error::Error> {
+async fn run(RawBody(body): RawBody) -> Result<Vec<u8>, error::Error> {
     let body = hyper::body::to_bytes(body).await.unwrap();
     if body.is_empty() {
         return Err(error::Error::NoBody);
@@ -46,51 +40,11 @@ async fn run(RawBody(body): RawBody) -> Result<Json<Response>, error::Error> {
     let cmd = cmd
         .arg("build")
         .arg("--target")
-        .arg("wasm32-unknown-unknown")
-        .arg("--debug");
-    debug!(?cmd, "running command");
-    let output = cmd.current_dir(&contract_dir).output().await?;
-    if !output.status.success() {
-        return Ok(Json(Response::CompileError(
-            String::from_utf8_lossy(&output.stderr).to_string(),
-        )));
-    }
-    let dist = contract_dir
-        .join("target")
-        .join("wasm32-unknown-unknown")
-        .join("debug");
-    let wasm = fs::read(dist.join("contract.wasm")).await?;
-
-    Ok(Json(Response::Wasm(wasm)))
-}
-
-async fn test() -> Result<Json<Response>, error::Error> {
-    let body = r#"
-    #![no_std]
-use soroban_sdk::{contractimpl, vec, Env, Symbol, Vec};
-
-pub struct Contract;
-
-#[contractimpl]
-impl Contract {
-    pub fn hello(env: Env, receiver: Symbol) -> Vec<Symbol> {
-        vec![&env, Symbol::short("Hello"), receiver]
-    }
-}
-    "#;
-    let contract_dir = fs::canonicalize(&*CONTRACT_DIR).await?;
-    fs::write(contract_dir.join("src/lib.rs"), &*body).await?;
-    let mut cmd = Command::new("cargo");
-    let cmd = cmd
-        .arg("build")
-        .arg("--target")
         .arg("wasm32-unknown-unknown");
     debug!(?cmd, "running command");
     let output = cmd.current_dir(&contract_dir).output().await?;
     if !output.status.success() {
-        return Ok(Json(Response::CompileError(
-            String::from_utf8_lossy(&output.stderr).to_string(),
-        )));
+        return Err(error::Error::BuildFailed(output));
     }
     let dist = contract_dir
         .join("target")
@@ -98,7 +52,7 @@ impl Contract {
         .join("debug");
     let wasm = fs::read(dist.join("sample_contract.wasm")).await?;
 
-    Ok(Json(Response::Wasm(wasm)))
+    Ok(wasm)
 }
 
 #[tokio::main]
@@ -115,14 +69,17 @@ async fn main() {
         .init();
     debug!(?contract_dir);
 
-    // build our application with a single route
     let app = Router::new()
-        .route("/", get(test))
         .route("/run", post(run))
         .layer(
             ServiceBuilder::new()
                 .layer(HandleErrorLayer::new(error::timeout_or_500))
                 .timeout(Duration::from_secs(10)),
+        )
+        .layer(
+            CorsLayer::new()
+                .allow_methods([Method::GET, Method::POST])
+                .allow_origin(Any),
         )
         .layer(GlobalConcurrencyLimitLayer::new(1))
         .layer(TraceLayer::new_for_http());

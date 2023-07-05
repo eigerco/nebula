@@ -24,8 +24,13 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
+    "monaco-editor": "^0.38.0",
+    "monaco-marker-data-provider": "^1.0.0",
+    "monaco-worker-manager": "^2.0.0",
+    "monaco-yaml": "^4.0.0",
     "prettier": "^2.8.8",
     "typescript": "^5.1.6",
-    "vite": "^4.3.9"
+    "vite": "^4.3.9",
+    "vite-plugin-monaco-editor": "^1.1.0"
   }
 }
