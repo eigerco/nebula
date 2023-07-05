@@ -10,5 +10,7 @@ jobs:
           node-version: "16"
       - name: Install
         run: npm install
+        working-directory: ./app
       - name: Check
         run: npm run lint
+        working-directory: ./app
