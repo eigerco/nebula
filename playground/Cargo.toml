@@ -1,0 +1,21 @@
+[package]
+name = "playground"
+description = "nebula playground that allows compilation of contracts"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { version = "0.6", features = ["http2"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1.0"
+tower = { version = "0.4", features = ["limit", "timeout"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tower-http = { version = "0.4", features = ["trace", "cors"] }
+anyhow = "1"
+lazy_static = "1.4.0"
+hyper = "0.14"
+thiserror = "1"
