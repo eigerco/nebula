@@ -1,4 +1,4 @@
-import { getParams } from "./contractparams/lotteryparams";
+import { getParams as lotteryparams } from "./contractparams/lotteryparams";
 import "./style.css";
 
 document.querySelector<HTMLDivElement>("#toolbox")!.innerHTML = `    
@@ -17,7 +17,7 @@ document.querySelector<HTMLDivElement>("#toolbox")!.innerHTML = `
         Settings:
     </label>
     <div class="contract-settings">
-        ${getParams()}
+        ${lotteryparams()}
     </div>
     <div class="footer">
         <div class="input-group mb-3">
