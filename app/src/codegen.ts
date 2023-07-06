@@ -21,130 +21,29 @@ export class CodeGen {
         return importsStr;
     }
 
-    public generateContract(name: String, tokenInterface: boolean, symbol: String = '', decimals: number = 1) {
+    public generateContract(name: String, params: Array<String>) {
         let contractCode = '';
         contractCode = `pub struct ${name};\n`;
         contractCode += '\n#[contractimpl]\n';
         contractCode += `impl ${name} {`;
         contractCode += `
-    pub fn init(Env env) {;
-    }\n`;
+    pub fn init(Env env) {
+        let contract_id = env.register_contract(None, Lottery::WASM);
+        let client = Lottery::Client::new(&env, contract_id);`
 
-        if (tokenInterface) {
-            contractCode += this.generateTokenInterface(name, symbol, decimals);
+        contractCode += `
+        client.init(`;
+        for (let param of params) {
+            contractCode += `${param}, `;
         }
-        contractCode += '}\n';
+        //remove last comma
+        if (params.length !== 0)
+            contractCode = contractCode.slice(0, -2);
+
+        contractCode += `);
+    }\n`;
+        contractCode += '}\n\n';
 
         return contractCode;
-    }
-
-    private generateTokenInterface(name: String, symbol: String, decimals: number) {
-        let tokenInterfaceCode = '';
-        tokenInterfaceCode = `
-    fn clawback(
-        env: soroban_sdk::Env,
-        from: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn mint(
-        env: soroban_sdk::Env,
-        to: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn set_authorized(
-        env: soroban_sdk::Env,
-        id: Address,
-        authorized: bool
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn increase_allowance(
-        env: soroban_sdk::Env,
-        from: Address,
-        spender: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn decrease_allowance(
-        env: soroban_sdk::Env,
-        from: Address,
-        spender: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn transfer(
-        env: soroban_sdk::Env,
-        from: Address,
-        to: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn transfer_from(
-        env: soroban_sdk::Env,
-        spender: Address,
-        from: Address,
-        to: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn burn(
-        env: soroban_sdk::Env,
-        from: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn burn_from(
-        env: soroban_sdk::Env,
-        spender: Address,
-        from: Address,
-        amount: i128
-    ) {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn balance(env: soroban_sdk::Env, id: Address) -> i128 {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn spendable_balance(env: soroban_sdk::Env id: Address) -> i128 {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn authorized(env: soroban_sdk::Env, id: Address) -> bool {
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn decimals(env: soroban_sdk::Env) -> u32 {
-    \treturn ${decimals};
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn name(env: soroban_sdk::Env) -> soroban_sdk::Bytes {
-        return "${name}";
-    }\n`;
-
-        tokenInterfaceCode += `
-    fn symbol(env: soroban_sdk::Env) -> soroban_sdk::Bytes {
-        return "${symbol}";
-    }\n`;
-
-        return tokenInterfaceCode;
     }
 }

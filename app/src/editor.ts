@@ -6,8 +6,8 @@ import "./style.css";
 
 let codeGen = new CodeGen();
 let contractCode = codeGen.generateHeader('author', 'MIT');
-contractCode += '\n' + codeGen.generateImports(['SomeContract', 'OtherContract']);
-contractCode += '\n' + codeGen.generateContract('MyContract', true);
+contractCode += '\n' + codeGen.generateImports(['Lottery']);
+contractCode += '\n' + codeGen.generateContract('MyContract', ['true', '100', '10', '1']);
 
 let html = hljs.highlight(contractCode, {language: 'rust'}).value
 

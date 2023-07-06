@@ -28,7 +28,7 @@ body {
   display: flex;
   /* place-items: center; */
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh;  
 }
 
 h1 {
@@ -58,17 +58,13 @@ h1 {
 
 #toolbox {
   padding: 2rem;
-  width: 30%;  
   min-width: 200px;
   max-width: 400px;
-  background-color: #343434;
-  float: left;
-  height: 100%;
+  background-color: #3a3a3a;
 }
 
-#editor {
-  width: 70%;  
-  float: right;
+.bi {
+  margin-right: 5px;
 }
 
 
@@ -76,27 +72,48 @@ h1 {
   padding: 2em;  
 }
 
+.footer {
+  /* position: fixed;   */
+  /* margin-top: 200px; */
+  padding-bottom: 1em;
+}
+
+.buttons {
+  margin: auto;
+  display: grid;
+}
+
+.buttons button {
+  margin-bottom: 5px;
+}
+
+.dropdown-menu li{
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.token-interface {
+  border:1px solid #4e4e4e;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  padding: 1em;
+}
+
+.contract-settings {
+  border:1px solid #4e4e4e;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  padding: 1em;
+}
+
 .read-the-docs {
   color: #888;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.container {
+  border:1px solid #4e4e4e;
+  max-height: 800px;
+  overflow: auto;
 }
 
 @media (prefers-color-scheme: light) {
