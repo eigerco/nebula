@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contracterror, contractimpl, contracttype, vec, Address, ConversionError, Env, Map, Symbol,
+    contracterror, contractimpl, contracttype, Address, ConversionError, Env, Map, Symbol,
 };
 
 #[contracterror]
@@ -113,7 +113,7 @@ impl ProposalVotingContract {
         env.storage().set(&DataKey::Proposals, &proposal_storage);
 
         env.events()
-            .publish((Symbol::short("proposal_voted"), id), updated_approval_rate);
+            .publish((Symbol::new(&env, "proposal_voted"), id), updated_approval_rate);
         Ok(())
     }
 }
