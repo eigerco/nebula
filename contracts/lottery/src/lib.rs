@@ -96,7 +96,7 @@ impl LotteryContract {
             &env,
             winners_count,
             players,
-            random_seed.checked_add(env.ledger().timestamp()).unwrap(),
+            random_seed.checked_add(env.ledger().timestamp()).unwrap(), // TODO, this needs to be more investigated, as it could be very deterministic.
         );
 
         // Pay the winners
