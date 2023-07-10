@@ -25,6 +25,10 @@ fn admin_is_identified_on_init() {
     )
 }
 
+fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::Client<'a> {
+    token::Client::new(e, &e.register_stellar_asset_contract(admin.clone()))
+}
+
 #[test]
 fn buy_ticket_works_as_expected() {
     let env = Env::default();
@@ -83,8 +87,4 @@ fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
     test_token_client.mint(&ticket_buyer, &100);
 
     client.buy_ticket(&ticket_buyer);
-}
-
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::Client<'a> {
-    token::Client::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
