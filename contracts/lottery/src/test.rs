@@ -1,7 +1,9 @@
 #![cfg(test)]
 
+use crate::calculate_winners;
+
 use super::{LotteryContract, LotteryContractClient};
-use soroban_sdk::{testutils::Address as _, token, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{testutils::Address as _, token, vec, Address, Env, IntoVal, Symbol};
 
 #[test]
 fn admin_is_identified_on_init() {
@@ -87,4 +89,18 @@ fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
     test_token_client.mint(&ticket_buyer, &100);
 
     client.buy_ticket(&ticket_buyer);
+}
+
+#[test]
+fn calculate_winners_works_seed_is_deterministic() {
+    let env = Env::default();
+    let result = calculate_winners(&env, 2, 12, 666);
+    assert_eq!(vec![&env, 5, 7], result);
+}
+
+#[test]
+fn calculate_winners_can_only_win_once() {
+    let env = Env::default();
+    let result = calculate_winners(&env, 100, 2, 666);
+    assert_eq!(vec![&env, 0, 1], result);
 }

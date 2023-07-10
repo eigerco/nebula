@@ -3,7 +3,7 @@
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
-use soroban_sdk::{contracterror, contractimpl, contracttype, token, Address, Env, Vec};
+use soroban_sdk::{contracterror, contractimpl, contracttype, token, Address, Env, Map, Vec};
 
 #[derive(Clone, Copy)]
 #[contracttype]
@@ -89,6 +89,25 @@ impl LotteryContract {
             // env.events().publish(topics, amount);
         }
     }
+}
+
+fn calculate_winners(
+    env: &Env,
+    winners_count: u32,
+    candidates_len: u32,
+    random_seed: u64,
+) -> Vec<u32> {
+    let mut winners = Map::new(&env);
+    let mut rand = SmallRng::seed_from_u64(random_seed);
+
+    for _ in 0..winners_count {
+        let winner = rand.gen_range(0..candidates_len);
+        if winners.contains_key(winner) {
+            continue;
+        }
+        winners.set(winner, 1);
+    }
+    winners.keys()
 }
 
 mod test;
