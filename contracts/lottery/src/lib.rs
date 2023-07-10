@@ -1,41 +1,65 @@
 #![no_std]
+
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
-use soroban_sdk::{contractimpl, contracttype, Address, Env, Vec};
+use soroban_sdk::{contracterror, contractimpl, contracttype, token, Address, Env, Vec};
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 #[contracttype]
 enum DataKey {
-    Admin,
-    Candidates,
-    WinnerCount,
-    TicketPrice,
+    Admin = 1,
+    Candidates = 2,
+    WinnerCount = 3,
+    TicketPrice = 4,
+    Token = 5,
+}
+
+#[contracterror]
+#[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum Error {
+    InsufficientFunds = 1,
 }
 
 pub struct LotteryContract;
 
 #[contractimpl]
 impl LotteryContract {
-    pub fn initialize(env: Env, admin: Address, winners_count: u32, ticket_price: u32) {
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        token: Address,
+        winners_count: u32,
+        ticket_price: i128,
+    ) {
         admin.require_auth();
         let storage = env.storage();
         storage.set(&DataKey::Admin, &admin);
+        storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::WinnerCount, &winners_count);
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));
     }
 
-    pub fn buy_ticket(env: Env, by: Address) {
+    pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
+        by.require_auth();
+
         let storage = env.storage();
-        // let price: u32 = storage.get(&DataKey::TicketPrice).unwrap().unwrap();
-        // let admin: Address = storage.get(&DataKey::Admin).unwrap().unwrap();
-        // token.transfer(env, admin, by, price);
-        let winner_count: u32 = storage.get(&DataKey::WinnerCount).unwrap().unwrap();
+        let price: i128 = storage.get(&DataKey::TicketPrice).unwrap().unwrap();
+        let token: Address = storage.get(&DataKey::Token).unwrap().unwrap();
+        let token_client = token::Client::new(&env, &token);
+
+        if token_client.balance(&by) <= price {
+            return Err(Error::InsufficientFunds);
+        }
+
+        token_client.transfer(&by, &env.current_contract_address(), &price);
+
         let mut candidates: Vec<Address> = storage.get(&DataKey::Candidates).unwrap().unwrap();
         candidates.push_back(by);
         storage.set(&DataKey::Candidates, &candidates);
-        
+        Ok(candidates.len())
     }
 
     pub fn play_raffle(env: Env, admin: Address, random_seed: u64) {
