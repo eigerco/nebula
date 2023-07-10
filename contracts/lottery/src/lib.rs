@@ -3,7 +3,9 @@
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
-use soroban_sdk::{contracterror, contractimpl, contracttype, token, Address, Env, Map, Vec};
+use soroban_sdk::{
+    contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec,
+};
 
 #[derive(Clone, Copy)]
 #[contracttype]
@@ -13,6 +15,7 @@ enum DataKey {
     WinnerCount = 3,
     TicketPrice = 4,
     Token = 5,
+    AlreadyPlayed = 6,
 }
 
 #[contracterror]
@@ -20,6 +23,8 @@ enum DataKey {
 #[repr(u32)]
 pub enum Error {
     InsufficientFunds = 1,
+    AlreadyPlayed = 2,
+    MinParticipantsNotSatisfied = 3,
 }
 
 pub struct LotteryContract;
@@ -40,6 +45,7 @@ impl LotteryContract {
         storage.set(&DataKey::WinnerCount, &winners_count);
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));
+        storage.set(&DataKey::AlreadyPlayed, &false);
     }
 
     pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
@@ -62,32 +68,49 @@ impl LotteryContract {
         Ok(candidates.len())
     }
 
-    pub fn play_raffle(env: Env, admin: Address, random_seed: u64) {
+    pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage();
 
-        // TODO: Assert admin
-        let mut candidates: Vec<Address> = storage.get(&DataKey::Candidates).unwrap().unwrap();
+        let admin: Address = storage.get(&DataKey::Admin).unwrap().unwrap();
+        admin.require_auth();
+
+        if storage.get(&DataKey::AlreadyPlayed).unwrap().unwrap() {
+            return Err(Error::AlreadyPlayed);
+        }
+
+        let token: Address = storage.get(&DataKey::Token).unwrap().unwrap();
+
+        let token_client = token::Client::new(&env, &token);
+
+        let candidates: Vec<Address> = storage.get(&DataKey::Candidates).unwrap().unwrap();
+
+        if candidates.is_empty() {
+            return Err(Error::MinParticipantsNotSatisfied);
+        }
 
         let winners_count: u32 = storage.get(&DataKey::WinnerCount).unwrap().unwrap();
         let players = candidates.len();
 
-        let mut rand = SmallRng::seed_from_u64(random_seed);
-        // TODO: Get balance
-        // let balance = token::spendable_balance(&token_id);
-        let balance = 999;
-        let payout = balance / winners_count;
-        let mut winners = Vec::new(&env);
-        // Todo already winners cannot win twice
-        for i in 0..winners_count {
-            let winner = rand.gen_range(0..players);
-            winners.push_back(winner);
-        }
-        for winner in winners {
+        // Calculate the winners
+        let winners_idx = calculate_winners(
+            &env,
+            winners_count,
+            players,
+            random_seed.checked_add(env.ledger().timestamp()).unwrap(),
+        );
+
+        // Pay the winners
+        let balance = token_client.balance(&env.current_contract_address());
+        let payout = balance / i128::from(winners_count);
+
+        for winner in winners_idx {
             let candidate = candidates.get(winner.unwrap()).unwrap().unwrap();
-            // TODO: token::transfer(candidate, &payout);
-            // let topics = (Symbol::short("winner"), admin, candidate);
-            // env.events().publish(topics, amount);
+            token_client.transfer(&env.current_contract_address(), &candidate, &payout);
+            let topics = (Symbol::short("winner"), candidate);
+            env.events().publish(topics, payout);
         }
+        storage.set(&DataKey::AlreadyPlayed, &true);
+        Ok(())
     }
 }
 
@@ -97,7 +120,7 @@ fn calculate_winners(
     candidates_len: u32,
     random_seed: u64,
 ) -> Vec<u32> {
-    let mut winners = Map::new(&env);
+    let mut winners = Map::new(env);
     let mut rand = SmallRng::seed_from_u64(random_seed);
 
     for _ in 0..winners_count {

@@ -3,7 +3,10 @@
 use crate::calculate_winners;
 
 use super::{LotteryContract, LotteryContractClient};
-use soroban_sdk::{testutils::Address as _, token, vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{
+    testutils::{Address as _, Events},
+    token, vec, Address, Env, IntoVal, Symbol,
+};
 
 #[test]
 fn admin_is_identified_on_init() {
@@ -103,4 +106,96 @@ fn calculate_winners_can_only_win_once() {
     let env = Env::default();
     let result = calculate_winners(&env, 100, 2, 666);
     assert_eq!(vec![&env, 0, 1], result);
+}
+
+#[test]
+fn play_raffle_works() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, LotteryContract);
+    let client = LotteryContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.initialize(&client.address, &test_token_client.address, &1, &100);
+
+    let ticket_buyer_1 = Address::random(&env);
+    let ticket_buyer_2 = Address::random(&env);
+
+    // Transfer some funds to the buyer
+    test_token_client.mint(&ticket_buyer_1, &101);
+    test_token_client.mint(&ticket_buyer_2, &101);
+
+    client.buy_ticket(&ticket_buyer_1);
+    client.buy_ticket(&ticket_buyer_2);
+
+    client.play_raffle(&666);
+
+    assert_eq!(
+        env.auths(),
+        [(
+            client.address.clone(),
+            client.address.clone(),
+            Symbol::new(&env, "play_raffle"),
+            (666u64,).into_val(&env)
+        )]
+    );
+
+    let last_event = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_event,
+        vec![
+            &env,
+            (
+                contract_id.clone(),
+                (Symbol::short("winner"), &ticket_buyer_2).into_val(&env),
+                200i128.into_val(&env)
+            )
+        ]
+    )
+}
+
+#[test]
+#[should_panic(expected = "ContractError(2)")]
+fn play_raffle_cannot_be_invoked_twice() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, LotteryContract);
+    let client = LotteryContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.initialize(&client.address, &test_token_client.address, &1, &100);
+
+    let ticket_buyer_1 = Address::random(&env);
+    let ticket_buyer_2 = Address::random(&env);
+
+    // Transfer some funds to the buyer
+    test_token_client.mint(&ticket_buyer_1, &101);
+    test_token_client.mint(&ticket_buyer_2, &101);
+
+    client.buy_ticket(&ticket_buyer_1);
+    client.buy_ticket(&ticket_buyer_2);
+
+    client.play_raffle(&666);
+    client.play_raffle(&666);
+}
+
+
+#[test]
+#[should_panic(expected = "ContractError(3)")]
+fn raffle_cannot_be_played_if_not_enough_participants() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, LotteryContract);
+    let client = LotteryContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.initialize(&client.address, &test_token_client.address, &1, &100);
+
+    client.play_raffle(&666);
 }
