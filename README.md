@@ -1,5 +1,7 @@
 # nebula
-Nebula is a tool for easing development of Soroban smart contracts
+Nebula is a tool for easing development of Soroban smart contracts.
+
+⚠️ This is still a prototyping repository. Production use its still discouraged.
 
 ## Frontend
 The frontend contains some basic starter code.
