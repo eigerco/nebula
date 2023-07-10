@@ -17,3 +17,14 @@ To build for deployment:
 npm run build
 ```
 The dist folder will contain the files ready for static serving
+
+## Contracts
+
+Contracts crates are stored in the `contracts` folder, grouped in a workspace.
+
+In order to run the tests:
+
+```
+$ cd contracts
+$ cargo test
+```
