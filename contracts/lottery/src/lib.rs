@@ -128,7 +128,7 @@ fn calculate_winners(
         if winners.contains_key(winner) {
             continue;
         }
-        winners.set(winner, 1);
+        winners.set(winner, true);
     }
     winners.keys()
 }
