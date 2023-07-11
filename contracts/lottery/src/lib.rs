@@ -36,6 +36,7 @@ impl LotteryContract {
         let storage = env.storage();
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
+        // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
         storage.set(&DataKey::WinnerCount, &winners_count);
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));
