@@ -31,13 +31,7 @@ pub struct LotteryContract;
 
 #[contractimpl]
 impl LotteryContract {
-    pub fn initialize(
-        env: Env,
-        admin: Address,
-        token: Address,
-        winners_count: u32,
-        ticket_price: i128,
-    ) {
+    pub fn init(env: Env, admin: Address, token: Address, winners_count: u32, ticket_price: i128) {
         admin.require_auth();
         let storage = env.storage();
         storage.set(&DataKey::Admin, &admin);

@@ -17,14 +17,14 @@ fn admin_is_identified_on_init() {
     let client = LotteryContractClient::new(&env, &contract_id);
     let target_token = create_token_contract(&env, &Address::random(&env));
 
-    client.initialize(&client.address, &target_token.address, &2, &100);
+    client.init(&client.address, &target_token.address, &2, &100);
 
     assert_eq!(
         env.auths(),
         [(
             client.address.clone(),
             client.address.clone(),
-            Symbol::new(&env, "initialize"),
+            Symbol::new(&env, "init"),
             (&client.address, &target_token.address, 2u32, 100i128).into_val(&env)
         )]
     )
@@ -44,7 +44,7 @@ fn buy_ticket_works_as_expected() {
     let token_admin = Address::random(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    client.initialize(&client.address, &test_token_client.address, &2, &100);
+    client.init(&client.address, &test_token_client.address, &2, &100);
 
     let ticket_buyer = Address::random(&env);
 
@@ -84,7 +84,7 @@ fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
     let token_admin = Address::random(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    client.initialize(&client.address, &test_token_client.address, &2, &100);
+    client.init(&client.address, &test_token_client.address, &2, &100);
 
     let ticket_buyer = Address::random(&env);
 
@@ -118,7 +118,7 @@ fn play_raffle_works() {
     let token_admin = Address::random(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    client.initialize(&client.address, &test_token_client.address, &1, &100);
+    client.init(&client.address, &test_token_client.address, &1, &100);
 
     let ticket_buyer_1 = Address::random(&env);
     let ticket_buyer_2 = Address::random(&env);
@@ -167,7 +167,7 @@ fn play_raffle_cannot_be_invoked_twice() {
     let token_admin = Address::random(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    client.initialize(&client.address, &test_token_client.address, &1, &100);
+    client.init(&client.address, &test_token_client.address, &1, &100);
 
     let ticket_buyer_1 = Address::random(&env);
     let ticket_buyer_2 = Address::random(&env);
@@ -183,7 +183,6 @@ fn play_raffle_cannot_be_invoked_twice() {
     client.play_raffle(&666);
 }
 
-
 #[test]
 #[should_panic(expected = "ContractError(3)")]
 fn raffle_cannot_be_played_if_not_enough_participants() {
@@ -195,7 +194,7 @@ fn raffle_cannot_be_played_if_not_enough_participants() {
     let token_admin = Address::random(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    client.initialize(&client.address, &test_token_client.address, &1, &100);
+    client.init(&client.address, &test_token_client.address, &1, &100);
 
     client.play_raffle(&666);
 }
