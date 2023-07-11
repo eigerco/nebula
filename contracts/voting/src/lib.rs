@@ -30,22 +30,45 @@ pub enum DataKey {
     Admin = 0,
     VoterList = 1,
     Proposals = 2,
+    VotingPeriodSecs = 3,
+    TargetApprovalRate = 4,
+    TotalVoters = 5,
 }
 
 pub struct ProposalVotingContract;
 
 #[contractimpl]
 impl ProposalVotingContract {
-    pub fn init(env: Env, admin: Address) {
+    pub fn init(
+        env: Env,
+        admin: Address,
+        voting_period_secs: u64,
+        target_approval_rate_bps: u32,
+        total_voters: u32,
+    ) {
         env.storage().set(&DataKey::Admin, &admin);
         env.storage()
             .set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
+        // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
+        env.storage()
+            .set(&DataKey::VotingPeriodSecs, &voting_period_secs);
+        env.storage()
+            .set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
+        env.storage().set(&DataKey::TotalVoters, &total_voters);
     }
 
     pub fn create_proposal(env: Env, id: u64) -> Result<(), Error> {
-        let voting_period_secs = 3600; // one hour
-        let target_approval_rate_bps = 50_00; // At least 50% of the votes to be approved.
-        let total_voters = 1000; // Up to 1000 participants.
+        let voting_period_secs = env
+            .storage()
+            .get(&DataKey::VotingPeriodSecs)
+            .unwrap()
+            .unwrap();
+        let target_approval_rate_bps = env
+            .storage()
+            .get(&DataKey::TargetApprovalRate)
+            .unwrap()
+            .unwrap();
+        let total_voters = env.storage().get(&DataKey::TotalVoters).unwrap().unwrap();
 
         Self::create_custom_proposal(
             env,
@@ -112,8 +135,10 @@ impl ProposalVotingContract {
 
         env.storage().set(&DataKey::Proposals, &proposal_storage);
 
-        env.events()
-            .publish((Symbol::new(&env, "proposal_voted"), id), updated_approval_rate);
+        env.events().publish(
+            (Symbol::new(&env, "proposal_voted"), id),
+            updated_approval_rate,
+        );
         Ok(())
     }
 }

@@ -32,7 +32,7 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
     let contract_id = env.register_contract(None, ProposalVotingContract);
     let client = ProposalVotingContractClient::new(&env, &contract_id);
     let admin = Address::random(&env);
-    client.init(&admin);
+    client.init(&admin, &3600, &50_00, &1000);
 
     (env, client, admin)
 }
