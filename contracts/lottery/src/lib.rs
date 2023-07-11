@@ -12,7 +12,7 @@ use soroban_sdk::{
 enum DataKey {
     Admin = 1,
     Candidates = 2,
-    WinnerCount = 3,
+    MaxWinnerCount = 3,
     TicketPrice = 4,
     Token = 5,
     AlreadyPlayed = 6,
@@ -31,13 +31,19 @@ pub struct LotteryContract;
 
 #[contractimpl]
 impl LotteryContract {
-    pub fn init(env: Env, admin: Address, token: Address, winners_count: u32, ticket_price: i128) {
+    pub fn init(
+        env: Env,
+        admin: Address,
+        token: Address,
+        max_winners_count: u32,
+        ticket_price: i128,
+    ) {
         admin.require_auth();
         let storage = env.storage();
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
-        storage.set(&DataKey::WinnerCount, &winners_count);
+        storage.set(&DataKey::MaxWinnerCount, &max_winners_count);
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));
         storage.set(&DataKey::AlreadyPlayed, &false);
@@ -83,20 +89,20 @@ impl LotteryContract {
             return Err(Error::MinParticipantsNotSatisfied);
         }
 
-        let winners_count: u32 = storage.get(&DataKey::WinnerCount).unwrap().unwrap();
+        let max_winners_count: u32 = storage.get(&DataKey::MaxWinnerCount).unwrap().unwrap();
         let players = candidates.len();
 
         // Calculate the winners
         let winners_idx = calculate_winners(
             &env,
-            winners_count,
+            max_winners_count,
             players,
             random_seed.checked_add(env.ledger().timestamp()).unwrap(), // TODO, this needs to be more investigated, as it could be very deterministic.
         );
 
         // Pay the winners
         let balance = token_client.balance(&env.current_contract_address());
-        let payout = balance / i128::from(winners_count);
+        let payout = balance / i128::from(max_winners_count);
 
         for winner in winners_idx {
             let candidate = candidates.get(winner.unwrap()).unwrap().unwrap();
@@ -109,16 +115,26 @@ impl LotteryContract {
     }
 }
 
+/// It calculates the winners of a raffle in a best effort way, avoiding
+/// duplicate winners.
+///
+/// # Arguments
+///
+/// - `env` - The environment for this contract.
+/// - `max_winners_count` - The maximum number of winners. Collisions from the random generator are currently solved by omission,
+/// so this should be read as "the max number of" but not the "exact number of".
+/// - `candidates_len` - The number of participants on this raffle.
+/// - `random_seed` - The random seed for the number generator. Currently it determines the output of the generator across calls.
 fn calculate_winners(
     env: &Env,
-    winners_count: u32,
+    max_winners_count: u32,
     candidates_len: u32,
     random_seed: u64,
 ) -> Vec<u32> {
     let mut winners = Map::new(env);
     let mut rand = SmallRng::seed_from_u64(random_seed);
 
-    for _ in 0..winners_count {
+    for _ in 0..max_winners_count {
         let winner = rand.gen_range(0..candidates_len);
         if winners.contains_key(winner) {
             continue;
