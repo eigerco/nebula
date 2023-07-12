@@ -1,0 +1,40 @@
+.Toolbox {
+  padding: 1rem;
+  background-color: #212529;
+  color: #adb5bd;
+  text-align: left;
+}
+
+.logo {
+  background-image: "../public/logo192.png";
+  width: 64px;
+  height: 64px;
+  margin-left: auto;
+  display: block;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
+.footer {
+  padding-bottom: 1em;
+}
+
+.buttons {
+  margin: auto;
+  display: grid;
+}
+
+.contract-menu {
+  display: inline;
+}
+
+.buttons button {
+  margin-bottom: 5px;
+}
+
+.contract-settings {
+  border:1px solid #4e4e4e;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  padding: 1em;
+}
