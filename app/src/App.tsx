@@ -19,7 +19,7 @@ export function App () {
 
   const codeGen = new CodeGen()
 
-  function handleClick(type: string) {
+  function handleClick (type: string) {
     if (type === 'Download') {
       setModalTitle('Download')
       setModalBody('Not implemented yet')
@@ -27,7 +27,7 @@ export function App () {
     }
     if (type === 'Copy') {
       const code = codeGen.generateCode()
-      navigator.clipboard.writeText(code)
+      void navigator.clipboard.writeText(code)
     }
     if (type === 'Deploy') {
       setModalTitle('Deploy')
@@ -35,7 +35,7 @@ export function App () {
       setShowInvokeModal(true)
     }
     if (type === 'Invoke') {
-      let invokeGen = new InvokeCommandGen()
+      const invokeGen = new InvokeCommandGen()
       setModalTitle('Invoke contract')
       setModalBody(
         invokeGen.generateInvokeCommand(
@@ -57,7 +57,9 @@ export function App () {
       setShowInvokeModal(true)
     }
   }
-  const handleInvokeModalClose = () => { setShowInvokeModal(false) }
+  const handleInvokeModalClose = () => {
+    setShowInvokeModal(false)
+  }
 
   return (
     <div className="App">

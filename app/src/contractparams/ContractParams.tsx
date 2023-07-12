@@ -1,9 +1,9 @@
 import React from 'react'
 import { DefaultParams } from './DefaultParams'
 import { LotteryParams } from './LotteryParams'
-import { VotingParams as VotingParams } from './VotingParams'
+import { VotingParams } from './VotingParams'
 
-export function ContractParams({ contractType, updateParams }: any) {
+export function ContractParams ({ contractType, updateParams }: any) {
   if (contractType === 'Lottery') {
     return <LotteryParams updateParams={updateParams} />
   }
