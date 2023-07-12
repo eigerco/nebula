@@ -20,5 +20,7 @@ module.exports = {
     sourceType: "module",
     project: true
   },
-  rules: {},
+  rules: {
+    "@typescript-eslint/explicit-function-return-type": 0
+  },
 };

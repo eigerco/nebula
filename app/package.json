@@ -30,7 +30,7 @@
     "lint:eslint": "eslint --ext .ts ./src",
     "lint:prettier": "prettier --check ./src",
     "fix": "npm run format && npm run lint:fix",
-    "format": "prettier --write 'src/**/*.{js,ts}'",
+    "format": "prettier --write 'src/**/*.{js,ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{js,ts}'",
     "fix:eslint": "eslint src --ext .js,.ts --fix"
   },

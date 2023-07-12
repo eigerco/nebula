@@ -1,19 +1,22 @@
-import React from 'react';
-import { CodeGen } from './codegen/codegen'
+import React from 'react'
 import Highlight from 'react-highlight'
 import 'highlight.js/styles/github-dark.css'
-import './Editor.css'
 
-export function Editor({contractType, codeGen, contractName, params, author, license} : any) {  
+export function Editor ({
+  contractType,
+  codeGen,
+  contractName,
+  params,
+  author,
+  license
+}: any) {
   codeGen.setHeader(author, license)
   codeGen.setContractCode(contractType, contractName, params)
-  let contractCode = codeGen.generateCode()
+  const contractCode = codeGen.generateCode()
 
   return (
-    <div className='Editor'>
-      <Highlight className='language-rust'>
-        {contractCode}
-      </Highlight>
+    <div className="Editor">
+      <Highlight className="language-rust">{contractCode}</Highlight>
     </div>
   )
 }

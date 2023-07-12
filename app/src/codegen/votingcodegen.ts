@@ -1,5 +1,5 @@
 export class VotingCodeGen {
-  public generateCode(name: string) {
+  public generateCode (name: string) {
     return `
 #![no_std]
 
@@ -196,19 +196,25 @@ impl Proposal {
         self.approval_rate_bps().unwrap() >= self.target_approval_rate_bps
     }
 }
-    `;
+    `
   }
-  generateInvokeCommand(name: string, params: any[]) {
+
+  generateInvokeCommand (name: string, params: any[]) {
+    const admin: string = params[0]
+    const votingPeriod: number = params[1]
+    const targetApprovalRate: number = params[2]
+    const totalVoters: number = params[3]
+
     return `
     soroban contract invoke
     --wasm ${name}.wasm
     --id 1
     --
     init
-      --admin ${params[0]}
-      --voting_period_secs ${params[1]}
-      --target_approval_rate_bps ${params[2]}
-      --total_voters ${params[3]}
-    `;
+      --admin ${admin}
+      --voting_period_secs ${votingPeriod}
+      --target_approval_rate_bps ${targetApprovalRate}
+      --total_voters ${totalVoters}
+    `
   }
 }
