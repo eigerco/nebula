@@ -196,7 +196,7 @@ impl Proposal {
         self.approval_rate_bps().unwrap() >= self.target_approval_rate_bps
     }
 }
-    `
+    `;
   }
   generateInvokeCommand(name: string, params: any[]) {
     return `
@@ -209,6 +209,6 @@ impl Proposal {
       --voting_period_secs ${params[1]}
       --target_approval_rate_bps ${params[2]}
       --total_voters ${params[3]}
-    `
+    `;
   }
 }

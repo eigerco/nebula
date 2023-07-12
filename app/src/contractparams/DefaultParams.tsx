@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 interface Props {
   updateParams: any;
@@ -13,6 +13,6 @@ export class DefaultParams extends React.Component<Props> {
   render() {
     return (
       <div></div>
-    );
+    )
   }
 }

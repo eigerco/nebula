@@ -2,11 +2,10 @@ import React from 'react';
 import { CodeGen } from './codegen/codegen'
 import Highlight from 'react-highlight'
 import 'highlight.js/styles/github-dark.css'
-import './Editor.css';
+import './Editor.css'
 
 export function Editor({contractType, codeGen, contractName, params, author, license} : any) {  
   codeGen.setHeader(author, license)
-  codeGen.setImports([contractType])
   codeGen.setContractCode(contractType, contractName, params)
   let contractCode = codeGen.generateCode()
 
@@ -16,5 +15,5 @@ export function Editor({contractType, codeGen, contractName, params, author, lic
         {contractCode}
       </Highlight>
     </div>
-  );
+  )
 }

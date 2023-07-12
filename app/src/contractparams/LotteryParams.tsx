@@ -1,9 +1,8 @@
-import React from 'react';
-import { Address } from './address';
+import React from 'react'
 
 
 interface Props {
-  updateParams: any;
+  updateParams: any
 }
 
 export class LotteryParams extends React.Component<Props> {
@@ -52,6 +51,6 @@ export class LotteryParams extends React.Component<Props> {
       </div>
     </div>
     </form>
-    );
+    )
   }
 }

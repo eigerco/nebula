@@ -68,5 +68,5 @@ export function Toolbox({ contractName, onContractNameChanged, contractType, onC
             </div>
         </div>
   </div>
-  );
+  )
 }

@@ -146,7 +146,7 @@ fn calculate_winners(
     }
     winners.keys()
 }
-    `
+    `;
   }
   generateInvokeCommand(name: string, params: any[]) {
     return `
@@ -159,6 +159,6 @@ fn calculate_winners(
       --token ${params[1]}
       --max_winners_count ${params[2]}
       --ticket_price ${params[3]}
-    `
+    `;
   }
 }

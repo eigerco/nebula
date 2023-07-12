@@ -1,8 +1,7 @@
-import React from 'react';
-import { Address } from './address';
+import React from 'react'
 
 interface Props {
-  updateParams: any;
+  updateParams: any
 }
 
 export class VotingParams extends React.Component<Props> {
