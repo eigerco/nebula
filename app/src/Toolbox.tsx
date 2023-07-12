@@ -21,16 +21,37 @@ export function Toolbox({ contractName, onContractNameChanged, contractType, onC
             <option>Voting</option>
           </Form.Select>
         </div>
-        <div className="buttons">
-              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Compile')}><i className="bi bi-hammer"></i>Compile</button>
-              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Deploy')}><i className="bi bi-cloud-upload"></i>Deploy</button>
-              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Invoke')}><i className="bi bi-gear"></i>Invoke</button>
+        <div className="buttons container text-center">
+          <div className="row">
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Compile')} title="Compile"><i className="bi bi-hammer"></i>Compile</button>
+            </div>
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Download')} title="Download"><i className="bi bi-cloud-arrow-down"></i>Download</button>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Deploy')} title="Deploy"><i className="bi bi-cloud-upload"></i>Deploy</button>
+            </div>          
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Invoke')} title="Invoke"><i className="bi bi-gear"></i>Invoke</button>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Copy')} title="Copy to clipboard"><i className="bi bi-clipboard"></i>Copy</button>
+            </div>
+            <div className="col">
+              <button type="button" className="btn btn-secondary" onClick={e => handleClick('Open')} title="Open in Pulsar"><i className="bi bi-folder2-open"></i>Open in Pulsar</button>
+            </div>
+          </div>
         </div> 
           <div className="input-group mb-2">
-          <label className="settings">
+          <label className="params">
               Init params:
           </label>
-          <div className="contract-settings">
+          <div className="contract-params">
               <ContractParams contractType={contractType} updateParams={updateParams}/>
           </div>
         </div>
@@ -44,11 +65,6 @@ export function Toolbox({ contractName, onContractNameChanged, contractType, onC
               <span className="input-group-text">License</span>
               <input type="text" className="form-control" aria-label="License" aria-describedby="basic-addon1" value={license}
                   onChange={e => onLicenseChanged(e.target.value)}/>
-            </div>
-            <div className="buttons">
-                <button type="button" className="btn btn-secondary" onClick={e => handleClick('Copy')}><i className="bi bi-clipboard"></i>Copy to clipboard</button>
-                <button type="button" className="btn btn-secondary" onClick={e => handleClick('Download')}><i className="bi bi-cloud-arrow-down"></i>Download</button>
-                <button type="button" className="btn btn-secondary" onClick={e => handleClick('Open')}><i className="bi bi-folder2-open"></i>Open in Pulsar</button>
             </div>
         </div>
   </div>

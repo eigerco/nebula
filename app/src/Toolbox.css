@@ -3,6 +3,8 @@
   background-color: #212529;
   color: #adb5bd;
   text-align: left;
+  /* position: fixed; */
+  height: 100%;
 }
 
 .logo {
@@ -20,21 +22,33 @@
 }
 
 .buttons {
-  margin: auto;
-  display: grid;
+  margin-top: 10px;
 }
 
 .contract-menu {
   display: inline;
 }
 
-.buttons button {
-  margin-bottom: 5px;
+.params {
+  margin-top: 10px;
 }
 
-.contract-settings {
+.buttons button {
+  margin-bottom: 5px;
+  width: 160px;
+}
+
+.contract-params {
   border:1px solid #4e4e4e;
   margin-bottom: 1em;
   margin-top: 1em;
   padding: 1em;
+}
+
+.contract-params span {
+  min-width: 150px;
+}
+
+.bi {
+  margin-right: 5px;
 }

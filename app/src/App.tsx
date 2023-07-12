@@ -15,22 +15,40 @@ export function App() {
   const [author, setAuthor] = useState('')
   const [license, setLicense] = useState('')
   const [showInvokeModal, setShowInvokeModal] = useState(false)
-  const [command, setCommand] = useState('')
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalBody, setModalBody] = useState('')
   
   const codeGen = new CodeGen();
 
   function handleClick(type: string) {
     if (type === 'Download') {
-
+      setModalTitle('Download')
+      setModalBody('Not implemented yet')
+      setShowInvokeModal(true)
     }
     if (type === 'Copy') {  
       const code = codeGen.generateCode()
       navigator.clipboard.writeText(code)
     }
+    if (type === 'Deploy') {
+      setModalTitle('Deploy')
+      setModalBody('Not implemented yet')
+      setShowInvokeModal(true)
+    }
     if (type === 'Invoke') {
       let invokeGen = new InvokeCommandGen()
-      setCommand(invokeGen.generateInvokeCommand(contractType, contractName, contractParams))
-      console.log(command)
+      setModalTitle('Invoke contract')
+      setModalBody(invokeGen.generateInvokeCommand(contractType, contractName, contractParams))
+      setShowInvokeModal(true)
+    }
+    if (type === 'Open') {
+      setModalTitle('Open in Pulsar')
+      setModalBody('Not implemented yet')
+      setShowInvokeModal(true)
+    }
+    if (type === 'Compile') {
+      setModalTitle('Compile')
+      setModalBody('Not implemented yet')
       setShowInvokeModal(true)
     }
   }
@@ -40,7 +58,7 @@ export function App() {
     <div className="App" data-bs-theme="dark">
       <div className="container d-flex flex-column">
         <div className="row flex-grow-1">
-          <div className="col-4"><Toolbox contractName={contractName} onContractNameChanged={setContractName}
+          <div className="col-4 position-relative"><Toolbox contractName={contractName} onContractNameChanged={setContractName}
                                           contractType={contractType} onContractTypeChanged={setContractType}
                                           author={author} onAuthorChanged={setAuthor} 
                                           license={license} onLicenseChanged={setLicense} 
@@ -54,10 +72,10 @@ export function App() {
           >
             <Modal show={showInvokeModal} onHide={handleInvokeModalClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Invoke contract</Modal.Title>
+                <Modal.Title>{modalTitle}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <p><pre><code>{command}</code></pre></p>
+                <p><pre><code>{modalBody}</code></pre></p>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={handleInvokeModalClose}>Close</Button>
