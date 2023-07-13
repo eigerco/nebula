@@ -5,7 +5,7 @@ import './Navbar.css'
 export function Navbar ({ currentPage }: any) {
   return (
     <div className="menu">
-    <Nav variant="tabs" defaultActiveKey={currentPage}>
+    <Nav variant="tabs" defaultActiveKey={currentPage} className="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
       <Nav.Item>
         <Nav.Link href="/">Readme</Nav.Link>
       </Nav.Item>

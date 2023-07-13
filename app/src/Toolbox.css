@@ -1,9 +1,5 @@
 .Toolbox {
   padding: 1rem;
-  background-color: #212529;
-  color: #adb5bd;
-  text-align: left;
-  /* position: fixed; */
   height: 100%;
 }
 
@@ -15,10 +11,6 @@
   display: block;
   margin-right: auto;
   margin-bottom: 10px;
-}
-
-.footer {
-  padding-bottom: 1em;
 }
 
 .buttons {

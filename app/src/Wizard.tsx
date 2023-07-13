@@ -8,7 +8,7 @@ import { InvokeCommandGen } from './codegen/invokecommandgen'
 import { Navbar } from './Navbar'
 
 export function Wizard () {
-  const [contractType, setContractType] = useState('Lottery')
+  const [contractTrait, setContractTrait] = useState('Lottery')
   const [contractName, setContractName] = useState('MyContract')
   const [contractParams, setContractParams] = useState([])
   const [author, setAuthor] = useState('')
@@ -26,7 +26,7 @@ export function Wizard () {
       setShowInvokeModal(true)
     }
     if (type === 'Copy') {
-      const code = codeGen.generateCode()
+      const code = codeGen.getCode()
       void navigator.clipboard.writeText(code)
     }
     if (type === 'Deploy') {
@@ -39,7 +39,7 @@ export function Wizard () {
       setModalTitle('Invoke contract')
       setModalBody(
         invokeGen.generateInvokeCommand(
-          contractType,
+          contractTrait,
           contractName,
           contractParams
         )
@@ -64,14 +64,13 @@ export function Wizard () {
   return (
     <div className="Wizard">
       <Navbar currentPage='/wizard'/>
-      <div className="container d-flex flex-column">
         <div className="row flex-grow-1">
-          <div className="col-4 position-relative">
+          <div className="col-3">
             <Toolbox
               contractName={contractName}
               onContractNameChanged={setContractName}
-              contractType={contractType}
-              onContractTypeChanged={setContractType}
+              contractTrait={contractTrait}
+              onContractTraitChanged={setContractTrait}
               author={author}
               onAuthorChanged={setAuthor}
               license={license}
@@ -80,11 +79,10 @@ export function Wizard () {
               handleClick={handleClick}
             />
           </div>
-          <div className="col-7">
+          <div className="col-8">
             <Editor
-              contractType={contractType}
+              contractTrait={contractTrait}
               contractName={contractName}
-              params={contractParams}
               author={author}
               license={license}
               codeGen={codeGen}
@@ -113,7 +111,6 @@ export function Wizard () {
             </Modal>
           </div>
         </div>
-      </div>
     </div>
   )
 }

@@ -3,16 +3,15 @@ import Highlight from 'react-highlight'
 import 'highlight.js/styles/github-dark.css'
 
 export function Editor ({
-  contractType,
+  contractTrait,
   codeGen,
   contractName,
-  params,
   author,
   license
 }: any) {
-  codeGen.setHeader(author, license)
-  codeGen.setContractCode(contractType, contractName, params)
-  const contractCode = codeGen.generateCode()
+  codeGen.generateHeader(author, license)
+  codeGen.generateContractCode(contractTrait, contractName)
+  const contractCode = codeGen.getCode()
 
   return (
     <div className="Editor">

@@ -7,8 +7,8 @@ import logo from './logo.png'
 export function Toolbox ({
   contractName,
   onContractNameChanged,
-  contractType,
-  onContractTypeChanged,
+  contractTrait,
+  onContractTraitChanged,
   updateParams,
   author,
   onAuthorChanged,
@@ -35,7 +35,7 @@ export function Toolbox ({
         <span className="input-group-text">Contract trait</span>
         <Form.Select
           className="p-2"
-          onChange={e => onContractTypeChanged(e.target.value)}
+          onChange={e => onContractTraitChanged(e.target.value)}
         >
           <option>Lottery</option>
           <option>Voting</option>
@@ -109,38 +109,34 @@ export function Toolbox ({
           </div>
         </div>
       </div>
-      <div className="input-group mb-2">
-        <label className="params">Init params:</label>
-        <div className="contract-params">
-          <ContractParams
-            contractType={contractType}
-            updateParams={updateParams}
-          />
-        </div>
+      <label className="params">Init params:</label>
+      <div className="contract-params">
+        <ContractParams
+          contractTrait={contractTrait}
+          updateParams={updateParams}
+        />
       </div>
-      <div className="footer">
-        <div className="input-group mb-2">
-          <span className="input-group-text">Author</span>
-          <input
-            type="text"
-            className="form-control"
-            aria-label="License"
-            aria-describedby="basic-addon1"
-            value={author}
-            onChange={e => onAuthorChanged(e.target.value)}
-          />
-        </div>
-        <div className="input-group mb-2">
-          <span className="input-group-text">License</span>
-          <input
-            type="text"
-            className="form-control"
-            aria-label="License"
-            aria-describedby="basic-addon1"
-            value={license}
-            onChange={e => onLicenseChanged(e.target.value)}
-          />
-        </div>
+      <div className="input-group mb-2">
+        <span className="input-group-text">Author</span>
+        <input
+          type="text"
+          className="form-control"
+          aria-label="License"
+          aria-describedby="basic-addon1"
+          value={author}
+          onChange={e => onAuthorChanged(e.target.value)}
+        />
+      </div>
+      <div className="input-group mb-2">
+        <span className="input-group-text">License</span>
+        <input
+          type="text"
+          className="form-control"
+          aria-label="License"
+          aria-describedby="basic-addon1"
+          value={license}
+          onChange={e => onLicenseChanged(e.target.value)}
+        />
       </div>
     </div>
   )

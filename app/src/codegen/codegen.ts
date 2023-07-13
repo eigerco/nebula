@@ -5,7 +5,7 @@ export class CodeGen {
   private header = ''
   private contractCode = ''
 
-  public setHeader (author: string, license: string) {
+  public generateHeader (author: string, license: string): string {
     this.header = ''
     if (author !== '') {
       this.header = `//author: ${author}\n`
@@ -13,20 +13,22 @@ export class CodeGen {
     if (license !== '') {
       this.header += `//license: ${license}\n`
     }
+    return this.header
   }
 
-  public setContractCode (type: string, name: string, params: any[]) {
+  public generateContractCode (trait: string, name: string): string {
     this.contractCode = ''
-    if (type === 'Lottery') {
+    if (trait === 'Lottery') {
       const lotteryCodeGen = new LotteryCodeGen()
       this.contractCode = lotteryCodeGen.generateCode(name)
-    } else if (type === 'Voting') {
+    } else if (trait === 'Voting') {
       const votingCodeGen = new VotingCodeGen()
       this.contractCode = votingCodeGen.generateCode(name)
     }
+    return this.contractCode
   }
 
-  public generateCode (): string {
+  public getCode (): string {
     return this.header + '\n' + this.contractCode
   }
 }
