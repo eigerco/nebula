@@ -155,16 +155,14 @@ fn calculate_winners(
     const maxWinnersCount: number = params[2]
     const ticketPrice: number = params[3]
 
-    return `
-    soroban contract invoke
-    --wasm ${name}.wasm
-    --id 1
-    --
-    init
-      --admin ${admin}
-      --token ${token}
-      --max_winners_count ${maxWinnersCount}
-      --ticket_price ${ticketPrice}
-    `
+    return `soroban contract invoke
+--wasm ${name}.wasm
+--id 1
+--
+init
+    --admin ${admin}
+    --token ${token}
+    --max_winners_count ${maxWinnersCount}
+    --ticket_price ${ticketPrice}`
   }
 }

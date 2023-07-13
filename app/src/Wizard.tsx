@@ -6,6 +6,7 @@ import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
 import { InvokeCommandGen } from './codegen/invokecommandgen'
 import { Navbar } from './Navbar'
+import './Wizard.css'
 
 export function Wizard() {
   const [contractTrait, setContractTrait] = useState('Lottery')
@@ -16,10 +17,12 @@ export function Wizard() {
   const [showInvokeModal, setShowInvokeModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
   const [modalBody, setModalBody] = useState('')
+  const [modalBackground, setModalBackground] = useState('console')
 
   const codeGen = new CodeGen()
 
   function handleClick(type: string) {
+    setModalBackground('normal')
     if (type === 'Download') {
       setModalTitle('Download')
       setModalBody('Not implemented yet')
@@ -37,6 +40,7 @@ export function Wizard() {
     if (type === 'Invoke') {
       const invokeGen = new InvokeCommandGen()
       setModalTitle('Invoke contract')
+      setModalBackground('console')
       setModalBody(
         invokeGen.generateInvokeCommand(
           contractTrait,
@@ -59,6 +63,16 @@ export function Wizard() {
   }
   const handleInvokeModalClose = () => {
     setShowInvokeModal(false)
+  }
+
+  function handleCopyToClipboard() {
+    const invokeGen = new InvokeCommandGen()
+    const invokeCode = invokeGen.generateInvokeCommand(
+      contractTrait,
+      contractName,
+      contractParams
+    )
+    void navigator.clipboard.writeText(invokeCode)
   }
 
   return (
@@ -97,14 +111,19 @@ export function Wizard() {
               <Modal.Title>{modalTitle}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <p>
-                <pre>
-                  <code>{modalBody}</code>
-                </pre>
-              </p>
+              <pre className={modalBackground}>
+                <code>{modalBody}</code>
+              </pre>
             </Modal.Body>
             <Modal.Footer>
+              {modalBackground === 'console' && (
+                <Button variant="secondary" onClick={handleCopyToClipboard}>
+                  <i className="bi bi-clipboard"></i>
+                  Copy to clipboard
+                </Button>
+              )}
               <Button variant="secondary" onClick={handleInvokeModalClose}>
+                <i className="bi bi-x-circle"></i>
                 Close
               </Button>
             </Modal.Footer>

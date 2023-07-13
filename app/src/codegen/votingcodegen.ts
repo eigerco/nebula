@@ -205,16 +205,14 @@ impl Proposal {
     const targetApprovalRate: number = params[2]
     const totalVoters: number = params[3]
 
-    return `
-    soroban contract invoke
-    --wasm ${name}.wasm
-    --id 1
-    --
-    init
-      --admin ${admin}
-      --voting_period_secs ${votingPeriod}
-      --target_approval_rate_bps ${targetApprovalRate}
-      --total_voters ${totalVoters}
-    `
+    return `soroban contract invoke
+--wasm ${name}.wasm
+--id 1
+--
+init
+    --admin ${admin}
+    --voting_period_secs ${votingPeriod}
+    --target_approval_rate_bps ${targetApprovalRate}
+    --total_voters ${totalVoters}`
   }
 }
