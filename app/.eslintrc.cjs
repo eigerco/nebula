@@ -22,6 +22,7 @@ module.exports = {
   },
   ignorePatterns: ["react-app-env.d.ts", "reportWebVitals.ts"],
   rules: {
-    "@typescript-eslint/explicit-function-return-type": 0
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "@typescript-eslint/space-before-function-paren": 0
   },
 };

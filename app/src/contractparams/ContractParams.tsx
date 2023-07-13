@@ -3,7 +3,7 @@ import { DefaultParams } from './DefaultParams'
 import { LotteryParams } from './LotteryParams'
 import { VotingParams } from './VotingParams'
 
-export function ContractParams ({ contractTrait, updateParams }: any) {
+export function ContractParams({ contractTrait, updateParams }: any) {
   if (contractTrait === 'Lottery') {
     return <LotteryParams updateParams={updateParams} />
   }

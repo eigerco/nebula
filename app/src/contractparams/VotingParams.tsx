@@ -9,20 +9,20 @@ export class VotingParams extends React.Component<Props> {
     adminAccount: '',
     votingPeriod: 3600,
     targetApprovalRateBps: 5000,
-    totalVoters: 2
+    totalVoters: 2,
   }
 
-  constructor (props: any) {
+  constructor(props: any) {
     super(props)
     this.props.updateParams([
       this.state.adminAccount,
       this.state.votingPeriod,
       this.state.targetApprovalRateBps,
-      this.state.totalVoters
+      this.state.totalVoters,
     ])
   }
 
-  render () {
+  render() {
     return (
       <form>
         <div className="LotteryParams">
@@ -40,7 +40,7 @@ export class VotingParams extends React.Component<Props> {
                   e.target.value,
                   this.state.votingPeriod,
                   this.state.targetApprovalRateBps,
-                  this.state.totalVoters
+                  this.state.totalVoters,
                 ])
               }}
             />
@@ -61,7 +61,7 @@ export class VotingParams extends React.Component<Props> {
                   this.state.adminAccount,
                   e.target.value,
                   this.state.targetApprovalRateBps,
-                  this.state.totalVoters
+                  this.state.totalVoters,
                 ])
               }}
             />
@@ -82,7 +82,7 @@ export class VotingParams extends React.Component<Props> {
                   this.state.adminAccount,
                   this.state.votingPeriod,
                   e.target.value,
-                  this.state.totalVoters
+                  this.state.totalVoters,
                 ])
               }}
             />
@@ -103,7 +103,7 @@ export class VotingParams extends React.Component<Props> {
                   this.state.adminAccount,
                   this.state.votingPeriod,
                   this.state.targetApprovalRateBps,
-                  e.target.value
+                  e.target.value,
                 ])
               }}
             />

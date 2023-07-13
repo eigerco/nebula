@@ -1,5 +1,5 @@
 export class VotingCodeGen {
-  public generateCode (name: string) {
+  public generateCode(name: string) {
     return `
 #![no_std]
 
@@ -199,7 +199,7 @@ impl Proposal {
     `
   }
 
-  generateInvokeCommand (name: string, params: any[]) {
+  generateInvokeCommand(name: string, params: any[]) {
     const admin: string = params[0]
     const votingPeriod: number = params[1]
     const targetApprovalRate: number = params[2]

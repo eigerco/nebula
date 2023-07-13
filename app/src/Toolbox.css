@@ -4,7 +4,7 @@
 }
 
 .logo {
-  background-image: "../public/logo192.png";
+  background-image: '../public/logo192.png';
   width: 64px;
   height: 64px;
   margin-left: auto;
@@ -31,7 +31,7 @@
 }
 
 .contract-params {
-  border:1px solid #4e4e4e;
+  border: 1px solid #4e4e4e;
   margin-bottom: 1em;
   margin-top: 1em;
   padding: 1em;

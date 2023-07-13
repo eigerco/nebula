@@ -7,7 +7,7 @@ import { Toolbox } from './Toolbox'
 import { InvokeCommandGen } from './codegen/invokecommandgen'
 import { Navbar } from './Navbar'
 
-export function Wizard () {
+export function Wizard() {
   const [contractTrait, setContractTrait] = useState('Lottery')
   const [contractName, setContractName] = useState('MyContract')
   const [contractParams, setContractParams] = useState([])
@@ -19,7 +19,7 @@ export function Wizard () {
 
   const codeGen = new CodeGen()
 
-  function handleClick (type: string) {
+  function handleClick(type: string) {
     if (type === 'Download') {
       setModalTitle('Download')
       setModalBody('Not implemented yet')
@@ -63,54 +63,54 @@ export function Wizard () {
 
   return (
     <div className="Wizard">
-      <Navbar currentPage='/wizard'/>
-        <div className="row flex-grow-1">
-          <div className="col-3">
-            <Toolbox
-              contractName={contractName}
-              onContractNameChanged={setContractName}
-              contractTrait={contractTrait}
-              onContractTraitChanged={setContractTrait}
-              author={author}
-              onAuthorChanged={setAuthor}
-              license={license}
-              onLicenseChanged={setLicense}
-              updateParams={setContractParams}
-              handleClick={handleClick}
-            />
-          </div>
-          <div className="col-8">
-            <Editor
-              contractTrait={contractTrait}
-              contractName={contractName}
-              author={author}
-              license={license}
-              codeGen={codeGen}
-            />
-          </div>
-          <div
-            className="modal show"
-            style={{ display: 'block', position: 'initial' }}
-          >
-            <Modal show={showInvokeModal} onHide={handleInvokeModalClose}>
-              <Modal.Header closeButton>
-                <Modal.Title>{modalTitle}</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <p>
-                  <pre>
-                    <code>{modalBody}</code>
-                  </pre>
-                </p>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={handleInvokeModalClose}>
-                  Close
-                </Button>
-              </Modal.Footer>
-            </Modal>
-          </div>
+      <Navbar currentPage="/wizard" />
+      <div className="row flex-grow-1">
+        <div className="col-3">
+          <Toolbox
+            contractName={contractName}
+            onContractNameChanged={setContractName}
+            contractTrait={contractTrait}
+            onContractTraitChanged={setContractTrait}
+            author={author}
+            onAuthorChanged={setAuthor}
+            license={license}
+            onLicenseChanged={setLicense}
+            updateParams={setContractParams}
+            handleClick={handleClick}
+          />
         </div>
+        <div className="col-8">
+          <Editor
+            contractTrait={contractTrait}
+            contractName={contractName}
+            author={author}
+            license={license}
+            codeGen={codeGen}
+          />
+        </div>
+        <div
+          className="modal show"
+          style={{ display: 'block', position: 'initial' }}
+        >
+          <Modal show={showInvokeModal} onHide={handleInvokeModalClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>{modalTitle}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>
+                <pre>
+                  <code>{modalBody}</code>
+                </pre>
+              </p>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleInvokeModalClose}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </div>
+      </div>
     </div>
   )
 }

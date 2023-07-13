@@ -9,20 +9,20 @@ export class LotteryParams extends React.Component<Props> {
     adminAccount: '',
     token: '',
     winners: 1,
-    ticketPrice: 1
+    ticketPrice: 1,
   }
 
-  constructor (props: any) {
+  constructor(props: any) {
     super(props)
     this.props.updateParams([
       this.state.adminAccount,
       this.state.token,
       this.state.winners,
-      this.state.ticketPrice
+      this.state.ticketPrice,
     ])
   }
 
-  render () {
+  render() {
     return (
       <form>
         <div className="LotteryParams">
@@ -40,7 +40,7 @@ export class LotteryParams extends React.Component<Props> {
                   e.target.value,
                   this.state.token,
                   this.state.winners,
-                  this.state.ticketPrice
+                  this.state.ticketPrice,
                 ])
               }}
             />
@@ -59,7 +59,7 @@ export class LotteryParams extends React.Component<Props> {
                   this.state.adminAccount,
                   e.target.value,
                   this.state.winners,
-                  this.state.ticketPrice
+                  this.state.ticketPrice,
                 ])
               }}
             />
@@ -80,7 +80,7 @@ export class LotteryParams extends React.Component<Props> {
                   this.state.adminAccount,
                   this.state.token,
                   e.target.value,
-                  this.state.ticketPrice
+                  this.state.ticketPrice,
                 ])
               }}
             />
@@ -101,7 +101,7 @@ export class LotteryParams extends React.Component<Props> {
                   this.state.adminAccount,
                   this.state.token,
                   this.state.winners,
-                  e.target.value
+                  e.target.value,
                 ])
               }}
             />

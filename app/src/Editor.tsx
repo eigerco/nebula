@@ -2,12 +2,12 @@ import React from 'react'
 import Highlight from 'react-highlight'
 import 'highlight.js/styles/github-dark.css'
 
-export function Editor ({
+export function Editor({
   contractTrait,
   codeGen,
   contractName,
   author,
-  license
+  license,
 }: any) {
   codeGen.generateHeader(author, license)
   codeGen.generateContractCode(contractTrait, contractName)

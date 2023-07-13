@@ -4,7 +4,7 @@ import { ContractParams } from './contractparams/ContractParams'
 import './Toolbox.css'
 import logo from './logo.png'
 
-export function Toolbox ({
+export function Toolbox({
   contractName,
   onContractNameChanged,
   contractTrait,
@@ -14,7 +14,7 @@ export function Toolbox ({
   onAuthorChanged,
   license,
   onLicenseChanged,
-  handleClick
+  handleClick,
 }: any) {
   return (
     <div className="Toolbox">

@@ -5,12 +5,12 @@ interface Props {
 }
 
 export class DefaultParams extends React.Component<Props> {
-  constructor (props: any) {
+  constructor(props: any) {
     super(props)
     this.props.updateParams([])
   }
 
-  render () {
+  render() {
     return <div></div>
   }
 }

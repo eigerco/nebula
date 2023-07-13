@@ -5,7 +5,7 @@ export class CodeGen {
   private header = ''
   private contractCode = ''
 
-  public generateHeader (author: string, license: string): string {
+  public generateHeader(author: string, license: string): string {
     this.header = ''
     if (author !== '') {
       this.header = `//author: ${author}\n`
@@ -16,7 +16,7 @@ export class CodeGen {
     return this.header
   }
 
-  public generateContractCode (trait: string, name: string): string {
+  public generateContractCode(trait: string, name: string): string {
     this.contractCode = ''
     if (trait === 'Lottery') {
       const lotteryCodeGen = new LotteryCodeGen()
@@ -28,7 +28,7 @@ export class CodeGen {
     return this.contractCode
   }
 
-  public getCode (): string {
+  public getCode(): string {
     return this.header + '\n' + this.contractCode
   }
 }

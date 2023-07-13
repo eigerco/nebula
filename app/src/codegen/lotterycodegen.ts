@@ -1,5 +1,5 @@
 export class LotteryCodeGen {
-  public generateCode (name: string) {
+  public generateCode(name: string) {
     return `
 #![no_std]
 
@@ -149,7 +149,7 @@ fn calculate_winners(
     `
   }
 
-  generateInvokeCommand (name: string, params: any[]) {
+  generateInvokeCommand(name: string, params: any[]) {
     const admin: string = params[0]
     const token: string = params[1]
     const maxWinnersCount: number = params[2]
