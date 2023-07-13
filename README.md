@@ -1,7 +1,7 @@
 # Nebula
 
 <p align="center">
-<img src="" alt="nebula-logo" width="300"/>
+<img src="app/src/logo.png" alt="nebula-logo" width="300"/>
 </p>
 
 Nebula is a tool for easing development of [Soroban](https://soroban.stellar.org/docs) smart contracts. Its integrated by a Wizard and a set of pre-coded, community audited smart contracts. 
