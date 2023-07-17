@@ -1,10 +1,12 @@
 #![cfg(test)]
 
+extern crate std;
+
 use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient};
 use rstest::rstest;
 use soroban_sdk::{
-    testutils::{Address as _, Ledger},
-    Address, Env, IntoVal, Map, Symbol,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Ledger},
+    Address, Env, IntoVal, Map, Symbol, Val, Vec,
 };
 
 #[test]
@@ -16,14 +18,29 @@ fn proposal_creation() {
     let id = 1001u64;
     client.create_custom_proposal(&id, &3600, &50_00, &100);
 
+    assert_auth(
+        &env.auths(),
+        0,
+        admin,
+        client.address,
+        Symbol::new(&env, "create_custom_proposal"),
+        (1001u64, 3600u64, 50_00u32, 100u32).into_val(&env),
+    )
+}
+
+fn assert_auth(
+    auths: &std::vec::Vec<(Address, AuthorizedInvocation)>,
+    idx: usize,
+    call_addr: Address,
+    auth_addr: Address,
+    func: Symbol,
+    args: Vec<Val>,
+) {
+    let auth = auths.get(idx).unwrap();
+    assert_eq!(auth.0, call_addr);
     assert_eq!(
-        env.auths(),
-        [(
-            admin,
-            client.address.clone(),
-            Symbol::new(&env, "create_custom_proposal"),
-            (1001u64, 3600u64, 50_00u32, 100u32).into_val(&env)
-        )]
+        auth.1.function,
+        AuthorizedFunction::Contract((auth_addr, func, args))
     );
 }
 
@@ -38,7 +55,7 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
 }
 
 #[test]
-#[should_panic(expected = "ContractError(5)")]
+#[should_panic(expected = "Error(Contract, #5)")]
 fn cannot_create_same_id_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
@@ -49,7 +66,7 @@ fn cannot_create_same_id_proposals() {
 }
 
 #[test]
-#[should_panic(expected = "NotAuthorized")]
+#[should_panic(expected = "Error(Auth, InvalidAction)")]
 fn only_admin_can_create_proposals() {
     let (_, client, _) = setup_test();
     client.create_custom_proposal(&1, &3600, &50_00, &2);
@@ -67,7 +84,7 @@ fn voter_can_vote_proposals() {
 }
 
 #[test]
-#[should_panic(expected = "ContractError(4)")]
+#[should_panic(expected = "Error(Contract, #4)")]
 fn voter_cannot_vote_a_proposal_twice() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
@@ -158,7 +175,7 @@ fn proposal_calculate_approval_rate(
 }
 
 #[test]
-#[should_panic(expected = "ContractError(8)")]
+#[should_panic(expected = "Error(Contract, #8)")]
 fn cannot_create_id0_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
