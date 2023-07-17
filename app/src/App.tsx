@@ -10,8 +10,17 @@ export function App() {
       <Routes>
         <Route path={'/'} element={<Wizard />} />
         <Route path={'/readme'} element={<Readme />} />
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>
+  )
+}
+
+function PageNotFound() {
+  return (
+    <div>
+      <h2>404 Page not found</h2>
+    </div>
   )
 }
 
