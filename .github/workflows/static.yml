@@ -1,6 +1,11 @@
 # Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 
+defaults:
+  run:
+    shell: bash
+    working-directory: app
+
 on:
   push:
     branches: [ main ]
@@ -44,7 +49,7 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload entire repository
-          path: '.'
+          path: './build'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
