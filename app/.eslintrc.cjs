@@ -20,5 +20,10 @@ module.exports = {
     sourceType: "module",
     project: true
   },
-  rules: {},
+  ignorePatterns: ["react-app-env.d.ts", "reportWebVitals.ts"],
+  rules: {
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "@typescript-eslint/space-before-function-paren": 0,
+    "@typescript-eslint/comma-dangle": 0
+  },
 };
