@@ -14,7 +14,7 @@ export function Navbar({ currentPage }: any) {
           <Nav.Link href="/nebula/">Readme</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link href="/nebula/wizard">Wizard</Nav.Link>
+          <Nav.Link href="/nebula/wizard/">Wizard</Nav.Link>
         </Nav.Item>
       </Nav>
     </div>
