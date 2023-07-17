@@ -8,8 +8,8 @@ export function App() {
   return (
     <BrowserRouter basename="/nebula">
       <Routes>
-        <Route path={'/'} element={<Readme />} />
-        <Route path={'/wizard'} element={<Wizard />} />
+        <Route path={'/'} element={<Wizard />} />
+        <Route path={'/readme'} element={<Readme />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>
