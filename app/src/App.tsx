@@ -6,7 +6,7 @@ import { Readme } from './Readme'
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename='/nebula'>
       <Routes>
         <Route path={'/'} element={<Wizard />} />
         <Route path={'/readme'} element={<Readme />} />
