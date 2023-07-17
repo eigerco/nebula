@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use soroban_sdk::{
-    contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec,
+    contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec, contract,
 };
 
 #[derive(Clone, Copy)]
@@ -27,6 +27,7 @@ pub enum Error {
     MinParticipantsNotSatisfied = 3,
 }
 
+#[contract]
 pub struct LotteryContract;
 
 #[contractimpl]
@@ -39,7 +40,7 @@ impl LotteryContract {
         ticket_price: i128,
     ) {
         admin.require_auth();
-        let storage = env.storage();
+        let storage = env.storage().persistent();
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
@@ -52,9 +53,9 @@ impl LotteryContract {
     pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
         by.require_auth();
 
-        let storage = env.storage();
-        let price: i128 = storage.get(&DataKey::TicketPrice).unwrap().unwrap();
-        let token: Address = storage.get(&DataKey::Token).unwrap().unwrap();
+        let storage = env.storage().persistent();
+        let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
+        let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token);
 
         if token_client.balance(&by) <= price {
@@ -63,33 +64,37 @@ impl LotteryContract {
 
         token_client.transfer(&by, &env.current_contract_address(), &price);
 
-        let mut candidates: Vec<Address> = storage.get(&DataKey::Candidates).unwrap().unwrap();
+        let mut candidates = storage
+            .get::<_, Vec<Address>>(&DataKey::Candidates)
+            .unwrap();
         candidates.push_back(by);
         storage.set(&DataKey::Candidates, &candidates);
         Ok(candidates.len())
     }
 
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
-        let storage = env.storage();
+        let storage = env.storage().persistent();
 
-        let admin: Address = storage.get(&DataKey::Admin).unwrap().unwrap();
+        let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();
 
-        if storage.get(&DataKey::AlreadyPlayed).unwrap().unwrap() {
+        if storage.get::<_, bool>(&DataKey::AlreadyPlayed).unwrap() {
             return Err(Error::AlreadyPlayed);
         }
 
-        let token: Address = storage.get(&DataKey::Token).unwrap().unwrap();
+        let token: Address = storage.get::<_, Address>(&DataKey::Token).unwrap();
 
         let token_client = token::Client::new(&env, &token);
 
-        let candidates: Vec<Address> = storage.get(&DataKey::Candidates).unwrap().unwrap();
+        let candidates = storage
+            .get::<_, Vec<Address>>(&DataKey::Candidates)
+            .unwrap();
 
         if candidates.is_empty() {
             return Err(Error::MinParticipantsNotSatisfied);
         }
 
-        let max_winners_count: u32 = storage.get(&DataKey::MaxWinnerCount).unwrap().unwrap();
+        let max_winners_count = storage.get::<_, u32>(&DataKey::MaxWinnerCount).unwrap();
         let players = candidates.len();
 
         // Calculate the winners
@@ -105,9 +110,9 @@ impl LotteryContract {
         let payout = balance / i128::from(max_winners_count);
 
         for winner in winners_idx {
-            let candidate = candidates.get(winner.unwrap()).unwrap().unwrap();
+            let candidate = candidates.get(winner).unwrap();
             token_client.transfer(&env.current_contract_address(), &candidate, &payout);
-            let topics = (Symbol::short("winner"), candidate);
+            let topics = (Symbol::new(&env, "winner"), candidate);
             env.events().publish(topics, payout);
         }
         storage.set(&DataKey::AlreadyPlayed, &true);

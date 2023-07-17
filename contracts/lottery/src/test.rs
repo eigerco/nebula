@@ -1,11 +1,14 @@
 #![cfg(test)]
 
+extern crate std;
+
 use crate::calculate_winners;
 
 use super::{LotteryContract, LotteryContractClient};
+
 use soroban_sdk::{
-    testutils::{Address as _, Events},
-    token, vec, Address, Env, IntoVal, Symbol,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events},
+    token, vec, Address, Env, IntoVal, Symbol, Val, Vec,
 };
 
 #[test]
@@ -19,19 +22,36 @@ fn admin_is_identified_on_init() {
 
     client.init(&client.address, &target_token.address, &2, &100);
 
-    assert_eq!(
-        env.auths(),
-        [(
-            client.address.clone(),
-            client.address.clone(),
-            Symbol::new(&env, "init"),
-            (&client.address, &target_token.address, 2u32, 100i128).into_val(&env)
-        )]
+    let auths = env.auths();
+
+    assert_auth(
+        &auths,
+        0,
+        client.address.clone(),
+        client.address.clone(),
+        Symbol::new(&env, "init"),
+        (&client.address, &target_token.address, 2u32, 100i128).into_val(&env),
     )
 }
 
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::Client<'a> {
-    token::Client::new(e, &e.register_stellar_asset_contract(admin.clone()))
+fn assert_auth(
+    auths: &std::vec::Vec<(Address, AuthorizedInvocation)>,
+    idx: usize,
+    call_addr: Address,
+    auth_addr: Address,
+    func: Symbol,
+    args: Vec<Val>,
+) {
+    let auth = auths.get(idx).unwrap();
+    assert_eq!(auth.0, call_addr);
+    assert_eq!(
+        auth.1.function,
+        AuthorizedFunction::Contract((auth_addr, func, args))
+    );
+}
+
+fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::AdminClient<'a> {
+    token::AdminClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
 #[test]
@@ -54,27 +74,21 @@ fn buy_ticket_works_as_expected() {
     let candidates = client.buy_ticket(&ticket_buyer);
 
     assert_eq!(1, candidates);
-    assert_eq!(
-        env.auths(),
-        [
-            (
-                ticket_buyer.clone(),
-                client.address.clone(),
-                Symbol::new(&env, "buy_ticket"),
-                (ticket_buyer.clone(),).into_val(&env)
-            ),
-            (
-                ticket_buyer.clone(),
-                test_token_client.address.clone(),
-                Symbol::new(&env, "transfer"),
-                (&ticket_buyer, &contract_id, 100i128).into_val(&env)
-            )
-        ]
-    )
+
+    let auths = env.auths();
+
+    assert_auth(
+        &auths,
+        0,
+        ticket_buyer.clone(),
+        client.address.clone(),
+        Symbol::new(&env, "buy_ticket"),
+        (ticket_buyer.clone(),).into_val(&env),
+    );
 }
 
 #[test]
-#[should_panic(expected = "ContractError(1)")]
+#[should_panic(expected = "Error(Contract, #1)")]
 fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
     let env = Env::default();
     env.mock_all_auths();
@@ -132,14 +146,13 @@ fn play_raffle_works() {
 
     client.play_raffle(&666);
 
-    assert_eq!(
-        env.auths(),
-        [(
-            client.address.clone(),
-            client.address.clone(),
-            Symbol::new(&env, "play_raffle"),
-            (666u64,).into_val(&env)
-        )]
+    assert_auth(
+        &env.auths(),
+        0,
+        client.address.clone(),
+        client.address.clone(),
+        Symbol::new(&env, "play_raffle"),
+        (666u64,).into_val(&env),
     );
 
     let last_event = env.events().all().slice(env.events().all().len() - 1..);
@@ -149,7 +162,7 @@ fn play_raffle_works() {
             &env,
             (
                 contract_id.clone(),
-                (Symbol::short("winner"), &ticket_buyer_2).into_val(&env),
+                (Symbol::new(&env, "winner"), &ticket_buyer_2).into_val(&env),
                 200i128.into_val(&env)
             )
         ]
@@ -157,7 +170,7 @@ fn play_raffle_works() {
 }
 
 #[test]
-#[should_panic(expected = "ContractError(2)")]
+#[should_panic(expected = "Error(Contract, #2)")]
 fn play_raffle_cannot_be_invoked_twice() {
     let env = Env::default();
     env.mock_all_auths();
@@ -184,7 +197,7 @@ fn play_raffle_cannot_be_invoked_twice() {
 }
 
 #[test]
-#[should_panic(expected = "ContractError(3)")]
+#[should_panic(expected = "Error(Contract, #3)")]
 fn raffle_cannot_be_played_if_not_enough_participants() {
     let env = Env::default();
     env.mock_all_auths();
