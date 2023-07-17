@@ -6,6 +6,9 @@ defaults:
     shell: bash
     working-directory: app
 
+env: 
+  PUBLIC_URL: "."
+
 on:
   push:
     branches: [ main ]
