@@ -77,7 +77,7 @@ export function Wizard() {
 
   return (
     <div className="Wizard">
-      <Navbar currentPage="/" />
+      <Navbar currentPage="/nebula/" />
       <div className="row flex-grow-1">
         <div className="col-3">
           <Toolbox
