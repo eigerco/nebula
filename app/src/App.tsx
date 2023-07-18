@@ -1,18 +1,18 @@
 import React from 'react'
 import './App.css'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { Wizard } from './Wizard'
 import { Readme } from './Readme'
 
 export function App() {
   return (
-    <BrowserRouter basename="/nebula">
+    <HashRouter>
       <Routes>
-        <Route path={'/nebula/'} element={<Wizard />} />
-        <Route path={'/nebula/readme/'} element={<Readme />} />
+        <Route path='/' element={<Wizard />} />
+        <Route path='/readme' element={<Readme />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

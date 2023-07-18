@@ -4,7 +4,7 @@ import { Navbar } from './Navbar'
 export function Readme({ currentPage }: any) {
   return (
     <div>
-      <Navbar currentPage="/nebula/readme/" />
+      <Navbar currentPage="#/readme" />
       Readme...
     </div>
   )

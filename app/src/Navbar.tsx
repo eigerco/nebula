@@ -11,10 +11,10 @@ export function Navbar({ currentPage }: any) {
         className="navbar navbar-expand-md navbar-dark fixed-top bg-dark"
       >
         <Nav.Item>
-          <Nav.Link href="/nebula/">Wizard</Nav.Link>
+          <Nav.Link href="#/">Wizard</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link href="/nebula/readme/">Readme</Nav.Link>
+          <Nav.Link href="#/readme">Readme</Nav.Link>
         </Nav.Item>
       </Nav>
     </div>
