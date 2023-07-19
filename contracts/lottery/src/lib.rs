@@ -149,4 +149,6 @@ fn calculate_winners(
     winners.keys()
 }
 
+
+#[cfg(test)]
 mod test;
