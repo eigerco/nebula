@@ -197,7 +197,7 @@ fn play_raffle_cannot_be_invoked_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #3)")]
+#[should_panic(expected = "Error(Contract, #4)")]
 fn raffle_cannot_be_played_if_not_enough_participants() {
     let env = Env::default();
     env.mock_all_auths();

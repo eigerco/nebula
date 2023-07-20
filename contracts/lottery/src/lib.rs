@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use soroban_sdk::{
-    contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec, contract,
+    contract, contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec,
 };
 
 #[derive(Clone, Copy)]
@@ -24,7 +24,7 @@ enum DataKey {
 pub enum Error {
     InsufficientFunds = 1,
     AlreadyPlayed = 2,
-    MinParticipantsNotSatisfied = 3,
+    MinParticipantsNotSatisfied = 4,
 }
 
 #[contract]
@@ -148,7 +148,6 @@ fn calculate_winners(
     }
     winners.keys()
 }
-
 
 #[cfg(test)]
 mod test;
