@@ -1,21 +1,23 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, Address, ConversionError, Env, Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, Address,
+    ConversionError, Env, Map, Symbol,
 };
 
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
-    Conversion = 1,
-    KeyExpected = 2,
-    NotFound = 3,
-    AlreadyVoted = 4,
-    DuplicatedEntity = 5,
-    Overflow = 6,
-    VotingClosed = 7,
-    NotValidID = 8,
+    AlreadyInitialized = 1,
+    Conversion = 2,
+    KeyExpected = 3,
+    NotFound = 4,
+    AlreadyVoted = 5,
+    DuplicatedEntity = 6,
+    Overflow = 7,
+    VotingClosed = 8,
+    NotValidID = 9,
 }
 
 impl From<ConversionError> for Error {
@@ -27,12 +29,13 @@ impl From<ConversionError> for Error {
 #[contracttype]
 #[derive(Clone, Copy)]
 pub enum DataKey {
-    Admin = 0,
-    VoterList = 1,
-    Proposals = 2,
-    VotingPeriodSecs = 3,
-    TargetApprovalRate = 4,
-    TotalVoters = 5,
+    AlreadyInitialized = 0,
+    Admin = 1,
+    VoterList = 2,
+    Proposals = 3,
+    VotingPeriodSecs = 4,
+    TargetApprovalRate = 5,
+    TotalVoters = 6,
 }
 
 #[contract]
@@ -48,6 +51,15 @@ impl ProposalVotingContract {
         total_voters: u32,
     ) {
         let storage = env.storage().persistent();
+
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+
+        storage.set(&DataKey::AlreadyInitialized, &true);
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .

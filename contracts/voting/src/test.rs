@@ -55,7 +55,15 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #5)")]
+#[should_panic(expected = "Error(Contract, #1)")]
+fn cannot_initialize_voting_twice() {
+    let (env, client, admin) = setup_test();
+    env.mock_all_auths();
+    client.init(&admin, &3600, &50_00, &1000);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
 fn cannot_create_same_id_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
@@ -84,7 +92,7 @@ fn voter_can_vote_proposals() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #4)")]
+#[should_panic(expected = "Error(Contract, #5)")]
 fn voter_cannot_vote_a_proposal_twice() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
@@ -175,7 +183,7 @@ fn proposal_calculate_approval_rate(
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")]
+#[should_panic(expected = "Error(Contract, #9)")]
 fn cannot_create_id0_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
