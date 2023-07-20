@@ -55,6 +55,21 @@ fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::AdminClient<'a>
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #1)")]
+fn raffle_cannot_be_initialized_twice() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, LotteryContract);
+    let client = LotteryContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.init(&client.address, &test_token_client.address, &1, &100);
+    client.init(&client.address, &test_token_client.address, &1, &100);
+}
+
+#[test]
 fn buy_ticket_works_as_expected() {
     let env = Env::default();
     env.mock_all_auths();
@@ -88,7 +103,7 @@ fn buy_ticket_works_as_expected() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1)")]
+#[should_panic(expected = "Error(Contract, #2)")]
 fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
     let env = Env::default();
     env.mock_all_auths();
@@ -170,7 +185,7 @@ fn play_raffle_works() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")]
+#[should_panic(expected = "Error(Contract, #4)")]
 fn play_raffle_cannot_be_invoked_twice() {
     let env = Env::default();
     env.mock_all_auths();
@@ -197,7 +212,7 @@ fn play_raffle_cannot_be_invoked_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #4)")]
+#[should_panic(expected = "Error(Contract, #5)")]
 fn raffle_cannot_be_played_if_not_enough_participants() {
     let env = Env::default();
     env.mock_all_auths();

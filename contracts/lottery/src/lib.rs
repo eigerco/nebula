@@ -4,7 +4,8 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, token, Address, Env, Map, Symbol, Vec,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
+    Map, Symbol, Vec,
 };
 
 #[derive(Clone, Copy)]
@@ -15,16 +16,18 @@ enum DataKey {
     MaxWinnerCount = 3,
     TicketPrice = 4,
     Token = 5,
-    AlreadyPlayed = 6,
+    AlreadyInitialized = 6,
+    AlreadyPlayed = 7,
 }
 
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
-    InsufficientFunds = 1,
-    AlreadyPlayed = 2,
-    MinParticipantsNotSatisfied = 4,
+    AlreadyInitialized = 1,
+    InsufficientFunds = 2,
+    AlreadyPlayed = 4,
+    MinParticipantsNotSatisfied = 5,
 }
 
 #[contract]
@@ -41,6 +44,14 @@ impl LotteryContract {
     ) {
         admin.require_auth();
         let storage = env.storage().persistent();
+
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
@@ -48,6 +59,7 @@ impl LotteryContract {
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));
         storage.set(&DataKey::AlreadyPlayed, &false);
+        storage.set(&DataKey::AlreadyInitialized, &true);
     }
 
     pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
