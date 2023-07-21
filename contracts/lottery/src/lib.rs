@@ -26,8 +26,8 @@ enum DataKey {
 pub enum Error {
     AlreadyInitialized = 1,
     InsufficientFunds = 2,
-    AlreadyPlayed = 4,
-    MinParticipantsNotSatisfied = 5,
+    AlreadyPlayed = 3,
+    MinParticipantsNotSatisfied = 4,
 }
 
 #[contract]
