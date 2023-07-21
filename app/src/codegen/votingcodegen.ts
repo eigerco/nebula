@@ -4,21 +4,23 @@ export class VotingCodeGen {
 #![no_std]
 
 use soroban_sdk::{
-    contracterror, contractimpl, contracttype, Address, ConversionError, Env, Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, Address,
+    ConversionError, Env, Map, Symbol,
 };
 
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
-    Conversion = 1,
-    KeyExpected = 2,
-    NotFound = 3,
-    AlreadyVoted = 4,
-    DuplicatedEntity = 5,
-    Overflow = 6,
-    VotingClosed = 7,
-    NotValidID = 8,
+    AlreadyInitialized = 1,
+    Conversion = 2,
+    KeyExpected = 3,
+    NotFound = 4,
+    AlreadyVoted = 5,
+    DuplicatedEntity = 6,
+    Overflow = 7,
+    VotingClosed = 8,
+    NotValidID = 9,
 }
 
 impl From<ConversionError> for Error {
@@ -30,14 +32,16 @@ impl From<ConversionError> for Error {
 #[contracttype]
 #[derive(Clone, Copy)]
 pub enum DataKey {
-    Admin = 0,
-    VoterList = 1,
-    Proposals = 2,
-    VotingPeriodSecs = 3,
-    TargetApprovalRate = 4,
-    TotalVoters = 5,
+    AlreadyInitialized = 0,
+    Admin = 1,
+    VoterList = 2,
+    Proposals = 3,
+    VotingPeriodSecs = 4,
+    TargetApprovalRate = 5,
+    TotalVoters = 6,
 }
 
+#[contract]
 pub struct ${name};
 
 #[contractimpl]
@@ -49,29 +53,29 @@ impl VotingTrait for ${name} {
         target_approval_rate_bps: u32,
         total_voters: u32,
     ) {
-        env.storage().set(&DataKey::Admin, &admin);
-        env.storage()
-            .set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
+        let storage = env.storage().persistent();
+
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+
+        storage.set(&DataKey::AlreadyInitialized, &true);
+        storage.set(&DataKey::Admin, &admin);
+        storage.set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
-        env.storage()
-            .set(&DataKey::VotingPeriodSecs, &voting_period_secs);
-        env.storage()
-            .set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
-        env.storage().set(&DataKey::TotalVoters, &total_voters);
+        storage.set(&DataKey::VotingPeriodSecs, &voting_period_secs);
+        storage.set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
+        storage.set(&DataKey::TotalVoters, &total_voters);
     }
 
     pub fn create_proposal(env: Env, id: u64) -> Result<(), Error> {
-        let voting_period_secs = env
-            .storage()
-            .get(&DataKey::VotingPeriodSecs)
-            .unwrap()
-            .unwrap();
-        let target_approval_rate_bps = env
-            .storage()
-            .get(&DataKey::TargetApprovalRate)
-            .unwrap()
-            .unwrap();
-        let total_voters = env.storage().get(&DataKey::TotalVoters).unwrap().unwrap();
+        let storage = env.storage().persistent();
+        let voting_period_secs = storage.get::<_, u64>(&DataKey::VotingPeriodSecs).unwrap();
+        let target_approval_rate_bps = storage.get(&DataKey::TargetApprovalRate).unwrap();
+        let total_voters = storage.get::<_, u32>(&DataKey::TotalVoters).unwrap();
 
         Self::create_custom_proposal(
             env,
@@ -89,25 +93,26 @@ impl VotingTrait for ${name} {
         target_approval_rate_bps: u32,
         total_voters: u32,
     ) -> Result<(), Error> {
-        env.storage()
+        let storage = env.storage().persistent();
+
+        storage
             .get::<_, Address>(&DataKey::Admin)
-            .ok_or(Error::KeyExpected)??
+            .ok_or(Error::KeyExpected)?
             .require_auth();
 
         if id == 0 {
             return Err(Error::NotValidID);
         }
 
-        let mut storage = env
-            .storage()
+        let mut proposal_storage = storage
             .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
-            .ok_or(Error::KeyExpected)??;
+            .ok_or(Error::KeyExpected)?;
 
-        if storage.contains_key(id) {
+        if proposal_storage.contains_key(id) {
             return Err(Error::DuplicatedEntity);
         }
 
-        storage.set(
+        proposal_storage.set(
             id,
             Proposal {
                 id,
@@ -118,25 +123,26 @@ impl VotingTrait for ${name} {
                 total_voters,
             },
         );
-        env.storage().set(&DataKey::Proposals, &storage);
+        storage.set(&DataKey::Proposals, &proposal_storage);
         Ok(())
     }
 
     pub fn vote(env: Env, voter: Address, id: u64) -> Result<(), Error> {
         voter.require_auth();
 
-        let mut proposal_storage: Map<u64, Proposal> = env
-            .storage()
-            .get(&DataKey::Proposals)
-            .ok_or(Error::KeyExpected)??;
+        let storage = env.storage().persistent();
 
-        let mut proposal = proposal_storage.get(id).ok_or(Error::NotFound)??;
+        let mut proposal_storage = storage
+            .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
+            .ok_or(Error::KeyExpected)?;
+
+        let mut proposal = proposal_storage.get(id).ok_or(Error::NotFound)?;
 
         proposal.vote(env.ledger().timestamp(), voter)?;
         let updated_approval_rate = proposal.approval_rate_bps();
         proposal_storage.set(id, proposal);
 
-        env.storage().set(&DataKey::Proposals, &proposal_storage);
+        storage.set(&DataKey::Proposals, &proposal_storage);
 
         env.events().publish(
             (Symbol::new(&env, "proposal_voted"), id),
