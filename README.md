@@ -49,3 +49,7 @@ After [installing rust](https://www.rust-lang.org/tools/install), tests can be r
 $ cd contracts
 $ cargo test
 ```
+### Tests in Futurenet
+
+* [Initial raffle contract](https://github.com/eigerco/nebula/issues/5#issuecomment-1644065962)
+* [Initial voting contract](https://github.com/eigerco/nebula/issues/5#issuecomment-1645208546)
