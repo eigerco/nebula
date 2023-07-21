@@ -18,6 +18,9 @@ interoperability of the tools that are planned to be built:
 ⚠️ Currently, production usage is discouraged.
 
 ## Wizard UI
+
+Currently an usable, latest version of the wizard can be found [here](https://eigerco.github.io/nebula/).
+
 The frontend contains some basic starter code.
 
 To run:
