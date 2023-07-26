@@ -102,9 +102,9 @@ export function Toolbox({
               type="button"
               className="btn btn-secondary"
               onClick={e => handleClick('Open')}
-              title="Open in Pulsar"
+              title="Open in Playground"
             >
-              <i className="bi bi-folder2-open"></i>Open in Pulsar
+              <i className="bi bi-folder2-open"></i>Open in Playground
             </button>
           </div>
         </div>

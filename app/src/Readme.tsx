@@ -3,9 +3,10 @@ import { Navbar } from './Navbar'
 
 export function Readme({ currentPage }: any) {
   return (
-    <div>
+    <div className='p-3'>
       <Navbar currentPage="#/readme" />
-      Readme...
+      <h1>Nebula</h1>
+      <p>Nebula is a tool for easing development of Soroban smart contracts.</p>
     </div>
   )
 }

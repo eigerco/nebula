@@ -2,10 +2,8 @@ export class RaffleCodeGen {
   public generateCode(name: string) {
     return `
 #![no_std]
-
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
     Map, Symbol, Vec,

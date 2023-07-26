@@ -23,6 +23,8 @@ export function Wizard() {
 
   function handleClick(type: string) {
     setModalBackground('normal')
+    // TODO: Replace these with useReducer
+    // https://react.dev/reference/react/useReducer
     if (type === 'Download') {
       setModalTitle('Download')
       setModalBody('Not implemented yet')
@@ -78,22 +80,24 @@ export function Wizard() {
   return (
     <div className="Wizard">
       <Navbar currentPage="#/" />
-      <div className="row flex-grow-1">
-        <div className="col-3">
-          <Toolbox
-            contractName={contractName}
-            onContractNameChanged={setContractName}
-            contractTrait={contractTrait}
-            onContractTraitChanged={setContractTrait}
-            author={author}
-            onAuthorChanged={setAuthor}
-            license={license}
-            onLicenseChanged={setLicense}
-            updateParams={setContractParams}
-            handleClick={handleClick}
-          />
+      <div className="flex flex-grow-1">
+        <div className="col-3 position-fixed">
+          <div className="flex-column flex-nowrap p-3">
+            <Toolbox
+              contractName={contractName}
+              onContractNameChanged={setContractName}
+              contractTrait={contractTrait}
+              onContractTraitChanged={setContractTrait}
+              author={author}
+              onAuthorChanged={setAuthor}
+              license={license}
+              onLicenseChanged={setLicense}
+              updateParams={setContractParams}
+              handleClick={handleClick}
+            />
+          </div>
         </div>
-        <div className="col-8">
+        <div className="col-9 offset-3">
           <Editor
             contractTrait={contractTrait}
             contractName={contractName}
