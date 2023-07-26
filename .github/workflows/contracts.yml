@@ -1,0 +1,69 @@
+name: Build and test contracts
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            lib/target
+          key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-build
+
+      - name: Prepare target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Build
+        run: for dir in $(ls); do cd $dir && cargo build --release --target wasm32-unknown-unknown  --verbose || exit 1 ; cd .. ; done
+
+      - name: Lint
+        run: for dir in $(ls); do cd $dir && cargo clippy || exit 1 ; cd .. ; done
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            lib/target
+          key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-build
+
+      - name: Test
+        run: for dir in $(ls); do cd $dir && cargo test || exit 1 ; cd .. ; done
