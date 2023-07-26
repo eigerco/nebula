@@ -1,7 +1,6 @@
 export class VotingCodeGen {
   public generateCode(name: string) {
-    return `
-#![no_std]
+    return `#![no_std]
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, Address,
     ConversionError, Env, Map, Symbol,
@@ -64,7 +63,6 @@ impl VotingTrait for ${name} {
         storage.set(&DataKey::AlreadyInitialized, &true);
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
-        // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
         storage.set(&DataKey::VotingPeriodSecs, &voting_period_secs);
         storage.set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
         storage.set(&DataKey::TotalVoters, &total_voters);

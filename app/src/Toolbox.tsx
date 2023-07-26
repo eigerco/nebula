@@ -2,7 +2,6 @@ import React from 'react'
 import Form from 'react-bootstrap/Form'
 import { ContractParams } from './contractparams/ContractParams'
 import './Toolbox.css'
-import logo from './logo.png'
 
 export function Toolbox({
   contractName,
@@ -18,7 +17,6 @@ export function Toolbox({
 }: any) {
   return (
     <div className="Toolbox">
-      <img src={logo} className="logo" alt="logo" />
       <div className="input-group mb-2">
         <span className="input-group-text">Name</span>
         <input
@@ -32,13 +30,19 @@ export function Toolbox({
         />
       </div>
       <div className="input-group mb-2">
-        <span className="input-group-text">Contract trait</span>
+        <span className="input-group-text">Interface</span>
         <Form.Select
           className="p-2"
           onChange={e => onContractTraitChanged(e.target.value)}
         >
           <option>Raffle</option>
           <option>Voting</option>
+          <option disabled>Auction</option>
+          <option disabled>MarketPlace</option>
+          <option disabled>FundMe</option>
+          <option disabled>Math</option>
+          <option disabled>PaymentSplit</option>
+          {/* <option disabled>NFT</option> */}
         </Form.Select>
       </div>
       <div className="buttons container text-center">

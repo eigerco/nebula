@@ -8,10 +8,10 @@ export class CodeGen {
   public generateHeader(author: string, license: string): string {
     this.header = ''
     if (author !== '') {
-      this.header = `//author: ${author}\n`
+      this.header = `// author: ${author}\n`
     }
     if (license !== '') {
-      this.header += `//license: ${license}\n`
+      this.header += `// license: ${license}\n`
     }
     return this.header
   }

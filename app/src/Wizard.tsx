@@ -12,8 +12,8 @@ export function Wizard() {
   const [contractTrait, setContractTrait] = useState('Raffle')
   const [contractName, setContractName] = useState('MyContract')
   const [contractParams, setContractParams] = useState([])
-  const [author, setAuthor] = useState('')
-  const [license, setLicense] = useState('')
+  const [author, setAuthor] = useState('eigerco')
+  const [license, setLicense] = useState('MIT')
   const [showInvokeModal, setShowInvokeModal] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
   const [modalBody, setModalBody] = useState('')
@@ -79,7 +79,7 @@ export function Wizard() {
 
   return (
     <div className="Wizard">
-      <Navbar currentPage="#/" />
+      <Navbar currentPage="#/wizard" />
       <div className="flex flex-grow-1">
         <div className="col-3 position-fixed">
           <div className="flex-column flex-nowrap p-3">
