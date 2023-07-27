@@ -54,6 +54,8 @@ pub enum Error {
     MinParticipantsNotSatisfied = 4,
     // Raffle must have at least 1 winner.
     InvalidMaxWinners = 5,
+    // Minimum ticket price.
+    MinimumTicketPrice = 6,
 }
 
 #[contract]
@@ -84,6 +86,10 @@ impl RaffleContract {
 
         if max_winners_count == 0 {
             panic_with_error!(&env, Error::InvalidMaxWinners);
+        }
+
+        if ticket_price <= 1 {
+            panic_with_error!(&env, Error::MinimumTicketPrice);
         }
 
         if storage

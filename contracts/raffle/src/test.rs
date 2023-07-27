@@ -84,6 +84,20 @@ fn raffle_cannot_be_initialized_without_winners() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn raffle_cannot_be_initialized_with_ticket_price_zero() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, RaffleContract);
+    let client = RaffleContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.init(&client.address, &test_token_client.address, &1, &0);
+}
+
+#[test]
 fn buy_ticket_works_as_expected() {
     let env = Env::default();
     env.mock_all_auths();
