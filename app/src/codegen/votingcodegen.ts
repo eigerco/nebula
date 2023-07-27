@@ -116,7 +116,11 @@ impl VotingTrait for ${name} {
             id,
             Proposal {
                 id,
-                voting_end_time: env.ledger().timestamp() + voting_period_secs,
+                voting_end_time: env
+                    .ledger()
+                    .timestamp()
+                    .checked_add(voting_period_secs)
+                    .unwrap(),
                 target_approval_rate_bps,
                 votes: 0,
                 voters: Map::<Address, bool>::new(&env),
