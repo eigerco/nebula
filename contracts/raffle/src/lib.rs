@@ -52,6 +52,8 @@ pub enum Error {
     AlreadyPlayed = 3,
     // In order to play the raffle, at least 1 participant should be in.
     MinParticipantsNotSatisfied = 4,
+    // Raffle must have at least 1 winner.
+    InvalidMaxWinners = 5,
 }
 
 #[contract]
@@ -79,6 +81,10 @@ impl RaffleContract {
     ) {
         admin.require_auth();
         let storage = env.storage().persistent();
+
+        if max_winners_count == 0 {
+            panic_with_error!(&env, Error::InvalidMaxWinners);
+        }
 
         if storage
             .get::<_, bool>(&DataKey::AlreadyInitialized)
