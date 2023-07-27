@@ -31,6 +31,9 @@ pub enum Error {
     InsufficientFunds = 2,
     AlreadyPlayed = 3,
     MinParticipantsNotSatisfied = 4,
+    InvalidMaxWinners = 5,
+    MinimumTicketPrice = 6,
+    NotInitialized = 7,
 }
 
 #[contract]
@@ -47,6 +50,14 @@ impl RaffleTrait for ${name} {
     ) {
         admin.require_auth();
         let storage = env.storage().persistent();
+
+        if max_winners_count == 0 {
+            panic_with_error!(&env, Error::InvalidMaxWinners);
+        }
+
+        if ticket_price <= 1 {
+            panic_with_error!(&env, Error::MinimumTicketPrice);
+        }
 
         if storage
             .get::<_, bool>(&DataKey::AlreadyInitialized)
@@ -69,6 +80,14 @@ impl RaffleTrait for ${name} {
         by.require_auth();
 
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
+
         let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
         let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token);
@@ -89,6 +108,13 @@ impl RaffleTrait for ${name} {
 
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
 
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();
