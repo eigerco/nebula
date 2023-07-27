@@ -1,3 +1,18 @@
+//! Raffle contract
+//!
+//! This contract provides raffle implementation
+//! for the soroban smart contract platform.
+//!
+//! Once deployed and initialized, each participant can buy
+//! any number of tickets. There is no limit in this aspect.
+//! As much tickets a participant has, the more probabilities
+//! of winning the raffle has.
+//!
+//! It also supports multiple winners. The amount of desired winners can
+//! specified on the initialization phase of the contract.
+//! The only requirement to play the raffle is to have at least
+//! one participant.
+
 #![no_std]
 
 use rand::rngs::SmallRng;
@@ -8,6 +23,8 @@ use soroban_sdk::{
     Map, Symbol, Vec,
 };
 
+/// Datakey holds all possible storage keys this
+/// contract uses. See https://soroban.stellar.org/docs/getting-started/storing-data .
 #[derive(Clone, Copy)]
 #[contracttype]
 enum DataKey {
@@ -20,13 +37,20 @@ enum DataKey {
     AlreadyPlayed = 7,
 }
 
+/// All the expected errors this contract expects.
+/// This error codes will appear as output in the transaction
+/// receipt.
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
+    /// The contract should be only initialised once.
     AlreadyInitialized = 1,
+    // Participants needs to have enough funds to buy a raffle ticket.
     InsufficientFunds = 2,
+    // The raffle can only be executed once.
     AlreadyPlayed = 3,
+    // In order to play the raffle, at least 1 participant should be in.
     MinParticipantsNotSatisfied = 4,
 }
 
@@ -35,6 +59,17 @@ pub struct RaffleContract;
 
 #[contractimpl]
 impl RaffleContract {
+    /// It initializes the contract with all the needed parameters.
+    /// This function must be invoked byt the administrator just 
+    /// after the contract deployment.
+    /// 
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `admin` - The address can play the raffle anytime.
+    /// - `token` - The asset contract address we are using for this raffle. See [token interface](https://soroban.stellar.org/docs/reference/interfaces/token-interface).
+    /// - `max_winners_count` - The maximum number of winners. See the calculate_winners function for more details.
+    /// - `ticket_price` - Unitary ticket price for the current raffle.
     pub fn init(
         env: Env,
         admin: Address,
@@ -62,6 +97,12 @@ impl RaffleContract {
         storage.set(&DataKey::AlreadyInitialized, &true);
     }
 
+    /// Allows any participant with enough funds to buy a ticket.
+    /// 
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `by` - The address that is buying the ticket. Its enforced to match with the incoming transaction signatures.
     pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
         by.require_auth();
 
@@ -84,6 +125,13 @@ impl RaffleContract {
         Ok(candidates.len())
     }
 
+    /// Allows an admin to play the raffle anytime.
+    /// The only requirement is to have at least one participant.
+    /// 
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements. See calculate_winners function.
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
 
