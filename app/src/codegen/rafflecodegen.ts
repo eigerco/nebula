@@ -1,6 +1,6 @@
 export class RaffleCodeGen {
-    public generateCode(name: string) {
-        return `
+  public generateCode(name: string) {
+    return `
 #![no_std]
 
 use rand::rngs::SmallRng;
@@ -164,15 +164,15 @@ fn calculate_winners(
     winners.keys()
 }
     `
-    }
+  }
 
-    generateInvokeCommand(name: string, params: any[]) {
-        const admin: string = params[0]
-        const token: string = params[1]
-        const maxWinnersCount: number = params[2]
-        const ticketPrice: number = params[3]
+  generateInvokeCommand(name: string, params: any[]) {
+    const admin: string = params[0]
+    const token: string = params[1]
+    const maxWinnersCount: number = params[2]
+    const ticketPrice: number = params[3]
 
-        return `soroban contract invoke \\
+    return `soroban contract invoke \\
 --wasm ${name}.wasm \\
 --id 1 \\
 -- \\
@@ -181,5 +181,5 @@ init \\
     --token ${token} \\
     --max_winners_count ${maxWinnersCount} \\
     --ticket_price ${ticketPrice}`
-    }
+  }
 }
