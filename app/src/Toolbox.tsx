@@ -37,7 +37,7 @@ export function Toolbox({
           className="p-2"
           onChange={e => onContractTraitChanged(e.target.value)}
         >
-          <option>Lottery</option>
+          <option>Raffle</option>
           <option>Voting</option>
         </Form.Select>
       </div>

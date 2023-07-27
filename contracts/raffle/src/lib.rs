@@ -31,10 +31,10 @@ pub enum Error {
 }
 
 #[contract]
-pub struct LotteryContract;
+pub struct RaffleContract;
 
 #[contractimpl]
-impl LotteryContract {
+impl RaffleContract {
     pub fn init(
         env: Env,
         admin: Address,

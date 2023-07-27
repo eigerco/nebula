@@ -25,7 +25,7 @@ export class VotingParams extends React.Component<Props> {
   render() {
     return (
       <form>
-        <div className="LotteryParams">
+        <div className="RaffleParams">
           <div className="input-group mb-2">
             <span className="input-group-text">Admin account</span>
             <input
