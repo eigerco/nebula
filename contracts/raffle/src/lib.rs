@@ -56,6 +56,8 @@ pub enum Error {
     InvalidMaxWinners = 5,
     // Minimum ticket price.
     MinimumTicketPrice = 6,
+    // If not initialized, raffle should not be able to execute actions.
+    NotInitialized = 7,
 }
 
 #[contract]
@@ -64,9 +66,9 @@ pub struct RaffleContract;
 #[contractimpl]
 impl RaffleContract {
     /// It initializes the contract with all the needed parameters.
-    /// This function must be invoked byt the administrator just 
+    /// This function must be invoked byt the administrator just
     /// after the contract deployment.
-    /// 
+    ///
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
@@ -110,7 +112,7 @@ impl RaffleContract {
     }
 
     /// Allows any participant with enough funds to buy a ticket.
-    /// 
+    ///
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
@@ -119,6 +121,14 @@ impl RaffleContract {
         by.require_auth();
 
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
+
         let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
         let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token);
@@ -139,13 +149,20 @@ impl RaffleContract {
 
     /// Allows an admin to play the raffle anytime.
     /// The only requirement is to have at least one participant.
-    /// 
+    ///
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
     /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements. See calculate_winners function.
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
 
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();

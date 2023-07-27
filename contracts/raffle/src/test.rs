@@ -98,6 +98,30 @@ fn raffle_cannot_be_initialized_with_ticket_price_zero() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #7)")]
+fn ticket_cannot_be_bought_if_not_initialized() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, RaffleContract);
+    let client = RaffleContractClient::new(&env, &contract_id);
+
+    client.buy_ticket(&client.address);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #7)")]
+fn raffle_cannot_be_played_if_not_initialized() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, RaffleContract);
+    let client = RaffleContractClient::new(&env, &contract_id);
+
+    client.play_raffle(&1);
+}
+
+#[test]
 fn buy_ticket_works_as_expected() {
     let env = Env::default();
     env.mock_all_auths();
