@@ -11,18 +11,18 @@ export function Readme({ currentPage }: any) {
       <p>
         Nebula aims to provide the following functionality:
         <ul>
-          <li>Compile contracts</li>
-          <li>Download compiled contracts</li>
-          <li>Deploy contracts</li>
-          <li>An IDE playground</li>
+          {/* Todo for @eloylp */}
           <li>
-            A contract management system via <code>#import</code>
+            A contract management system via{' '}
+            <a href="https://github.com/eigerco/nebula/discussions/11">
+              <code>#import</code>
+            </a>
           </li>
         </ul>
       </p>
-      <h2>Standardization</h2>
+      <h2>Common interfaces </h2>
       <p>
-        Nebula aims to provide standard interfaces for commonly used contacts.
+        Nebula aims to provide interfaces for commonly used contacts.
         <ul>
           <li>Math</li>
           <li>Voting</li>
@@ -30,6 +30,9 @@ export function Readme({ currentPage }: any) {
           <li>Split Payments</li>
           <li>Auction</li>
           <li>MarketPlace</li>
+          <li>Pause</li>
+          <li>Payment splitter</li>
+          <li>reverse billing splitting</li>
         </ul>
       </p>
     </div>
