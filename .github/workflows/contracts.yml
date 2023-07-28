@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
 
 jobs:
   build:
@@ -40,7 +41,7 @@ jobs:
         run: for dir in $(ls); do cd $dir && cargo build --release --target wasm32-unknown-unknown  --verbose || exit 1 ; cd .. ; done
 
       - name: Lint
-        run: for dir in $(ls); do cd $dir && cargo clippy || exit 1 ; cd .. ; done
+        run: for dir in $(ls); do cd $dir && cargo clippy --all-targets --all-features || exit 1 ; cd .. ; done
 
   test:
     needs: build
