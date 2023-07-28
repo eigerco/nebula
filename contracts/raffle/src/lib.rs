@@ -122,9 +122,8 @@ impl RaffleContract {
 
         let storage = env.storage().persistent();
 
-        if !storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized)
-            .is_some()
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized).is_none()
         {
             return Err(Error::NotInitialized);
         }
@@ -157,9 +156,8 @@ impl RaffleContract {
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
 
-        if !storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized)
-            .is_some()
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized).is_none()
         {
             return Err(Error::NotInitialized);
         }

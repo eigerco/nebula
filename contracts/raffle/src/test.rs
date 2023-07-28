@@ -35,7 +35,7 @@ fn admin_is_identified_on_init() {
 }
 
 fn assert_auth(
-    auths: &std::vec::Vec<(Address, AuthorizedInvocation)>,
+    auths: &[(Address, AuthorizedInvocation)],
     idx: usize,
     call_addr: Address,
     auth_addr: Address,
