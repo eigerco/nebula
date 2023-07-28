@@ -1,11 +1,8 @@
 export class RaffleCodeGen {
   public generateCode(name: string) {
-    return `
-#![no_std]
-
+    return `#![no_std]
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
     Map, Symbol, Vec,
@@ -68,7 +65,6 @@ impl RaffleTrait for ${name} {
 
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
-        // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
         storage.set(&DataKey::MaxWinnerCount, &max_winners_count);
         storage.set(&DataKey::TicketPrice, &ticket_price);
         storage.set(&DataKey::Candidates, &Vec::<Address>::new(&env));

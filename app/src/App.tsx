@@ -8,8 +8,8 @@ export function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Wizard />} />
-        <Route path="/readme" element={<Readme />} />
+        <Route path="/" element={<Readme />} />
+        <Route path="/wizard" element={<Wizard />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </HashRouter>

@@ -4,6 +4,7 @@ interface Props {
   updateParams: any
 }
 
+// TODO: Use functional component
 export class RaffleParams extends React.Component<Props> {
   state = {
     adminAccount: '',

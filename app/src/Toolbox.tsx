@@ -2,7 +2,6 @@ import React from 'react'
 import Form from 'react-bootstrap/Form'
 import { ContractParams } from './contractparams/ContractParams'
 import './Toolbox.css'
-import logo from './logo.png'
 
 export function Toolbox({
   contractName,
@@ -18,7 +17,6 @@ export function Toolbox({
 }: any) {
   return (
     <div className="Toolbox">
-      <img src={logo} className="logo" alt="logo" />
       <div className="input-group mb-2">
         <span className="input-group-text">Name</span>
         <input
@@ -32,65 +30,27 @@ export function Toolbox({
         />
       </div>
       <div className="input-group mb-2">
-        <span className="input-group-text">Contract trait</span>
+        <span className="input-group-text">Interface</span>
         <Form.Select
           className="p-2"
           onChange={e => onContractTraitChanged(e.target.value)}
         >
           <option>Raffle</option>
           <option>Voting</option>
+          <option disabled>Auction</option>
+          <option disabled>MarketPlace</option>
+          <option disabled>FundMe</option>
+          <option disabled>Math</option>
+          <option disabled>PaymentSplit</option>
+          {/* <option disabled>NFT</option> */}
         </Form.Select>
       </div>
-      <div className="buttons container text-center">
-        <div className="row">
+      <div>
+        <div className="row mt-1">
           <div className="col">
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Compile')}
-              title="Compile"
-            >
-              <i className="bi bi-hammer"></i>Compile
-            </button>
-          </div>
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Download')}
-              title="Download"
-            >
-              <i className="bi bi-cloud-arrow-down"></i>Download
-            </button>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Deploy')}
-              title="Deploy"
-            >
-              <i className="bi bi-cloud-upload"></i>Deploy
-            </button>
-          </div>
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Invoke')}
-              title="Invoke"
-            >
-              <i className="bi bi-gear"></i>Invoke
-            </button>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary w-100"
               onClick={e => handleClick('Copy')}
               title="Copy to clipboard"
             >
@@ -100,11 +60,23 @@ export function Toolbox({
           <div className="col">
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Open')}
-              title="Open in Pulsar"
+              className="btn btn-secondary w-100"
+              onClick={e => handleClick('Invoke')}
+              title="Invoke"
             >
-              <i className="bi bi-folder2-open"></i>Open in Pulsar
+              <i className="bi bi-gear"></i>Invoke
+            </button>
+          </div>
+        </div>
+        <div className="row mt-1">
+          <div className="col">
+            <button
+              type="button"
+              className="btn btn-secondary w-100"
+              onClick={e => handleClick('Open')}
+              title="Open in Playground"
+            >
+              <i className="bi bi-code-square"></i> Open in Playground
             </button>
           </div>
         </div>
