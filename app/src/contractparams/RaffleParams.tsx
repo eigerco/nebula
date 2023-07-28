@@ -4,7 +4,7 @@ interface Props {
   updateParams: any
 }
 
-export class LotteryParams extends React.Component<Props> {
+export class RaffleParams extends React.Component<Props> {
   state = {
     adminAccount: '',
     token: '',
@@ -25,7 +25,7 @@ export class LotteryParams extends React.Component<Props> {
   render() {
     return (
       <form>
-        <div className="LotteryParams">
+        <div className="RaffleParams">
           <div className="input-group mb-2">
             <span className="input-group-text">Admin account</span>
             <input

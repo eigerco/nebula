@@ -9,7 +9,7 @@ import { Navbar } from './Navbar'
 import './Wizard.css'
 
 export function Wizard() {
-  const [contractTrait, setContractTrait] = useState('Lottery')
+  const [contractTrait, setContractTrait] = useState('Raffle')
   const [contractName, setContractName] = useState('MyContract')
   const [contractParams, setContractParams] = useState([])
   const [author, setAuthor] = useState('')

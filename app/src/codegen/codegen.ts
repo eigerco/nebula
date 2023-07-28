@@ -1,4 +1,4 @@
-import { LotteryCodeGen } from './lotterycodegen'
+import { RaffleCodeGen } from './rafflecodegen'
 import { VotingCodeGen } from './votingcodegen'
 
 export class CodeGen {
@@ -18,9 +18,9 @@ export class CodeGen {
 
   public generateContractCode(trait: string, name: string): string {
     this.contractCode = ''
-    if (trait === 'Lottery') {
-      const lotteryCodeGen = new LotteryCodeGen()
-      this.contractCode = lotteryCodeGen.generateCode(name)
+    if (trait === 'Raffle') {
+      const raffleCodeGen = new RaffleCodeGen()
+      this.contractCode = raffleCodeGen.generateCode(name)
     } else if (trait === 'Voting') {
       const votingCodeGen = new VotingCodeGen()
       this.contractCode = votingCodeGen.generateCode(name)

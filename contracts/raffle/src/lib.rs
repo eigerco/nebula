@@ -1,6 +1,18 @@
-export class LotteryCodeGen {
-  public generateCode(name: string) {
-    return `
+//! Raffle contract
+//!
+//! This contract provides raffle implementation
+//! for the soroban smart contract platform.
+//!
+//! Once deployed and initialized, each participant can buy
+//! any number of tickets. There is no limit in this aspect.
+//! As much tickets a participant has, the more probabilities
+//! of winning the raffle has.
+//!
+//! It also supports multiple winners. The amount of desired winners can
+//! specified on the initialization phase of the contract.
+//! The only requirement to play the raffle is to have at least
+//! one participant.
+
 #![no_std]
 
 use rand::rngs::SmallRng;
@@ -11,6 +23,8 @@ use soroban_sdk::{
     Map, Symbol, Vec,
 };
 
+/// Datakey holds all possible storage keys this
+/// contract uses. See https://soroban.stellar.org/docs/getting-started/storing-data .
 #[derive(Clone, Copy)]
 #[contracttype]
 enum DataKey {
@@ -23,21 +37,45 @@ enum DataKey {
     AlreadyPlayed = 7,
 }
 
+/// All the expected errors this contract expects.
+/// This error codes will appear as output in the transaction
+/// receipt.
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
+    /// The contract should be only initialised once.
     AlreadyInitialized = 1,
+    // Participants needs to have enough funds to buy a raffle ticket.
     InsufficientFunds = 2,
+    // The raffle can only be executed once.
     AlreadyPlayed = 3,
+    // In order to play the raffle, at least 1 participant should be in.
     MinParticipantsNotSatisfied = 4,
+    // Raffle must have at least 1 winner.
+    InvalidMaxWinners = 5,
+    // Minimum ticket price.
+    MinimumTicketPrice = 6,
+    // If not initialized, raffle should not be able to execute actions.
+    NotInitialized = 7,
 }
 
 #[contract]
-pub struct ${name};
+pub struct RaffleContract;
 
 #[contractimpl]
-impl LotteryTrait for ${name} {
+impl RaffleContract {
+    /// It initializes the contract with all the needed parameters.
+    /// This function must be invoked byt the administrator just
+    /// after the contract deployment.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `admin` - The address can play the raffle anytime.
+    /// - `token` - The asset contract address we are using for this raffle. See [token interface](https://soroban.stellar.org/docs/reference/interfaces/token-interface).
+    /// - `max_winners_count` - The maximum number of winners. See the calculate_winners function for more details.
+    /// - `ticket_price` - Unitary ticket price for the current raffle.
     pub fn init(
         env: Env,
         admin: Address,
@@ -47,6 +85,14 @@ impl LotteryTrait for ${name} {
     ) {
         admin.require_auth();
         let storage = env.storage().persistent();
+
+        if max_winners_count == 0 {
+            panic_with_error!(&env, Error::InvalidMaxWinners);
+        }
+
+        if ticket_price <= 1 {
+            panic_with_error!(&env, Error::MinimumTicketPrice);
+        }
 
         if storage
             .get::<_, bool>(&DataKey::AlreadyInitialized)
@@ -65,10 +111,24 @@ impl LotteryTrait for ${name} {
         storage.set(&DataKey::AlreadyInitialized, &true);
     }
 
+    /// Allows any participant with enough funds to buy a ticket.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `by` - The address that is buying the ticket. Its enforced to match with the incoming transaction signatures.
     pub fn buy_ticket(env: Env, by: Address) -> Result<u32, Error> {
         by.require_auth();
 
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
+
         let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
         let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token);
@@ -87,8 +147,22 @@ impl LotteryTrait for ${name} {
         Ok(candidates.len())
     }
 
+    /// Allows an admin to play the raffle anytime.
+    /// The only requirement is to have at least one participant.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements. See calculate_winners function.
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
+
+        if !storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            return Err(Error::NotInitialized);
+        }
 
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();
@@ -140,11 +214,11 @@ impl LotteryTrait for ${name} {
 ///
 /// # Arguments
 ///
-/// - 'env' - The environment for this contract.
-/// - 'max_winners_count' - The maximum number of winners. Collisions from the random generator are currently solved by omission,
+/// - `env` - The environment for this contract.
+/// - `max_winners_count` - The maximum number of winners. Collisions from the random generator are currently solved by omission,
 /// so this should be read as "the max number of" but not the "exact number of".
-/// - 'candidates_len' - The number of participants on this raffle.
-/// - 'random_seed' - The random seed for the number generator. Currently it determines the output of the generator across calls.
+/// - `candidates_len` - The number of participants on this raffle.
+/// - `random_seed` - The random seed for the number generator. Currently it determines the output of the generator across calls.
 fn calculate_winners(
     env: &Env,
     max_winners_count: u32,
@@ -163,23 +237,6 @@ fn calculate_winners(
     }
     winners.keys()
 }
-    `
-  }
 
-  generateInvokeCommand(name: string, params: any[]) {
-    const admin: string = params[0]
-    const token: string = params[1]
-    const maxWinnersCount: number = params[2]
-    const ticketPrice: number = params[3]
-
-    return `soroban contract invoke \\
---wasm ${name}.wasm \\
---id 1 \\
--- \\
-init \\
-    --admin ${admin} \\
-    --token ${token} \\
-    --max_winners_count ${maxWinnersCount} \\
-    --ticket_price ${ticketPrice}`
-  }
-}
+#[cfg(test)]
+mod test;
