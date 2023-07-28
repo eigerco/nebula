@@ -38,10 +38,10 @@ jobs:
         run: rustup target add wasm32-unknown-unknown
 
       - name: Build
-        run: for dir in $(ls); do cd $dir && cargo build --release --target wasm32-unknown-unknown  --verbose || exit 1 ; cd .. ; done
+        run: cargo build --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
-        run: for dir in $(ls); do cd $dir && cargo clippy --all-targets --all-features || exit 1 ; cd .. ; done
+        run: cargo clippy --all-targets --all-features
 
   test:
     needs: build
@@ -62,9 +62,9 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            lib/target
+            contracts/target
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
 
       - name: Test
-        run: for dir in $(ls); do cd $dir && cargo test || exit 1 ; cd .. ; done
+        run: cargo test --verbose
