@@ -45,56 +45,12 @@ export function Toolbox({
           {/* <option disabled>NFT</option> */}
         </Form.Select>
       </div>
-      <div className="buttons container text-center">
-        <div className="row">
+      <div>
+        <div className="row mt-1">
           <div className="col">
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Compile')}
-              title="Compile"
-            >
-              <i className="bi bi-hammer"></i>Compile
-            </button>
-          </div>
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Download')}
-              title="Download"
-            >
-              <i className="bi bi-cloud-arrow-down"></i>Download
-            </button>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Deploy')}
-              title="Deploy"
-            >
-              <i className="bi bi-cloud-upload"></i>Deploy
-            </button>
-          </div>
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={e => handleClick('Invoke')}
-              title="Invoke"
-            >
-              <i className="bi bi-gear"></i>Invoke
-            </button>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary w-100"
               onClick={e => handleClick('Copy')}
               title="Copy to clipboard"
             >
@@ -104,11 +60,23 @@ export function Toolbox({
           <div className="col">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary w-100"
+              onClick={e => handleClick('Invoke')}
+              title="Invoke"
+            >
+              <i className="bi bi-gear"></i>Invoke
+            </button>
+          </div>
+        </div>
+        <div className="row mt-1">
+          <div className="col">
+            <button
+              type="button"
+              className="btn btn-secondary w-100"
               onClick={e => handleClick('Open')}
               title="Open in Playground"
             >
-              <i className="bi bi-folder2-open"></i>Open in Playground
+              <i className="bi bi-code-square"></i> Open in Playground
             </button>
           </div>
         </div>
