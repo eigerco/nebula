@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wasm-files
-          path: target/wasm32-unknown-unknown/release/?.wasm
+          path: target/wasm32-unknown-unknown/release/*.wasm
 
   test:
     needs: build
