@@ -2,7 +2,6 @@ name: Build and test contracts
 
 on:
   push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -13,9 +12,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./contracts
 
     steps:
       - name: Checkout repository
@@ -37,7 +33,9 @@ jobs:
       - name: Prepare target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Build
+      # This will attempt to build all contracts in the workspace.
+      # This command will likely change when we have more than contracts in the workspace
+      - name: Build All
         run: cargo build --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
@@ -46,9 +44,7 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./contracts
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -67,4 +63,4 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-build
 
       - name: Test
-        run: cargo test --verbose
+        run: cargo test
