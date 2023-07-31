@@ -29,7 +29,7 @@ fn proposal_creation() {
 }
 
 fn assert_auth(
-    auths: &std::vec::Vec<(Address, AuthorizedInvocation)>,
+    auths: &[(Address, AuthorizedInvocation)],
     idx: usize,
     call_addr: Address,
     auth_addr: Address,
@@ -146,14 +146,14 @@ fn cannot_vote_if_total_voters_reached() {
 
 fn advance_ledger_time_in(time: u64, env: &mut Env) {
     let mut ledger_info = env.ledger().get();
-    ledger_info.timestamp = ledger_info.timestamp + time;
+    ledger_info.timestamp += time;
     env.ledger().set(ledger_info)
 }
 
 #[rstest]
 #[case::rate_50(2, 1, 50_00, true)]
 #[case::precision_is_captured_in_bps(3, 1, 33_33, false)]
-#[case::rate_100(2, 2, 100_00, true)]
+#[case::rate_100(2, 2, 10_000, true)]
 #[case::no_votes_no_rate(0, 0, 0, false)]
 fn proposal_calculate_approval_rate(
     #[case] total_voters: u32,
