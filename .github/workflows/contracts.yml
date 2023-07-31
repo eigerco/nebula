@@ -45,9 +45,7 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./contracts
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
