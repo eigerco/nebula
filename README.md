@@ -12,14 +12,14 @@ It aims to play in a cohesive way with the existing [Stellar](https://stellar.or
 Progress on this project is currently just a demonstration of the [initial](https://github.com/eigerco/nebula/milestone/1) part of the first milestone, which aims to show the essence and 
 interoperability of the tools that are planned to be built:
 
-* The [Nebula's UI](#-wizard-ui) wizard.
-* The [smart contracts](#-contracts).
+* The [Nebula's UI](#wizard-ui) wizard.
+* The [smart contracts](#contracts).
 
 ⚠️ Currently, production usage is discouraged.
 
 ## Wizard UI
 
-Currently an usable, latest version of the wizard can be found [here](https://eigerco.github.io/nebula/).
+Currently a live, latest version of the wizard can be found [here](https://eigerco.github.io/nebula/).
 
 The frontend contains some basic starter code.
 
@@ -51,7 +51,7 @@ After [installing rust](https://www.rust-lang.org/tools/install), tests can be r
 ```bash
 $ cd contracts
 $ cargo test
-```
+``` 
 ### Tests in Futurenet
 
 * [Initial raffle contract](https://github.com/eigerco/nebula/issues/5#issuecomment-1644065962)
