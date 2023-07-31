@@ -2,7 +2,6 @@ name: Build and test contracts
 
 on:
   push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
 
