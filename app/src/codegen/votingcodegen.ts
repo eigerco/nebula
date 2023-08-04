@@ -222,4 +222,67 @@ init \\
     --target_approval_rate_bps ${targetApprovalRate} \\
     --total_voters ${totalVoters}`
   }
+
+  getInvokes(commandId: any): object {
+    return {
+      lenses: [
+        {
+          range: {
+            startLineNumber: 48,
+            startColumn: 1,
+            endLineNumber: 49,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('init', `--admin \\
+        --voting_period_secs 3600\\
+        --target_approval_rate_bps 500 \\
+        --total_voters 2`),
+            title: 'invoke',
+          }
+        }, {
+          range: {
+            startLineNumber: 72,
+            startColumn: 1,
+            endLineNumber: 73,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('create_proposal', '--id '),
+            title: 'invoke',
+          }
+        }, {
+          range: {
+            startLineNumber: 87,
+            startColumn: 1,
+            endLineNumber: 88,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('create_custom_proposal', `--id \\
+        --voting_period_secs 3600\\
+        --target_approval_rate_bps 500 \\
+        --total_voters 2`),
+            title: 'invoke',
+          }
+        }, {
+          range: {
+            startLineNumber: 132,
+            startColumn: 1,
+            endLineNumber: 133,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('vote', `--voter \\
+        --id`),
+            title: 'invoke',
+          }
+        }
+      ]
+    }
+  }
 }

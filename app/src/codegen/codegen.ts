@@ -31,4 +31,15 @@ export class CodeGen {
   public getCode(): string {
     return this.header + '\n' + this.contractCode
   }
+
+  public getInvokes(trait: string, commandId: any) {
+    if (trait === 'Raffle') {
+      const raffleCodeGen = new RaffleCodeGen()
+      return raffleCodeGen.getInvokes(commandId)
+    } else if (trait === 'Voting') {
+      const votingCodeGen = new VotingCodeGen()
+      return votingCodeGen.getInvokes(commandId)
+    }
+    return {}
+  }
 }

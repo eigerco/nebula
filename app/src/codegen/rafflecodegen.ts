@@ -204,4 +204,51 @@ init \\
     --max_winners_count ${maxWinnersCount} \\
     --ticket_price ${ticketPrice}`
   }
+
+  getInvokes(commandId: any): object {
+    return {
+      lenses: [
+        {
+          range: {
+            startLineNumber: 42,
+            startColumn: 1,
+            endLineNumber: 43,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('init', `--admin \\
+        --token \\
+        --max_winners_count 1 \\
+        --ticket_price 1`),
+            title: 'invoke',
+          }
+        }, {
+          range: {
+            startLineNumber: 76,
+            startColumn: 1,
+            endLineNumber: 77,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('buy_ticket', '--by'),
+            title: 'invoke',
+          }
+        }, {
+          range: {
+            startLineNumber: 106,
+            startColumn: 1,
+            endLineNumber: 107,
+            endColumn: 1,
+          },
+          id: 'invoke',
+          command: {
+            id: commandId('play_raffle', '--random_seed'),
+            title: 'invoke',
+          }
+        }
+      ]
+    }
+  }
 }

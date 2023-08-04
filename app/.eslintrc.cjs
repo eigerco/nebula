@@ -24,6 +24,7 @@ module.exports = {
   rules: {
     "@typescript-eslint/explicit-function-return-type": 0,
     "@typescript-eslint/space-before-function-paren": 0,
-    "@typescript-eslint/comma-dangle": 0
+    "@typescript-eslint/comma-dangle": 0,
+    "@typescript-eslint/no-non-null-assertion": 0
   },
 };
