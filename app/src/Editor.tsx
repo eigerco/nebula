@@ -2,6 +2,8 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 import MonacoEditor from '@monaco-editor/react'
+import './Editor.css'
+import { ContractService } from './contractsources/contractservice'
 
 interface Props {
   contractTrait: any
@@ -17,10 +19,19 @@ export class Editor extends React.Component<Props> {
   }
 
   modalBody = ''
+  contractCode = ''
   monaco: any
   editor: any
 
+  contractService = new ContractService()
+
   editorDidMount = (ed: any, mon: any) => {
+    console.log('reget')
+    this.contractService.readContracts().then(() => {
+      // force redraw editor
+      this.forceUpdate()
+    }).catch((e) => { console.error(e) })
+
     this.monaco = mon
     this.editor = ed
     ed.focus()
@@ -47,7 +58,7 @@ export class Editor extends React.Component<Props> {
     }
     this.monaco.languages.registerCodeLensProvider('rust', {
       provideCodeLenses: function (model: any, token: any) {
-        return outerThis.props.codeGen.getInvokes(outerThis.props.contractTrait, commandId)
+        return outerThis.props.codeGen.getInvokes(commandId)
       },
       resolveCodeLens: function (model: any, codeLens: any, token: any) {
         return codeLens
@@ -56,8 +67,15 @@ export class Editor extends React.Component<Props> {
   }
 
   private handleInvokeModalClose(outerThis: any) {
-    console.log(this)
     outerThis.setState({ showInvokeModal: false })
+  }
+
+  generateContractCode() {
+    this.props.codeGen.generateHeader(this.props.author, this.props.license)
+    const traitLowerCase: string = this.props.contractTrait.toLowerCase()
+    const originalCode = this.contractService.getContractsContent(traitLowerCase)
+    this.props.codeGen.generateContractCode(originalCode, this.props.contractName)
+    this.contractCode = this.props.codeGen.getCode()
   }
 
   render() {
@@ -65,9 +83,7 @@ export class Editor extends React.Component<Props> {
       selectOnLineNumbers: true,
       readOnly: true
     }
-    this.props.codeGen.generateHeader(this.props.author, this.props.license)
-    this.props.codeGen.generateContractCode(this.props.contractTrait, this.props.contractName)
-    const contractCode = this.props.codeGen.getCode()
+    this.generateContractCode()
 
     return (
     <div className="Editor">
@@ -80,7 +96,7 @@ export class Editor extends React.Component<Props> {
             <Modal.Title>Invoke command example</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <pre>
+            <pre className='console'>
               <code>{this.modalBody}</code>
             </pre>
           </Modal.Body>
@@ -97,7 +113,7 @@ export class Editor extends React.Component<Props> {
         height="90vh"
         language="rust"
         theme="vs-dark"
-        value={contractCode}
+        value={this.contractCode}
         options={options}
         onMount={this.editorDidMount}
       />

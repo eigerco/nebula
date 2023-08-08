@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
-import { CodeGen } from './codegen/codegen'
+import { CodeGen } from './contractsources/codegen'
 import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
-import { InvokeCommandGen } from './codegen/invokecommandgen'
+import { InvokeCommandGen } from './contractsources/invokecommandgen'
 import { Navbar } from './Navbar'
 import './Wizard.css'
 
@@ -31,8 +31,8 @@ export function Wizard() {
       setShowInvokeModal(true)
     }
     if (type === 'Copy') {
-      const code = codeGen.getCode()
-      void navigator.clipboard.writeText(code)
+      // const code = codeGen.getCode()
+      // void navigator.clipboard.writeText(code)
     }
     if (type === 'Deploy') {
       setModalTitle('Deploy')
