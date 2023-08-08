@@ -16,6 +16,7 @@
 
 .buttons {
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .contract-menu {
@@ -29,17 +30,6 @@
 .buttons button {
   margin-bottom: 5px;
   width: 160px;
-}
-
-.contract-params {
-  border: 1px solid #4e4e4e;
-  margin-bottom: 1em;
-  margin-top: 1em;
-  padding: 1em;
-}
-
-.contract-params span {
-  min-width: 150px;
 }
 
 .bi {

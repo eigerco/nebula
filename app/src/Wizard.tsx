@@ -1,17 +1,15 @@
 import React, { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
-import { CodeGen } from './contractsources/codegen'
+import { ContractsCodeGen } from './contractsources/contractscodegen'
 import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
-import { InvokeCommandGen } from './contractsources/invokecommandgen'
 import { Navbar } from './Navbar'
 import './Wizard.css'
 
 export function Wizard() {
   const [contractTrait, setContractTrait] = useState('Raffle')
   const [contractName, setContractName] = useState('MyContract')
-  const [contractParams, setContractParams] = useState([])
   const [author, setAuthor] = useState('eigerco')
   const [license, setLicense] = useState('MIT')
   const [showInvokeModal, setShowInvokeModal] = useState(false)
@@ -19,7 +17,7 @@ export function Wizard() {
   const [modalBody, setModalBody] = useState('')
   const [modalBackground, setModalBackground] = useState('console')
 
-  const codeGen = new CodeGen()
+  const codeGen = new ContractsCodeGen()
 
   function handleClick(type: string) {
     setModalBackground('normal')
@@ -39,19 +37,6 @@ export function Wizard() {
       setModalBody('Not implemented yet')
       setShowInvokeModal(true)
     }
-    if (type === 'Invoke') {
-      const invokeGen = new InvokeCommandGen()
-      setModalTitle('Invoke contract')
-      setModalBackground('console')
-      setModalBody(
-        invokeGen.generateInvokeCommand(
-          contractTrait,
-          contractName,
-          contractParams
-        )
-      )
-      setShowInvokeModal(true)
-    }
     if (type === 'Open') {
       setModalTitle('Open in Pulsar')
       setModalBody('Not implemented yet')
@@ -67,16 +52,6 @@ export function Wizard() {
     setShowInvokeModal(false)
   }
 
-  function handleCopyToClipboard() {
-    const invokeGen = new InvokeCommandGen()
-    const invokeCode = invokeGen.generateInvokeCommand(
-      contractTrait,
-      contractName,
-      contractParams
-    )
-    void navigator.clipboard.writeText(invokeCode)
-  }
-
   return (
     <div className="Wizard">
       <Navbar currentPage="#/wizard" />
@@ -86,13 +61,11 @@ export function Wizard() {
             <Toolbox
               contractName={contractName}
               onContractNameChanged={setContractName}
-              contractTrait={contractTrait}
               onContractTraitChanged={setContractTrait}
               author={author}
               onAuthorChanged={setAuthor}
               license={license}
               onLicenseChanged={setLicense}
-              updateParams={setContractParams}
               handleClick={handleClick}
             />
           </div>
@@ -120,12 +93,12 @@ export function Wizard() {
               </pre>
             </Modal.Body>
             <Modal.Footer>
-              {modalBackground === 'console' && (
+              {/* {modalBackground === 'console' && (
                 <Button variant="secondary" onClick={handleCopyToClipboard}>
                   <i className="bi bi-clipboard"></i>
                   Copy to clipboard
                 </Button>
-              )}
+              )} */}
               <Button variant="secondary" onClick={handleInvokeModalClose}>
                 <i className="bi bi-x-circle"></i>
                 Close

@@ -1,14 +1,21 @@
-import { ContractFileReader } from './contractfilereader'
+import { ContractsRepoReader } from './contractsreporeader'
 
 export class ContractService {
-  private readonly contractsFileReader = new ContractFileReader()
+  private readonly contractsRepoReader = new ContractsRepoReader()
   private readonly contractsContent = new Map<string, string>()
 
   public async readContracts() {
-    let content = await this.contractsFileReader.readContractFile('contracts/voting/src/lib.rs')
-    this.contractsContent.set('voting', content)
-    content = await this.contractsFileReader.readContractFile('contracts/raffle/src/lib.rs')
-    this.contractsContent.set('raffle', content)
+    const content = await this.contractsRepoReader.readContractsDir('contracts')
+    for (const contract of content) {
+      await this.getContract(contract.name, contract.path)
+    }
+  }
+
+  private async getContract(name: string, path: string) {
+    const content = await this.contractsRepoReader.readContractFile(
+      `${path}/src/lib.rs`
+    )
+    this.contractsContent.set(name, content)
   }
 
   public getContractsContent(contractName: string): string | undefined {

@@ -15,7 +15,7 @@ interface Props {
 
 export class Editor extends React.Component<Props> {
   state = {
-    showInvokeModal: false
+    showInvokeModal: false,
   }
 
   modalBody = ''
@@ -26,11 +26,15 @@ export class Editor extends React.Component<Props> {
   contractService = new ContractService()
 
   editorDidMount = (ed: any, mon: any) => {
-    console.log('reget')
-    this.contractService.readContracts().then(() => {
-      // force redraw editor
-      this.forceUpdate()
-    }).catch((e) => { console.error(e) })
+    this.contractService
+      .readContracts()
+      .then(() => {
+        // force redraw editor
+        this.forceUpdate()
+      })
+      .catch(e => {
+        console.error(e)
+      })
 
     this.monaco = mon
     this.editor = ed
@@ -62,7 +66,7 @@ export class Editor extends React.Component<Props> {
       },
       resolveCodeLens: function (model: any, codeLens: any, token: any) {
         return codeLens
-      }
+      },
     })
   }
 
@@ -73,51 +77,65 @@ export class Editor extends React.Component<Props> {
   generateContractCode() {
     this.props.codeGen.generateHeader(this.props.author, this.props.license)
     const traitLowerCase: string = this.props.contractTrait.toLowerCase()
-    const originalCode = this.contractService.getContractsContent(traitLowerCase)
-    this.props.codeGen.generateContractCode(originalCode, this.props.contractName)
+    const originalCode =
+      this.contractService.getContractsContent(traitLowerCase)
+    this.props.codeGen.generateContractCode(
+      originalCode,
+      this.props.contractName
+    )
     this.contractCode = this.props.codeGen.getCode()
   }
 
   render() {
     const options = {
       selectOnLineNumbers: true,
-      readOnly: true
+      readOnly: true,
     }
     this.generateContractCode()
 
     return (
-    <div className="Editor">
-      <div
-        className="modal show"
-        style={{ display: 'block', position: 'initial' }}
-      >
-        <Modal show={this.state.showInvokeModal} onHide={() => { this.handleInvokeModalClose(this) } }>
-          <Modal.Header closeButton>
-            <Modal.Title>Invoke command example</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <pre className='console'>
-              <code>{this.modalBody}</code>
-            </pre>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => { this.handleInvokeModalClose(this) } }>
-              <i className="bi bi-x-circle"></i>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+      <div className="Editor">
+        <div
+          className="modal show"
+          style={{ display: 'block', position: 'initial' }}
+        >
+          <Modal
+            show={this.state.showInvokeModal}
+            onHide={() => {
+              this.handleInvokeModalClose(this)
+            }}
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Invoke command example</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <pre className="console">
+                <code>{this.modalBody}</code>
+              </pre>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  this.handleInvokeModalClose(this)
+                }}
+              >
+                <i className="bi bi-x-circle"></i>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </div>
+        <MonacoEditor
+          width="100%"
+          height="90vh"
+          language="rust"
+          theme="vs-dark"
+          value={this.contractCode}
+          options={options}
+          onMount={this.editorDidMount}
+        />
       </div>
-      <MonacoEditor
-        width="100%"
-        height="90vh"
-        language="rust"
-        theme="vs-dark"
-        value={this.contractCode}
-        options={options}
-        onMount={this.editorDidMount}
-      />
-    </div>
     )
   }
 }

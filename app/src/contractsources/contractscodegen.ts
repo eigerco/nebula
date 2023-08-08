@@ -1,7 +1,4 @@
-// import { RaffleCodeGen } from './rafflecodegen'
-// import { VotingCodeGen } from './votingcodegen'
-
-export class CodeGen {
+export class ContractsCodeGen {
   private header = ''
   private contractCode = ''
 
@@ -16,7 +13,10 @@ export class CodeGen {
     return this.header
   }
 
-  public generateContractCode(originalCode: string, contractName: string): string {
+  public generateContractCode(
+    originalCode: string,
+    contractName: string
+  ): string {
     if (originalCode === undefined) {
       return ''
     }
@@ -24,19 +24,31 @@ export class CodeGen {
 
     const contractIdx = this.contractCode.indexOf('#[contract]')
     if (contractIdx !== -1) {
-      const contractNameIdx = this.contractCode.indexOf('pub struct', contractIdx)
+      const contractNameIdx = this.contractCode.indexOf(
+        'pub struct',
+        contractIdx
+      )
       if (contractNameIdx !== -1) {
         const endLineIdx = this.contractCode.indexOf('\n', contractNameIdx)
-        this.contractCode = this.contractCode.replace(this.contractCode.substring(contractNameIdx + 11, endLineIdx), contractName)
+        this.contractCode = this.contractCode.replace(
+          this.contractCode.substring(contractNameIdx + 11, endLineIdx),
+          contractName
+        )
       }
     }
 
     const contractimplIdx = this.contractCode.indexOf('#[contractimpl]')
     if (contractimplIdx !== -1) {
-      const contractNameIdx = this.contractCode.indexOf('impl', contractimplIdx + 15)
+      const contractNameIdx = this.contractCode.indexOf(
+        'impl',
+        contractimplIdx + 15
+      )
       if (contractNameIdx !== -1) {
         const endLineIdx = this.contractCode.indexOf('{', contractNameIdx)
-        this.contractCode = this.contractCode.replace(this.contractCode.substring(contractNameIdx + 5, endLineIdx), contractName + ' ')
+        this.contractCode = this.contractCode.replace(
+          this.contractCode.substring(contractNameIdx + 5, endLineIdx),
+          contractName + ' '
+        )
       }
     }
     return this.contractCode
@@ -53,7 +65,8 @@ export class CodeGen {
     if (contractimplIdx !== -1) {
       let funIdx = this.contractCode.indexOf('pub fn', contractimplIdx)
       while (funIdx !== -1) {
-        const lineNo = this.contractCode.substring(0, funIdx).split(/\r\n|\r|\n/).length + 3 // +3 because of header
+        const lineNo =
+          this.contractCode.substring(0, funIdx).split(/\r\n|\r|\n/).length + 3 // +3 because of header
         const range = {
           startLineNumber: lineNo,
           startColumn: 1,
@@ -64,12 +77,12 @@ export class CodeGen {
         const funParams = this.getFunParams(funIdx)
         const command = {
           id: commandId(funName, funParams),
-          title: 'invoke'
+          title: 'invoke',
         }
         lenses.push({
-          range: range,
+          range,
           id: 'invoke',
-          command: command
+          command,
         })
         funIdx = this.contractCode.indexOf('pub fn', funIdx + 1)
         if (traitEndIdx !== -1 && funIdx >= traitEndIdx) {
@@ -78,8 +91,8 @@ export class CodeGen {
       }
     }
     return {
-      lenses: lenses,
-      dispose: () => {}
+      lenses,
+      dispose: () => {},
     }
   }
 
@@ -103,9 +116,18 @@ export class CodeGen {
         if (paramTypeEndIdx >= funEndIdx) {
           paramTypeEndIdx = funEndIdx
         }
-        const paramName = this.contractCode.substring(paramBegIdx, paramEndIdx).trimStart().trimEnd()
-        const paramType = this.contractCode.substring(paramEndIdx + 1, paramTypeEndIdx).trimStart().trimEnd()
-        params += `--${paramName} ${this.getDefaultValueForType(paramName, paramType)} \\\n\t`
+        const paramName = this.contractCode
+          .substring(paramBegIdx, paramEndIdx)
+          .trimStart()
+          .trimEnd()
+        const paramType = this.contractCode
+          .substring(paramEndIdx + 1, paramTypeEndIdx)
+          .trimStart()
+          .trimEnd()
+        params += `--${paramName} ${this.getDefaultValueForType(
+          paramName,
+          paramType
+        )} \\\n\t`
 
         paramBegIdx = this.contractCode.indexOf(',', paramEndIdx) + 1
         paramEndIdx = this.contractCode.indexOf(':', paramBegIdx)
