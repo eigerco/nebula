@@ -29,8 +29,8 @@ export function Wizard() {
       setShowInvokeModal(true)
     }
     if (type === 'Copy') {
-      // const code = codeGen.getCode()
-      // void navigator.clipboard.writeText(code)
+      const code = codeGen.getCode()
+      void navigator.clipboard.writeText(code)
     }
     if (type === 'Deploy') {
       setModalTitle('Deploy')

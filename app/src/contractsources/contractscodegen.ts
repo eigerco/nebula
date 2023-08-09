@@ -143,7 +143,7 @@ export class ContractsCodeGen {
 
   private getDefaultValueForType(name: string, type: string) {
     if (type === 'Address') {
-      return `${name}_address`
+      return `{${name}_address}`
     }
     if (type.startsWith('u') || type.startsWith('i')) {
       return '1'

@@ -27,6 +27,10 @@
   margin-top: 10px;
 }
 
+.input-group-text {
+  min-width: 100px;
+}
+
 .buttons button {
   margin-bottom: 5px;
   width: 160px;
