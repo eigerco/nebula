@@ -77,8 +77,7 @@ export class Editor extends React.Component<Props> {
   generateContractCode() {
     this.props.codeGen.generateHeader(this.props.author, this.props.license)
     const traitLowerCase: string = this.props.contractTrait.toLowerCase()
-    const originalCode =
-      this.contractService.getContractCode(traitLowerCase)
+    const originalCode = this.contractService.getContractCode(traitLowerCase)
     this.props.codeGen.generateContractCode(
       originalCode,
       this.props.contractName
