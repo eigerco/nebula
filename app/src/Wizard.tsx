@@ -93,12 +93,6 @@ export function Wizard() {
               </pre>
             </Modal.Body>
             <Modal.Footer>
-              {/* {modalBackground === 'console' && (
-                <Button variant="secondary" onClick={handleCopyToClipboard}>
-                  <i className="bi bi-clipboard"></i>
-                  Copy to clipboard
-                </Button>
-              )} */}
               <Button variant="secondary" onClick={handleInvokeModalClose}>
                 <i className="bi bi-x-circle"></i>
                 Close
