@@ -2,3 +2,7 @@
   background-color: #0d1117;
   padding: 1rem;
 }
+
+.codelens-decoration {
+  --vscode-editorCodeLens-fontSize: 13px;
+}
