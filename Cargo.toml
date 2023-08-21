@@ -4,8 +4,7 @@
 # We want to use v2 of the cargo dependency resolver.
 resolver = "2"
 # Our workspace members include the packages in the contracts directory.
-members = ["contracts/voting", "contracts/raffle"]
-
+members = ["contracts/voting", "contracts/simple_voting", "contracts/raffle"]
 
 [profile.release]
 opt-level = "z"
