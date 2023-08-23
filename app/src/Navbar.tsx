@@ -1,7 +1,7 @@
 import React from 'react'
 import { Nav } from 'react-bootstrap'
-import './Navbar.css'
-import logo from './logo.png'
+// import './Navbar.css'
+import logo from './logo.svg'
 
 export function Navbar({ currentPage }: any) {
   return (
@@ -18,10 +18,10 @@ export function Navbar({ currentPage }: any) {
           <img src={logo} width="32" alt="logo" /> Nebula
         </h1>
         <Nav.Item>
-          <Nav.Link href="#/">About</Nav.Link>
+          <Nav.Link href="/">About</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link href="#/wizard">Wizard</Nav.Link>
+          <Nav.Link href="/wizard">Wizard</Nav.Link>
         </Nav.Item>
       </Nav>
     </div>
