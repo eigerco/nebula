@@ -1,7 +1,7 @@
 import React from 'react'
 import { Nav } from 'react-bootstrap'
-// import './Navbar.css'
-import logo from './logo.svg'
+import Image from 'next/image'
+import Link from "next/link"
 
 export function Navbar({ currentPage }: any) {
   return (
@@ -15,13 +15,13 @@ export function Navbar({ currentPage }: any) {
           className="mx-3 my-auto"
           style={{ fontSize: '1.8rem', textAlign: 'justify' }}
         >
-          <img src={logo} width="32" alt="logo" /> Nebula
+          <Image src={'/logo.svg'} width="32" height={"32"} alt="logo" /> Nebula 
         </h1>
         <Nav.Item>
-          <Nav.Link href="/">About</Nav.Link>
+          <Nav.Link as={Link} href="/">About</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link href="/wizard">Wizard</Nav.Link>
+          <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
         </Nav.Item>
       </Nav>
     </div>

@@ -1,6 +1,6 @@
 import React from 'react'
 import Form from 'react-bootstrap/Form'
-import './Toolbox.css'
+// import './Toolbox.css'
 
 export function Toolbox({
   contractName,

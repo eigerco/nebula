@@ -5,9 +5,9 @@ import { ContractsCodeGen } from './contractsources/contractscodegen'
 import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
 import { Navbar } from './Navbar'
-import './Wizard.css'
+// import './Wizard.css'
 
-export function Wizard() {
+export default function Wizard() {
   const [contractTrait, setContractTrait] = useState('Raffle')
   const [contractName, setContractName] = useState('MyContract')
   const [author, setAuthor] = useState('eigerco')
@@ -54,7 +54,7 @@ export function Wizard() {
 
   return (
     <div className="Wizard">
-      <Navbar currentPage="#/wizard" />
+      <Navbar currentPage="/wizard" />
       <div className="flex flex-grow-1">
         <div className="col-3 position-fixed">
           <div className="flex-column flex-nowrap p-3">
