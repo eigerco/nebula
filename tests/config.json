@@ -1,0 +1,8 @@
+{
+  "server" : {
+    "friendbot": "https://friendbot-futurenet.stellar.org/",
+    "url": "https://horizon-futurenet.stellar.org/",
+    "network": "futurenet"
+  },
+  "show_logs": false
+}
