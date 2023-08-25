@@ -9,7 +9,6 @@ export class RaffleTests extends BaseTests {
   }
 
   async getTokenId() {
-    let resultOk = true
     await this.runSoroban([
       'lab',
       'token',
@@ -17,23 +16,14 @@ export class RaffleTests extends BaseTests {
       '--asset',
       'native',
       '--network',
-      this.config.network,
-    ]).then(
-      data => {
-        this.tokenId = data.toString().trim()
-      },
-      error => {
-        this.logs.push(error.toString())
-        resultOk = false
-        console.error('error: ', error.toString())
-      }
-    )
-    return resultOk
+      this.config.network
+    ]).then(async data => {
+      this.tokenId = data.toString().trim()
+    })
   }
 
   async invokeInit() {
-    let resultOk = true
-    await this.runSoroban([
+    return await this.runSoroban([
       'contract',
       'invoke',
       '--id',
@@ -51,59 +41,40 @@ export class RaffleTests extends BaseTests {
       '--max_winners_count',
       '1',
       '--ticket_price',
-      '5001',
-    ]).then(
-      data => {
-        if (this.config.showLogs) {
-          console.log(data.toString().trim())
-        }
-      },
-      error => {
-        this.logs.push(error.toString())
-        resultOk = false
-        console.error('error: ', error.toString())
-      }
-    )
-    return resultOk
+      '5001'
+    ])
   }
 
   async invokeBuyTickets() {
-    let resultOk = true
-    for (const acc of this.accounts.keys()) {
-      if (acc !== 'admin') {
-        await this.runSoroban([
-          'contract',
-          'invoke',
-          '--id',
-          this.contractId,
-          '--source',
-          acc,
-          '--network',
-          this.config.network,
-          '--',
-          'buy_ticket',
-          '--by',
-          this.accounts.get(acc)[0],
-        ]).then(
-          data => {
-            if (this.config.showLogs) {
-              console.log(data.toString().trim())
-            }
-          },
-          error => {
-            this.logs.push(error.toString())
-            resultOk = false
-            console.error('error: ', error.toString())
-          }
-        )
-      }
-    }
-    return resultOk
+    return await Array.from(this.accounts.keys())
+      .filter(r => r !== 'admin')
+      .reduce(async (p, acc) => {
+        return await p.then(async r => {
+          this.handleResult(r)
+          return await this.invokeBuyOneTicket(acc)
+        })
+      }, Promise.resolve())
+  }
+
+  async invokeBuyOneTicket(acc: string) {
+    return await this.runSoroban([
+      'contract',
+      'invoke',
+      '--id',
+      this.contractId,
+      '--source',
+      acc,
+      '--network',
+      this.config.network,
+      '--',
+      'buy_ticket',
+      '--by',
+      this.accounts.get(acc)[0]
+    ])
   }
 
   async invokePlayRaffle() {
-    let resultOk = true
-    await this.runSoroban([
+    return await this.runSoroban([
       'contract',
       'invoke',
       '--id',
@@ -115,67 +86,61 @@ export class RaffleTests extends BaseTests {
       '--',
       'play_raffle',
       '--random_seed',
-      '1234',
-    ]).then(
-      data => {
-        if (this.config.showLogs) {
-          console.log(data.toString().trim())
-        }
-      },
-      error => {
-        this.logs.push(error.toString())
-        resultOk = false
-        console.error('error: ', error.toString())
-      }
-    )
-    return resultOk
+      '1234'
+    ])
   }
 
   async checkBalance() {
-    let resultOk = true
-    for (const acc of this.accounts.keys()) {
-      if (acc !== 'admin') {
-        await this.runSoroban([
-          'contract',
-          'invoke',
-          '--id',
-          this.tokenId,
-          '--network',
-          this.config.network,
-          '--',
-          'balance',
-          '--id',
-          this.accounts.get(acc)[0],
-        ]).then(
-          data => {
-            if (this.config.showLogs) {
-              console.log(data.toString().trim())
-            }
-          },
-          error => {
-            this.logs.push(error.toString())
-            resultOk = false
-            console.error('error: ', error.toString())
-          }
-        )
-      }
-    }
-    return resultOk
+    return await Array.from(this.accounts.keys())
+      .filter(r => r !== 'admin')
+      .reduce(async (p, acc) => {
+        return await p.then(async r => {
+          this.handleResult(r)
+          return await this.checkBalanceForAccount(acc)
+        })
+      }, Promise.resolve())
   }
 
-  public async run(): Promise<boolean> {
-    let result = await this.createAccounts()
-    if (!result) return false
-    result = await this.deployContract('raffle')
-    if (!result) return false
-    result = await this.getTokenId()
-    if (!result) return false
-    result = await this.invokeInit()
-    if (!result) return false
-    result = await this.invokeBuyTickets()
-    if (!result) return false
-    result = await this.invokePlayRaffle()
-    if (!result) return false
-    return await this.checkBalance()
+  async checkBalanceForAccount(acc: string) {
+    return await this.runSoroban([
+      'contract',
+      'invoke',
+      '--id',
+      this.tokenId,
+      '--network',
+      this.config.network,
+      '--',
+      'balance',
+      '--id',
+      this.accounts.get(acc)[0]
+    ])
+  }
+
+  public async run() {
+    return await this.createAccounts()
+      .then(async r => {
+        this.handleResult(r)
+        await this.deployContract('raffle')
+      })
+      .then(async r => {
+        this.handleResult(r)
+        await this.getTokenId()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokeInit()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokeBuyTickets()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokePlayRaffle()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.checkBalance()
+      })
   }
 }

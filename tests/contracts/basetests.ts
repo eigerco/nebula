@@ -6,7 +6,7 @@ import type { AppConfig } from '../appconfig'
 export enum OperationType {
   UploadContract,
   CreateContract,
-  InvokeMethod,
+  InvokeMethod
 }
 
 export class OperationFee {
@@ -24,7 +24,7 @@ export abstract class BaseTests {
     ['admin', []],
     ['player_1', []],
     ['player_2', []],
-    ['player_3', []],
+    ['player_3', []]
   ])
 
   protected contractId: string = ''
@@ -32,37 +32,36 @@ export abstract class BaseTests {
   constructor(protected config: AppConfig) {}
 
   async createAccounts() {
-    let resultOk = true
+    const promises = []
     for (const acc of this.accounts.keys()) {
-      await this.runSoroban(['config', 'identity', 'generate', acc])
-      await this.runSoroban(['config', 'identity', 'address', acc]).then(
-        async data => {
-          const id = data.toString().trim()
-          await this.runSoroban(['config', 'identity', 'show', acc]).then(
-            pwd => {
-              this.accounts.set(acc, [id, pwd.toString().trim()])
-            }
-          )
-          const url = `${this.config.friendbot}?addr=${id}`
-          const res = await fetch(url)
-          const json = await res.json()
-
-          if (this.config.showLogs) {
-            console.log(json)
-          }
-        },
-        error => {
-          resultOk = false
-          const strError: string = error.toString()
-          console.error(`error: ${strError}`)
-        }
+      promises.push(
+        this.createAccount(acc).then(async values => {
+          const id = values[0].toString().trim()
+          const pwd = values[1].toString().trim()
+          this.accounts.set(acc, [id, pwd])
+          return await this.fundAccount(id)
+        })
       )
     }
-    return resultOk
+    return await Promise.all(promises)
+  }
+
+  private async createAccount(acc: string) {
+    return await this.runSoroban(['config', 'identity', 'generate', acc]).then(
+      async r =>
+        await Promise.all([
+          this.runSoroban(['config', 'identity', 'address', acc]),
+          this.runSoroban(['config', 'identity', 'show', acc])
+        ])
+    )
+  }
+
+  private async fundAccount(id: string) {
+    const url = `${this.config.friendbot}?addr=${id}`
+    return await fetch(url).then(async r => await r.json())
   }
 
   async deployContract(contract: string) {
-    let result = true
     await this.runSoroban([
       'contract',
       'deploy',
@@ -71,17 +70,10 @@ export abstract class BaseTests {
       '--wasm',
       `../target/wasm32-unknown-unknown/release/${contract}.wasm`,
       '--network',
-      this.config.network,
-    ]).then(
-      data => {
-        this.contractId = data.toString().trim()
-      },
-      error => {
-        result = false
-        console.error(error)
-      }
-    )
-    return result
+      this.config.network
+    ]).then(async data => {
+      this.contractId = data.toString().trim()
+    })
   }
 
   protected async runSoroban(args: string[]) {
@@ -117,11 +109,11 @@ export abstract class BaseTests {
 
   protected async calculateFeesForAccount(account: string) {
     const server = new StellarSdk.Server(this.config.server)
-    await server
+    return server
       .transactions()
       .forAccount(this.accounts.get(account)[0])
       .call()
-      .then(r => {
+      .then(async r => {
         const adminFees = new Array<OperationFee>()
         for (let i = 1; i < r.records.length; ++i) {
           const tx = r.records[i]
@@ -150,15 +142,25 @@ export abstract class BaseTests {
             this.invokeFee += operationFee.fee
           }
           adminFees.push(operationFee)
-          if (this.config.showLogs) {
-            console.log(
-              `${operationFee.methodName} fee: ${operationFee.fee.toString()}`
-            )
-          }
         }
         this.fees.set(account, adminFees)
+        await Promise.resolve()
       })
   }
 
-  abstract run(): Promise<boolean>
+  protected handleResult(data) {
+    if (this.config.showLogs && data !== undefined) {
+      if (data instanceof String) {
+        data = data.trim()
+      }
+      console.log(JSON.stringify(data))
+    }
+  }
+
+  protected handleError(error) {
+    this.logs.push(error.toString())
+    console.error(error)
+  }
+
+  abstract run()
 }

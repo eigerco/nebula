@@ -9,8 +9,7 @@ export class VotingTests extends BaseTests {
   }
 
   async invokeInit() {
-    let resultOk = true
-    await this.runSoroban([
+    return await this.runSoroban([
       'contract',
       'invoke',
       '--id',
@@ -28,25 +27,12 @@ export class VotingTests extends BaseTests {
       '--target_approval_rate_bps',
       '50000',
       '--total_voters',
-      '3',
-    ]).then(
-      data => {
-        if (this.config.showLogs) {
-          console.log(data.toString().trim())
-        }
-      },
-      error => {
-        this.logs.push(error.toString())
-        resultOk = false
-        console.error(error)
-      }
-    )
-    return resultOk
+      '3'
+    ])
   }
 
   async invokeCreateProposal() {
-    let resultOk = true
-    await this.runSoroban([
+    return await this.runSoroban([
       'contract',
       'invoke',
       '--id',
@@ -58,66 +44,48 @@ export class VotingTests extends BaseTests {
       '--',
       'create_proposal',
       '--id',
-      '1',
-    ]).then(
-      data => {
-        if (this.config.showLogs) {
-          console.log(data.toString().trim())
-        }
-      },
-      error => {
-        this.logs.push(error.toString())
-        resultOk = false
-        console.error(error)
-      }
-    )
-    return resultOk
+      '1'
+    ])
   }
 
   async invokeVote() {
-    let resultOk = true
-    for (const acc of this.accounts.keys()) {
-      if (acc !== 'admin') {
-        await this.runSoroban([
-          'contract',
-          'invoke',
-          '--id',
-          this.contractId,
-          '--source',
-          acc,
-          '--network',
-          this.config.network,
-          '--',
-          'vote',
-          '--voter',
-          this.accounts.get(acc)[0],
-          '--id',
-          '1',
-        ]).then(
-          data => {
-            if (this.config.showLogs) {
-              console.log(data.toString().trim())
-            }
-          },
-          error => {
-            this.logs.push(error.toString())
-            resultOk = false
-            console.error(error)
-          }
-        )
-      }
-    }
-    return resultOk
+    // invokes need to be called one after another!
+    return await Array.from(this.accounts.keys())
+      .filter(r => r !== 'admin')
+      .reduce(async (p, acc) => {
+        return await p.then(async r => {
+          this.handleResult(r)
+          return await this.invokeSingleVote(acc)
+        })
+      }, Promise.resolve())
+  }
+
+  async invokeSingleVote(acc: string) {
+    return await this.runSoroban([
+      'contract',
+      'invoke',
+      '--id',
+      this.contractId,
+      '--source',
+      acc,
+      '--network',
+      this.config.network,
+      '--',
+      'vote',
+      '--voter',
+      this.accounts.get(acc)[0],
+      '--id',
+      '1'
+    ])
   }
 
   async checkResults() {
     const server = new StellarSdk.Server(this.config.server)
-    let resultOk = false
-    await server
+    return server
       .transactions()
       .forAccount(this.accounts.get('player_2')[0])
       .call()
-      .then(r => {
+      .then(async r => {
         const tx = r.records[r.records.length - 1]
         // use SorobanClient here, as StellarSdk.xdr has problems with parsing the meta
         const resultMeta = SorobanClient.xdr.TransactionMeta.fromXDR(
@@ -128,29 +96,44 @@ export class VotingTests extends BaseTests {
           resultMeta._value._attributes.sorobanMeta._attributes.events[0]
             ._attributes.body._value._attributes.data._value
         if (result === 6666) {
-          resultOk = true
+          await Promise.resolve()
+        } else {
+          return await Promise.reject(new Error('Voting result different than expected'))
         }
       })
-    return resultOk
   }
 
   async calculateFees() {
-    await this.calculateFeesForAccount('admin')
-    await this.calculateFeesForAccount('player_1')
+    return await this.calculateFeesForAccount('admin').then(
+      async r => await this.calculateFeesForAccount('player_1')
+    )
   }
 
-  public async run(): Promise<boolean> {
-    let result = await this.createAccounts()
-    if (!result) return false
-    result = await this.deployContract('voting')
-    if (!result) return false
-    result = await this.invokeInit()
-    if (!result) return false
-    result = await this.invokeCreateProposal()
-    if (!result) return false
-    result = await this.invokeVote()
-    if (!result) return false
-    await this.calculateFees()
-    return await this.checkResults()
+  public async run() {
+    return await this.createAccounts()
+      .then(async r => {
+        this.handleResult(r)
+        await this.deployContract('voting')
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokeInit()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokeCreateProposal()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.invokeVote()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.calculateFees()
+      })
+      .then(async r => {
+        this.handleResult(r)
+        return await this.checkResults()
+      })
   }
 }

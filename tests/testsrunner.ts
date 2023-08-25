@@ -8,7 +8,6 @@ export class TestsRunner {
   private readonly config: AppConfig = new AppConfig()
 
   constructor() {
-    this.config.parseConfig()
     this.tests.set('voting', new VotingTests(this.config))
     this.tests.set('raffle', new RaffleTests(this.config))
   }
@@ -27,10 +26,17 @@ export class TestsRunner {
       console.log('---------------------------------------')
       console.log(`Running ${testName} test...`)
       console.log('---------------------------------------')
-      const result = await test.run()
+
+      let result = true
+      await test.run().catch(e => {
+        console.error(e)
+        result = false
+      })
+
       if (!result) {
         break
       }
+
       console.log('Test costs:')
       console.log('------------')
       for (const feeName of test.fees.keys()) {

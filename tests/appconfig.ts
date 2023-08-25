@@ -1,15 +1,8 @@
 import configJson from './config.json'
 
 export class AppConfig {
-  public friendbot: string = ''
-  public server: string = ''
-  public network: string = ''
-  public showLogs: boolean = true
-
-  public parseConfig() {
-    this.friendbot = configJson.server.friendbot
-    this.server = configJson.server.url
-    this.network = configJson.server.network
-    this.showLogs = configJson.show_logs
-  }
+  public friendbot: string = configJson.server.friendbot
+  public server: string = configJson.server.url
+  public network: string = configJson.server.network
+  public showLogs: boolean = configJson.show_logs
 }
