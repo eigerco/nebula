@@ -7,4 +7,4 @@ assignees: ''
 
 ---
 
-Please for opening security issue, please contact tbd@eiger.co . For security reasons, DO NOT PUBLISH HERE INFORMATION.
+Please for opening security issue, please contact hello@eiger.co . For security reasons, DO NOT PUBLISH HERE INFORMATION.
