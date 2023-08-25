@@ -159,6 +159,4 @@ export abstract class BaseTests {
         this.fees.set(account, adminFees)
       })
   }
-
-  abstract run(): Promise<boolean>
 }
