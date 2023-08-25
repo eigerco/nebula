@@ -29,6 +29,7 @@ module.exports = {
     "@typescript-eslint/strict-boolean-expressions" : 0,
     "@typescript-eslint/restrict-plus-operands" : 0,
     "@typescript-eslint/no-base-to-string" : 0,
-    "@typescript-eslint/restrict-template-expressions" : 0
+    "@typescript-eslint/restrict-template-expressions" : 0,
+    "@typescript-eslint/indent" : 0
   },
 };
