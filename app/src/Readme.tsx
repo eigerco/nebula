@@ -1,10 +1,10 @@
 import React from 'react'
 import { Navbar } from './Navbar'
 
-export function Readme({ currentPage }: any) {
+export default function Readme({ currentPage }: any) {
   return (
     <div className="p-3">
-      <Navbar currentPage="#/" />
+      <Navbar currentPage="/" />
       <h2>What is it?</h2>
       <p>
         Nebula is a tool for easing development of Soroban smart contracts being

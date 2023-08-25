@@ -2,7 +2,6 @@ import React from 'react'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 import MonacoEditor from '@monaco-editor/react'
-import './Editor.css'
 import { ContractService } from './contractsources/contractservice'
 
 interface Props {
@@ -93,7 +92,7 @@ export class Editor extends React.Component<Props> {
     this.generateContractCode()
 
     return (
-      <div className="Editor">
+      <div className={'Editor'}>
         <div
           className="modal show"
           style={{ display: 'block', position: 'initial' }}
