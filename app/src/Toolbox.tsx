@@ -1,14 +1,11 @@
 import React from 'react'
 import Form from 'react-bootstrap/Form'
-import { ContractParams } from './contractparams/ContractParams'
 import './Toolbox.css'
 
 export function Toolbox({
   contractName,
   onContractNameChanged,
-  contractTrait,
   onContractTraitChanged,
-  updateParams,
   author,
   onAuthorChanged,
   license,
@@ -45,49 +42,6 @@ export function Toolbox({
           {/* <option disabled>NFT</option> */}
         </Form.Select>
       </div>
-      <div>
-        <div className="row mt-1">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary w-100"
-              onClick={e => handleClick('Copy')}
-              title="Copy to clipboard"
-            >
-              <i className="bi bi-clipboard"></i>Copy
-            </button>
-          </div>
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary w-100"
-              onClick={e => handleClick('Invoke')}
-              title="Invoke"
-            >
-              <i className="bi bi-gear"></i>Invoke
-            </button>
-          </div>
-        </div>
-        <div className="row mt-1">
-          <div className="col">
-            <button
-              type="button"
-              className="btn btn-secondary w-100"
-              onClick={e => handleClick('Open')}
-              title="Open in Playground"
-            >
-              <i className="bi bi-code-square"></i> Open in Playground
-            </button>
-          </div>
-        </div>
-      </div>
-      <label className="params">Init params:</label>
-      <div className="contract-params">
-        <ContractParams
-          contractTrait={contractTrait}
-          updateParams={updateParams}
-        />
-      </div>
       <div className="input-group mb-2">
         <span className="input-group-text">Author</span>
         <input
@@ -109,6 +63,30 @@ export function Toolbox({
           value={license}
           onChange={e => onLicenseChanged(e.target.value)}
         />
+      </div>
+      <div className="buttons">
+        <div className="row mt-1">
+          <div className="col">
+            <button
+              type="button"
+              className="btn btn-secondary w-100"
+              onClick={e => handleClick('Copy')}
+              title="Copy to clipboard"
+            >
+              <i className="bi bi-clipboard"></i>Copy
+            </button>
+          </div>
+          <div className="col">
+            <button
+              type="button"
+              className="btn btn-secondary w-100"
+              onClick={e => handleClick('Open')}
+              title="Open in Playground"
+            >
+              <i className="bi bi-code-square"></i> Open in Playground
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
