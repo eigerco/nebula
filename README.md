@@ -15,7 +15,7 @@ interoperability of the tools that are planned to be built:
 * The [Nebula's UI](#wizard-ui) wizard.
 * The [smart contracts](#contracts).
 
-⚠️ Currently, production usage is discouraged.
+⚠️ Disclaimer: Currently, production usage is discouraged.
 
 ## Wizard UI
 
