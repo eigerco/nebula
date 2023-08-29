@@ -17,6 +17,7 @@ use soroban_sdk::{
 enum DataKey {
     Initialized = 1,
     Curator = 2,
+    Token = 3,
 }
 
 /// All the expected errors this contract expects.
@@ -35,8 +36,7 @@ pub struct GovernanceContract;
 
 #[contractimpl]
 impl GovernanceContract {
-    
-    pub fn init(env: Env, curator: Address) {
+    pub fn init(env: Env, curator: Address, token: Address) {
         let storage = env.storage().persistent();
 
         if storage.has(&DataKey::Initialized) {
@@ -44,6 +44,7 @@ impl GovernanceContract {
         }
         storage.set(&DataKey::Initialized, &());
         storage.set(&DataKey::Curator, &curator);
+        storage.set(&DataKey::Token, &token);
     }
 }
 
