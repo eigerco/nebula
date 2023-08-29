@@ -40,11 +40,15 @@ jobs:
 
       - name: Lint
         run: cargo clippy --all-targets --all-features
+      - name: Upload compiled contracts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wasm-files
+          path: target/wasm32-unknown-unknown/release/*.wasm
 
   test:
     needs: build
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
