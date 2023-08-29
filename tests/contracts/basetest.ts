@@ -15,23 +15,26 @@ export class OperationFee {
   methodName: string
 }
 
-export abstract class BaseTests {
+export abstract class BaseTest {
   fees: Map<string, OperationFee[]> = new Map<string, OperationFee[]>()
   deployFee: number = 0
   invokeFee: number = 0
   protected logs: string[] = new Array<string>()
-  protected accounts: Map<string, string[]> = new Map<string, string[]>([
-    ['admin', []],
-    ['player_1', []],
-    ['player_2', []],
-    ['player_3', []]
-  ])
+  protected accounts: Map<string, string[]> = new Map<string, string[]>()
 
   protected contractId: string = ''
 
   constructor(protected config: AppConfig) {}
 
+  setupAccountNames() {
+    this.accounts.set('admin', [])
+    this.accounts.set('player_1', [])
+    this.accounts.set('player_2', [])
+    this.accounts.set('player_3', [])
+  }
+
   async createAccounts() {
+    this.setupAccountNames()
     const promises = []
     for (const acc of this.accounts.keys()) {
       promises.push(
@@ -62,15 +65,11 @@ export abstract class BaseTests {
   }
 
   async deployContract(contract: string) {
-    await this.runSoroban([
-      'contract',
-      'deploy',
-      '--source',
-      'admin',
-      '--wasm',
-      `../target/wasm32-unknown-unknown/release/${contract}.wasm`,
-      '--network',
-      this.config.network
+    // prettier-ignore
+    await this.runSoroban(['contract', 'deploy',
+      '--source', 'admin',
+      '--wasm', `../target/wasm32-unknown-unknown/release/${contract}.wasm`,
+      '--network', this.config.network
     ]).then(async data => {
       this.contractId = data.toString().trim()
     })
@@ -148,10 +147,10 @@ export abstract class BaseTests {
       })
   }
 
-  protected handleResult(data) {
+  printLogs(data) {
     if (this.config.showLogs && data !== undefined) {
       if (data instanceof String) {
-        data = data.trim()
+        console.log(data.trim())
       }
       console.log(JSON.stringify(data))
     }
@@ -162,5 +161,21 @@ export abstract class BaseTests {
     console.error(error)
   }
 
-  abstract run()
+  displayTestCosts() {
+    console.log('---------------------------------------')
+    console.log('|              Test costs             |')
+    console.log('---------------------------------------')
+    for (const feeName of this.fees.keys()) {
+      for (const operationFee of this.fees.get(feeName)) {
+        console.log(`${operationFee.methodName}: ${operationFee.fee}`)
+      }
+    }
+    console.log('---------------------------------------')
+    console.log(
+      `Total contract deployment fee: ${this.deployFee}\nTotal invoke fee: ${this.invokeFee}`
+    )
+    console.log('---------------------------------------')
+  }
+
+  // abstract run()
 }

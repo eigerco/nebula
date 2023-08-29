@@ -2,9 +2,9 @@
   "name": "tests",
   "version": "1.0.0",
   "description": "",
-  "main": "app.ts",
+  "type": "module",
   "scripts": {
-    "tests": "ts-node app.ts",
+    "test": "node --loader tsx --test **/*.test.ts",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint --ext .ts ./",
     "lint:prettier": "prettier --check ./*.ts",
@@ -31,6 +31,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
-    "prettier": "^2.8.8"
+    "prettier": "^2.8.8",
+    "tsx": "^3.12.7"
   }
 }
