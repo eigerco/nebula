@@ -136,7 +136,7 @@ impl RaffleContract {
             return Err(Error::InsufficientFunds);
         }
 
-        token_client.transfer(&by, &env.current_contract_address(), &price);
+        // token_client.transfer(&by, &env.current_contract_address(), &price);
 
         let mut candidates = storage
             .get::<_, Vec<Address>>(&DataKey::Candidates)
@@ -146,7 +146,7 @@ impl RaffleContract {
         Ok(candidates.len())
     }
 
-    /// Allows an admin to play the raffle anytime.
+    /// Allows an admin to play the raffle anytime.da
     /// The only requirement is to have at least one participant.
     ///
     /// # Arguments
