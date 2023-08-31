@@ -132,9 +132,8 @@ fn participant_cant_join_without_enough_funds() {
     sc.token_admin_client.mint(&participant_addr, &199);
 
     // Init contract
-    let curator = Address::random(&sc.env);
     sc.contract_client
-        .init(&curator, &sc.token_admin_client.address);
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
     // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &200);
@@ -152,9 +151,8 @@ fn participant_cant_join_with_negative_stake() {
     sc.token_admin_client.mint(&participant_addr, &199);
 
     // Init contract
-    let curator = Address::random(&sc.env);
     sc.contract_client
-        .init(&curator, &sc.token_admin_client.address);
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
     // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &-1);
@@ -172,9 +170,8 @@ fn participant_cant_join_with_zero_stake() {
     sc.token_admin_client.mint(&participant_addr, &199);
 
     // Init contract
-    let curator = Address::random(&sc.env);
     sc.contract_client
-        .init(&curator, &sc.token_admin_client.address);
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
     // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &0);
