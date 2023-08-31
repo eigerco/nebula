@@ -167,3 +167,57 @@ fn participant_cant_join_with_zero_stake() {
 
     sc.contract_client.join(&participant_addr, &0);
 }
+
+#[test]
+fn participant_can_withdraw_all_funds() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_addr = Address::random(&sc.env);
+    // Add funds to client address (as participant)
+    sc.token_admin_client.mint(&participant_addr, &1000);
+
+    // Init contract
+    let curator = Address::random(&sc.env);
+    sc.contract_client
+        .init(&curator, &sc.token_admin_client.address);
+
+    // Join the participant (in this case same as client)
+    let initial_stake = 200;
+    sc.contract_client.join(&participant_addr, &initial_stake);
+
+    sc.contract_client.withdraw(&participant_addr);
+
+    // Ensure we check participant is who says.
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        participant_addr.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "withdraw"),
+        (participant_addr.clone(),).into_val(&sc.env),
+    );
+
+    // After withdrawing, all balances return to initial status.
+    assert_eq!(0, sc.token_client.balance(&sc.contract_id));
+    assert_eq!(1000, sc.token_client.balance(&participant_addr));
+
+    // A proper withdrawal event should be published.
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id,
+                (
+                    Symbol::new(&sc.env, "participant_abandoned"),
+                    participant_addr
+                )
+                    .into_val(&sc.env),
+                200i128.into_val(&sc.env)
+            ),
+        ]
+    )
+}

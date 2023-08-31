@@ -96,6 +96,36 @@ impl GovernanceContract {
             initial_stake,
         );
     }
+
+    pub fn withdraw(env: Env, participant: Address) {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+
+        let mut participants = storage
+            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
+            .unwrap();
+        let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_addr);
+
+        let stored_participant = participants.get(participant.clone()).unwrap();
+
+        token_client.transfer(
+            &env.current_contract_address(),
+            &participant,
+            &stored_participant.current_balance,
+        );
+
+        let prev_balance = stored_participant.current_balance;
+
+        participants.remove(participant.clone());
+        storage.set(&DataKey::Participants, &participants);
+
+        env.events().publish(
+            (Symbol::new(&env, "participant_abandoned"), &participant),
+            prev_balance,
+        );
+    }
 }
 
 #[contracttype]
