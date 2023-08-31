@@ -28,7 +28,7 @@ enum DataKey {
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
-enum Error {
+pub enum Error {
     /// The contract should be only initialized once.
     AlreadyInitialized = 1,
     // Must have funds for the operation.
@@ -105,26 +105,44 @@ impl GovernanceContract {
         let mut participants = storage
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
-        let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
-        let token_client = token::Client::new(&env, &token_addr);
 
-        let stored_participant = participants.get(participant.clone()).unwrap();
+        let mut stored_participant = participants.get(participant.clone()).unwrap();
 
-        token_client.transfer(
-            &env.current_contract_address(),
-            &participant,
-            &stored_participant.current_balance,
-        );
+        let amount = stored_participant.current_balance;
 
-        let prev_balance = stored_participant.current_balance;
+        Self::withdraw_stake(&env, &mut stored_participant, amount).unwrap();
 
         participants.remove(participant.clone());
         storage.set(&DataKey::Participants, &participants);
 
-        env.events().publish(
-            (Symbol::new(&env, "participant_abandoned"), &participant),
-            prev_balance,
+        env.events()
+            .publish((Symbol::new(&env, "participant_left"), &participant), ());
+
+    }
+
+    fn withdraw_stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
+        if participant.current_balance < amount {
+            return Err(Error::InsufficientFunds);
+        }
+
+        let storage = env.storage().persistent();
+        let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(env, &token_addr);
+
+        token_client.transfer(
+            &env.current_contract_address(),
+            &participant.address,
+            &participant.current_balance,
         );
+
+        participant.current_balance -= amount;
+
+        env.events().publish(
+            (Symbol::new(env, "withdraw"), &participant.address),
+            amount,
+        );
+
+        Ok(())
     }
 }
 

@@ -203,20 +203,25 @@ fn participant_can_withdraw_all_funds() {
     assert_eq!(0, sc.token_client.balance(&sc.contract_id));
     assert_eq!(1000, sc.token_client.balance(&participant_addr));
 
-    // A proper withdrawal event should be published.
-    let last_event = sc.env.events().all().last().unwrap();
+    // A proper withdrawal and participant left events should be published.
+    let last_events = sc
+        .env
+        .events()
+        .all()
+        .slice(sc.env.events().all().len() - 2..);
     assert_eq!(
-        vec![&sc.env, last_event],
+        last_events,
         vec![
             &sc.env,
             (
-                sc.contract_id,
-                (
-                    Symbol::new(&sc.env, "participant_abandoned"),
-                    participant_addr
-                )
-                    .into_val(&sc.env),
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "withdraw"), participant_addr.clone()).into_val(&sc.env),
                 200i128.into_val(&sc.env)
+            ),
+            (
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "participant_left"), participant_addr).into_val(&sc.env),
+                ().into_val(&sc.env)
             ),
         ]
     )
