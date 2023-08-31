@@ -169,7 +169,7 @@ fn participant_cant_join_with_zero_stake() {
 }
 
 #[test]
-fn participant_can_withdraw_all_funds() {
+fn participant_can_leave_withdrawing_all_funds() {
     let sc = setup_scenario();
 
     sc.env.mock_all_auths();
@@ -187,7 +187,7 @@ fn participant_can_withdraw_all_funds() {
     let initial_stake = 200;
     sc.contract_client.join(&participant_addr, &initial_stake);
 
-    sc.contract_client.withdraw(&participant_addr);
+    sc.contract_client.leave(&participant_addr);
 
     // Ensure we check participant is who says.
     assert_auth(
@@ -195,7 +195,7 @@ fn participant_can_withdraw_all_funds() {
         0,
         participant_addr.clone(),
         sc.contract_client.address.clone(),
-        Symbol::new(&sc.env, "withdraw"),
+        Symbol::new(&sc.env, "leave"),
         (participant_addr.clone(),).into_val(&sc.env),
     );
 

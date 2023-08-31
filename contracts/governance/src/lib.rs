@@ -97,7 +97,7 @@ impl GovernanceContract {
         );
     }
 
-    pub fn withdraw(env: Env, participant: Address) {
+    pub fn leave(env: Env, participant: Address) {
         participant.require_auth();
 
         let storage = env.storage().persistent();
@@ -117,7 +117,6 @@ impl GovernanceContract {
 
         env.events()
             .publish((Symbol::new(&env, "participant_left"), &participant), ());
-
     }
 
     fn withdraw_stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
@@ -137,10 +136,8 @@ impl GovernanceContract {
 
         participant.current_balance -= amount;
 
-        env.events().publish(
-            (Symbol::new(env, "withdraw"), &participant.address),
-            amount,
-        );
+        env.events()
+            .publish((Symbol::new(env, "withdraw"), &participant.address), amount);
 
         Ok(())
     }
