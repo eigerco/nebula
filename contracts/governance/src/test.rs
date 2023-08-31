@@ -23,10 +23,6 @@ fn cannot_be_initialized_twice() {
         .init(&sc.contract_client.address, &sc.token_client.address);
 }
 
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::AdminClient<'a> {
-    token::AdminClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
-}
-
 fn setup_scenario<'a>() -> Scenario<'a> {
     let env = Env::default();
 
