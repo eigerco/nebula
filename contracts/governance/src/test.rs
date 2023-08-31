@@ -226,3 +226,68 @@ fn participant_can_leave_withdrawing_all_funds() {
         ]
     )
 }
+
+#[test]
+fn participant_can_withdraw_partial_funds() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_addr = Address::random(&sc.env);
+    // Add funds to client address (as participant)
+    sc.token_admin_client.mint(&participant_addr, &1000);
+
+    // Init contract
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+
+    sc.contract_client.join(&participant_addr, &200);
+
+    sc.contract_client.withdraw(&participant_addr, &100);
+
+    // Ensure we check participant is who says.
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        participant_addr.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "withdraw"),
+        (participant_addr.clone(), 100i128).into_val(&sc.env),
+    );
+
+    assert_eq!(100, sc.token_client.balance(&sc.contract_id));
+    assert_eq!(900, sc.token_client.balance(&participant_addr));
+
+    // A proper withdrawal and participant left events should be published.
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "withdraw"), participant_addr.clone()).into_val(&sc.env),
+                100i128.into_val(&sc.env)
+            ),
+        ]
+    )
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #2)")]
+fn participant_cannot_withdraw_more_partial_funds_than_it_has() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_addr = Address::random(&sc.env);
+    // Add funds to client address (as participant)
+    sc.token_admin_client.mint(&participant_addr, &1000);
+
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+
+    sc.contract_client.join(&participant_addr, &200);
+
+    sc.contract_client.withdraw(&participant_addr, &201);
+}

@@ -131,7 +131,7 @@ impl GovernanceContract {
         token_client.transfer(
             &env.current_contract_address(),
             &participant.address,
-            &participant.current_balance,
+            &amount,
         );
 
         participant.current_balance -= amount;
@@ -139,6 +139,24 @@ impl GovernanceContract {
         env.events()
             .publish((Symbol::new(env, "withdraw"), &participant.address), amount);
 
+        Ok(())
+    }
+
+    pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+
+        let mut participants = storage
+            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
+            .unwrap();
+
+        let mut stored_participant = participants.get(participant.clone()).unwrap();
+
+        Self::withdraw_stake(&env, &mut stored_participant, amount)?;
+
+        participants.set(participant.clone(), stored_participant);
+        storage.set(&DataKey::Participants, &participants);
         Ok(())
     }
 }
