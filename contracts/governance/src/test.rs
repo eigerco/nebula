@@ -128,14 +128,11 @@ fn participant_cant_join_without_enough_funds() {
     sc.env.mock_all_auths();
 
     let participant_addr = Address::random(&sc.env);
-    // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    // Init contract
     sc.contract_client
         .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
-    // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &200);
 }
 
@@ -147,14 +144,11 @@ fn participant_cant_join_with_negative_stake() {
     sc.env.mock_all_auths();
 
     let participant_addr = Address::random(&sc.env);
-    // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    // Init contract
     sc.contract_client
         .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
-    // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &-1);
 }
 
@@ -166,13 +160,10 @@ fn participant_cant_join_with_zero_stake() {
     sc.env.mock_all_auths();
 
     let participant_addr = Address::random(&sc.env);
-    // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    // Init contract
     sc.contract_client
         .init(&Address::random(&sc.env), &sc.token_admin_client.address);
 
-    // Join the participant (in this case same as client). Should not have enough funds. We expect panic.
     sc.contract_client.join(&participant_addr, &0);
 }
