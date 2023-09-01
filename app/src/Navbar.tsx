@@ -18,7 +18,7 @@ function CustomNavbar() {
             <Nav.Link as={Link} href="/">Home</Nav.Link>
             <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
             <NavDropdown title="Contracts" id="basic-nav-dropdown">
-              <NavDropdown.Item href="/contracts/raffle">Raffle</NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/raffle">Raffle</NavDropdown.Item>
               <NavDropdown.Item href="#action/3.2">
                 Voting
               </NavDropdown.Item>
@@ -36,28 +36,3 @@ function CustomNavbar() {
 }
 
 export default CustomNavbar;
-
-// export function Navbar({ currentPage }: any) {
-//   return (
-//     <div className="menu">
-//       <Nav
-//         variant="tabs"
-//         defaultActiveKey={currentPage}
-//         className="navbar navbar-expand-md navbar-dark fixed-top bg-dark"
-//       >
-//         <h1
-//           className="mx-3 my-auto"
-//           style={{ fontSize: '1.8rem', textAlign: 'justify' }}
-//         >
-//           <Image src={'/logo.svg'} width="32" height={"32"} alt="logo" /> Nebula 
-//         </h1>
-//         <Nav.Item>
-//           <Nav.Link as={Link} href="/">About</Nav.Link>
-//         </Nav.Item>
-//         <Nav.Item>
-//           <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
-//         </Nav.Item>
-//       </Nav>
-//     </div>
-//   )
-// }

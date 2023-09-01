@@ -54,7 +54,7 @@ export default function Wizard() {
     <div className="Wizard">
       <div className="flex flex-grow-1">
         <div className="col-3 position-fixed">
-          <div className="flex-column flex-nowrap p-3">
+          <div className="flex-column flex-nowrap py-3">
             <Toolbox
               contractName={contractName}
               onContractNameChanged={setContractName}
