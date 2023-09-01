@@ -30,7 +30,9 @@ export default function MyApp({ Component, pageProps }: AppProps): JSX.Element {
       </Head>
       <body>
         <CustomNavbar />
-        <Component {...pageProps} />
+        <div className="container">
+          <Component {...pageProps} />
+        </div>
       </body>
     </html>
   )

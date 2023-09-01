@@ -18,7 +18,7 @@ function CustomNavbar() {
             <Nav.Link as={Link} href="/">Home</Nav.Link>
             <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
             <NavDropdown title="Contracts" id="basic-nav-dropdown">
-              <NavDropdown.Item href="#action/3.1">Raffle</NavDropdown.Item>
+              <NavDropdown.Item href="/contracts/raffle">Raffle</NavDropdown.Item>
               <NavDropdown.Item href="#action/3.2">
                 Voting
               </NavDropdown.Item>

@@ -4,8 +4,6 @@ import Modal from 'react-bootstrap/Modal'
 import { ContractsCodeGen } from './contractsources/contractscodegen'
 import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
-import Navbar from './Navbar'
-// import './Wizard.css'
 
 export default function Wizard() {
   const [contractTrait, setContractTrait] = useState('Raffle')
@@ -69,7 +67,7 @@ export default function Wizard() {
             />
           </div>
         </div>
-        <div className="col-9 offset-3">
+        <div className="col-8 offset-4">
           <Editor
             contractTrait={contractTrait}
             contractName={contractName}
