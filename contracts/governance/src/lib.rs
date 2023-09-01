@@ -58,43 +58,55 @@ impl GovernanceContract {
         );
     }
 
-    pub fn join(env: Env, participant_addr: Address, initial_stake: i128) {
+    pub fn join(env: Env, participant_addr: Address, amount: i128) -> Result<(), Error> {
         participant_addr.require_auth();
 
-        if initial_stake <= 0 {
-            panic_with_error!(&env, Error::UnderZeroAmount);
-        }
-
         let storage = env.storage().persistent();
-        let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
-        let token_client = token::Client::new(&env, &token_addr);
-        let balance = token_client.balance(&participant_addr);
-
-        if balance < initial_stake {
-            panic_with_error!(&env, Error::InsufficientFunds)
-        }
-
-        token_client.transfer(
-            &participant_addr,
-            &env.current_contract_address(),
-            &initial_stake,
-        );
 
         let mut participants = storage
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
 
-        participants.set(
-            participant_addr.clone(),
-            Participant::new(participant_addr.clone(), initial_stake),
-        );
+        let mut participant = Participant::new(participant_addr.clone());
+
+        Self::stake(&env, &mut participant, amount)?;
+
+        participants.set(participant_addr.clone(), participant);
 
         storage.set(&DataKey::Participants, &participants);
 
         env.events().publish(
             (Symbol::new(&env, "participant_joined"), participant_addr),
-            initial_stake,
+            (),
         );
+        Ok(())
+    }
+
+    fn stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
+        if amount <= 0 {
+            return Err(Error::UnderZeroAmount);
+        }
+
+        let storage = env.storage().persistent();
+        let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_addr);
+        let balance = token_client.balance(&participant.address);
+
+        if balance < amount {
+            return Err(Error::InsufficientFunds);
+        }
+
+        token_client.transfer(
+            &participant.address,
+            &env.current_contract_address(),
+            &amount,
+        );
+
+        participant.current_balance += amount;
+
+        env.events()
+            .publish((Symbol::new(env, "stake"), &participant.address), amount);
+        Ok(())
     }
 
     pub fn leave(env: Env, participant: Address) {
@@ -169,11 +181,11 @@ struct Participant {
 }
 
 impl Participant {
-    pub fn new(address: Address, initial_stake: i128) -> Self {
+    pub fn new(address: Address) -> Self {
         Participant {
             address,
             whitelisted: false,
-            current_balance: initial_stake,
+            current_balance: 0,
         }
     }
 }

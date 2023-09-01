@@ -90,16 +90,25 @@ fn participant_can_join() {
     assert_eq!(200, sc.token_client.balance(&sc.contract_id));
     assert_eq!(800, sc.token_client.balance(&participant_addr));
 
-    // A proper joining event should be published.
-    let last_event = sc.env.events().all().last().unwrap();
+    // A proper joining event should be published and a stake one.
+    let last_events = sc
+        .env
+        .events()
+        .all()
+        .slice(sc.env.events().all().len() - 2..);
     assert_eq!(
-        vec![&sc.env, last_event],
+        last_events,
         vec![
             &sc.env,
             (
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "stake"), participant_addr.clone()).into_val(&sc.env),
+                200i128.into_val(&sc.env)
+            ),
+            (
                 sc.contract_id,
                 (Symbol::new(&sc.env, "participant_joined"), participant_addr).into_val(&sc.env),
-                200i128.into_val(&sc.env)
+                ().into_val(&sc.env)
             ),
         ]
     )
