@@ -89,7 +89,7 @@ impl GovernanceContract {
 
         let storage = env.storage().persistent();
         let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
-        let token_client = token::Client::new(&env, &token_addr);
+        let token_client = token::Client::new(env, &token_addr);
         let balance = token_client.balance(&participant.address);
 
         if balance < amount {
@@ -106,6 +106,25 @@ impl GovernanceContract {
 
         env.events()
             .publish((Symbol::new(env, "stake"), &participant.address), amount);
+        Ok(())
+    }
+
+    pub fn stake_funds(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+
+        let mut participants = storage
+            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
+            .unwrap();
+
+        let mut stored_participant = participants.get(participant.clone()).unwrap();
+
+        Self::stake(&env, &mut stored_participant, amount)?;
+
+        participants.set(participant.clone(), stored_participant);
+        storage.set(&DataKey::Participants, &participants);
+
         Ok(())
     }
 

@@ -300,3 +300,49 @@ fn participant_cannot_withdraw_more_partial_funds_than_it_has() {
 
     sc.contract_client.withdraw(&participant_addr, &201);
 }
+
+#[test]
+fn participant_can_deposit_extra_funds() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_addr = Address::random(&sc.env);
+    // Add funds to client address (as participant)
+    sc.token_admin_client.mint(&participant_addr, &1000);
+
+    // Init contract
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+
+    sc.contract_client.join(&participant_addr, &200);
+
+    sc.contract_client.stake_funds(&participant_addr, &100);
+
+    // Ensure we check participant is who says.
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        participant_addr.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "stake_funds"),
+        (participant_addr.clone(), 100i128).into_val(&sc.env),
+    );
+
+    assert_eq!(300, sc.token_client.balance(&sc.contract_id));
+    assert_eq!(700, sc.token_client.balance(&participant_addr));
+
+    // A proper stake event should be published.
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "stake"), participant_addr.clone()).into_val(&sc.env),
+                100i128.into_val(&sc.env)
+            ),
+        ]
+    )
+}
