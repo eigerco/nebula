@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
 import '../src/index.css'
+import CustomNavbar from '../src/Navbar'
 
 export default function MyApp({ Component, pageProps }: AppProps): JSX.Element {
   return (
@@ -27,7 +28,10 @@ export default function MyApp({ Component, pageProps }: AppProps): JSX.Element {
         <link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
       </Head>
-      <Component {...pageProps} />
+      <body>
+        <CustomNavbar />
+        <Component {...pageProps} />
+      </body>
     </html>
   )
 }

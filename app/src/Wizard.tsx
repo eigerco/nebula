@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal'
 import { ContractsCodeGen } from './contractsources/contractscodegen'
 import { Editor } from './Editor'
 import { Toolbox } from './Toolbox'
-import { Navbar } from './Navbar'
+import Navbar from './Navbar'
 // import './Wizard.css'
 
 export default function Wizard() {
@@ -54,7 +54,6 @@ export default function Wizard() {
 
   return (
     <div className="Wizard">
-      <Navbar currentPage="/wizard" />
       <div className="flex flex-grow-1">
         <div className="col-3 position-fixed">
           <div className="flex-column flex-nowrap p-3">
