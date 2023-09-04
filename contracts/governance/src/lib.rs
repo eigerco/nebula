@@ -141,7 +141,7 @@ impl GovernanceContract {
 
         let amount = stored_participant.current_balance;
 
-        Self::withdraw_stake(&env, &mut stored_participant, amount).unwrap();
+        Self::withdraw_funds(&env, &mut stored_participant, amount).unwrap();
 
         participants.remove(participant.clone());
         storage.set(&DataKey::Participants, &participants);
@@ -150,7 +150,7 @@ impl GovernanceContract {
             .publish((Symbol::new(&env, "participant_left"), &participant), ());
     }
 
-    fn withdraw_stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
+    fn withdraw_funds(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
         if participant.current_balance < amount {
             return Err(Error::InsufficientFunds);
         }
@@ -184,7 +184,7 @@ impl GovernanceContract {
 
         let mut stored_participant = participants.get(participant.clone()).unwrap();
 
-        Self::withdraw_stake(&env, &mut stored_participant, amount)?;
+        Self::withdraw_funds(&env, &mut stored_participant, amount)?;
 
         participants.set(participant.clone(), stored_participant);
         storage.set(&DataKey::Participants, &participants);
