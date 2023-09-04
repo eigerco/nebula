@@ -33,8 +33,8 @@ pub enum Error {
     AlreadyInitialized = 1,
     // Must have funds for the operation.
     InsufficientFunds = 2,
-    // Amounts cannot be negative in some operations.
-    UnderZeroAmount = 3,
+    // Certain amounts are not valid in some operations.(Like under and/or equal to zero)
+    InvalidAmount = 3,
     ParticipantNotFound = 4,
 }
 
@@ -85,7 +85,7 @@ impl GovernanceContract {
 
     fn stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
         if amount <= 0 {
-            return Err(Error::UnderZeroAmount);
+            return Err(Error::InvalidAmount);
         }
 
         let storage = env.storage().persistent();
