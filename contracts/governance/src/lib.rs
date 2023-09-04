@@ -35,6 +35,7 @@ pub enum Error {
     InsufficientFunds = 2,
     // Amounts cannot be negative in some operations.
     UnderZeroAmount = 3,
+    ParticipantNotFound = 4,
 }
 
 #[contract]
@@ -118,7 +119,9 @@ impl GovernanceContract {
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
 
-        let mut stored_participant = participants.get(participant.clone()).unwrap();
+        let mut stored_participant = participants
+            .get(participant.clone())
+            .ok_or(Error::ParticipantNotFound)?;
 
         Self::stake(&env, &mut stored_participant, amount)?;
 
@@ -128,7 +131,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    pub fn leave(env: Env, participant: Address) {
+    pub fn leave(env: Env, participant: Address) -> Result<(), Error> {
         participant.require_auth();
 
         let storage = env.storage().persistent();
@@ -137,7 +140,9 @@ impl GovernanceContract {
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
 
-        let mut stored_participant = participants.get(participant.clone()).unwrap();
+        let mut stored_participant = participants
+            .get(participant.clone())
+            .ok_or(Error::ParticipantNotFound)?;
 
         let amount = stored_participant.current_balance;
 
@@ -148,6 +153,8 @@ impl GovernanceContract {
 
         env.events()
             .publish((Symbol::new(&env, "participant_left"), &participant), ());
+
+        Ok(())
     }
 
     fn withdraw_funds(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
@@ -182,7 +189,7 @@ impl GovernanceContract {
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
 
-        let mut stored_participant = participants.get(participant.clone()).unwrap();
+        let mut stored_participant = participants.get(participant.clone()).ok_or(Error::ParticipantNotFound)?;
 
         Self::withdraw_funds(&env, &mut stored_participant, amount)?;
 

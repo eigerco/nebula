@@ -346,3 +346,39 @@ fn participant_can_deposit_extra_funds() {
         ]
     )
 }
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn non_existent_participant_cannot_stake() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.withdraw(&Address::random(&sc.env), &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn non_existent_participant_cannot_leave() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.leave(&Address::random(&sc.env));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn non_existent_participant_cannot_withdraw() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    sc.contract_client
+        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.leave(&Address::random(&sc.env));
+}
