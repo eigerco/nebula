@@ -317,7 +317,7 @@ fn participant_can_deposit_extra_funds() {
 
     sc.contract_client.join(&participant_addr, &200);
 
-    sc.contract_client.stake_funds(&participant_addr, &100);
+    sc.contract_client.stake(&participant_addr, &100);
 
     // Ensure we check participant is who says.
     assert_auth(
@@ -325,7 +325,7 @@ fn participant_can_deposit_extra_funds() {
         0,
         participant_addr.clone(),
         sc.contract_client.address.clone(),
-        Symbol::new(&sc.env, "stake_funds"),
+        Symbol::new(&sc.env, "stake"),
         (participant_addr.clone(), 100i128).into_val(&sc.env),
     );
 

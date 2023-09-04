@@ -70,7 +70,7 @@ impl GovernanceContract {
 
         let mut participant = Participant::new(participant_addr.clone());
 
-        Self::stake(&env, &mut participant, amount)?;
+        Self::stake_funds(&env, &mut participant, amount)?;
 
         participants.set(participant_addr.clone(), participant);
 
@@ -83,7 +83,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    fn stake(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
+    fn stake_funds(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
         if amount <= 0 {
             return Err(Error::InvalidAmount);
         }
@@ -110,7 +110,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    pub fn stake_funds(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
+    pub fn stake(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
         participant.require_auth();
 
         let storage = env.storage().persistent();
@@ -123,7 +123,7 @@ impl GovernanceContract {
             .get(participant.clone())
             .ok_or(Error::ParticipantNotFound)?;
 
-        Self::stake(&env, &mut stored_participant, amount)?;
+        Self::stake_funds(&env, &mut stored_participant, amount)?;
 
         participants.set(participant.clone(), stored_participant);
         storage.set(&DataKey::Participants, &participants);
@@ -189,7 +189,9 @@ impl GovernanceContract {
             .get::<_, Map<Address, Participant>>(&DataKey::Participants)
             .unwrap();
 
-        let mut stored_participant = participants.get(participant.clone()).ok_or(Error::ParticipantNotFound)?;
+        let mut stored_participant = participants
+            .get(participant.clone())
+            .ok_or(Error::ParticipantNotFound)?;
 
         Self::withdraw_funds(&env, &mut stored_participant, amount)?;
 
