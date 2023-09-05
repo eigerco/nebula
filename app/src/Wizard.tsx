@@ -52,9 +52,9 @@ export default function Wizard() {
 
   return (
     <div className="Wizard">
-      <div className="flex flex-grow-1">
-        <div className="col-md-3 position-fixed">
-          <div className="flex-column flex-nowrap py-3">
+      <div className="row">
+        <div className="col-md-3">
+          <div className="flex-column flex-nowrap pt-3">
             <Toolbox
               contractName={contractName}
               onContractNameChanged={setContractName}
@@ -67,7 +67,7 @@ export default function Wizard() {
             />
           </div>
         </div>
-        <div className="col-md-8 offset-md-4">
+        <div className="col-md-8">
           <Editor
             contractTrait={contractTrait}
             contractName={contractName}
@@ -76,27 +76,27 @@ export default function Wizard() {
             codeGen={codeGen}
           />
         </div>
-        <div
-          className="modal show"
-          style={{ display: 'block', position: 'initial' }}
-        >
-          <Modal show={showInvokeModal} onHide={handleInvokeModalClose}>
-            <Modal.Header closeButton>
-              <Modal.Title>{modalTitle}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <pre className={modalBackground}>
-                <code>{modalBody}</code>
-              </pre>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleInvokeModalClose}>
-                <i className="bi bi-x-circle"></i>
-                Close
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        </div>
+      </div>
+      <div
+        className="modal show"
+        style={{ display: 'block', position: 'initial' }}
+      >
+        <Modal show={showInvokeModal} onHide={handleInvokeModalClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>{modalTitle}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <pre className={modalBackground}>
+              <code>{modalBody}</code>
+            </pre>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleInvokeModalClose}>
+              <i className="bi bi-x-circle"></i>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   )
