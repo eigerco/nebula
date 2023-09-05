@@ -48,7 +48,7 @@ dependencies = [
 script = '''
   soroban contract deploy \
   --source admin \
-  --wasm ../../target/wasm32-unknown-unknown/release/voting.wasm \
+  --wasm ../../target/wasm32-unknown-unknown/release/simple_voting.wasm \
   --network ${network} > /tmp/contract_id.txt
 '''
 
@@ -60,21 +60,9 @@ script = '''
   --network ${network} \
   -- \
   init \
-  --admin $(soroban config identity address admin) \
   --voting_period_secs 3600 \
   --target_approval_rate_bps 50000 \
   --total_voters 3
-'''
-
-[tasks.invoke_create_proposal]
-script = '''
-  soroban contract invoke \
-  --id $(cat /tmp/contract_id.txt) \
-  --source admin \
-  --network ${network} \
-  -- \
-  create_proposal \
-  --id 1
 '''
 
 [tasks.invoke_vote]
@@ -87,15 +75,13 @@ script = '''
     --network ${network} \
     -- \
     vote \
-    --voter $(soroban config identity address player_$PLAYER) \
-    --id 1
+    --voter $(soroban config identity address player_$PLAYER)
   done
 '''
 
 [tasks.invoke_contract]
 dependencies = [
   "invoke_init",
-  "invoke_create_proposal",
   "invoke_vote"
 ]
 
