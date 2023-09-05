@@ -19,13 +19,12 @@ function CustomNavbar() {
             <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
             <NavDropdown title="Contracts" id="basic-nav-dropdown">
               <NavDropdown.Item as={Link} href="/contracts/raffle">Raffle</NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.2">
+              <NavDropdown.Item as={Link} href="/contracts/voting">
                 Voting
               </NavDropdown.Item>
-              <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
               <NavDropdown.Divider />
-              <NavDropdown.Item href="#action/3.4">
-                Separated link
+              <NavDropdown.Item href="https://github.com/eigerco/nebula">
+                View in Github
               </NavDropdown.Item>
             </NavDropdown>
           </Nav>

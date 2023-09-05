@@ -1,6 +1,10 @@
 import React from 'react'
-import Readme from '../src/Readme.mdx'
+import Readme from '../src/Readme.md'
 
 export default function Page({ children }) {
-  return <Readme />
+  return (
+    <div className="container">
+      <Readme />
+    </div>
+  )
 }
