@@ -1,7 +1,10 @@
-import React from "react"
-import Readme from "../src/Readme"
-// export default Index
+import React from 'react'
+import Readme from '../src/Readme.md'
 
-const Index = () => <Readme />
-
-export default Index
+export default function Page({ children }) {
+  return (
+    <div className="container-fluid">
+      <Readme />
+    </div>
+  )
+}

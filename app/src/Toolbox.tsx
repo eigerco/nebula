@@ -83,7 +83,7 @@ export function Toolbox({
               onClick={e => handleClick('Open')}
               title="Open in Playground"
             >
-              <i className="bi bi-code-square"></i> Open in Playground
+              <i className="bi bi-code-square"></i>Play
             </button>
           </div>
         </div>
