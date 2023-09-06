@@ -9,7 +9,7 @@ for d in *; do
   echo "------------------------------------"
   cargo make run_test
   if [ "$?" != 0 ]; then
-    let exit_code=1
+    exit_code=$((1))
   fi
   cd ../
 done

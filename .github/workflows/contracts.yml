@@ -46,6 +46,9 @@ jobs:
           name: wasm-files
           path: target/wasm32-unknown-unknown/release/*.wasm
 
+      - name: Install cargo make
+        run: cargo install --force cargo-make
+
   test:
     needs: build
     runs-on: ubuntu-latest
