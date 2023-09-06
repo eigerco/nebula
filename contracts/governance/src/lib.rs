@@ -186,7 +186,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
+    pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {        
         participant.require_auth();
 
         let storage = env.storage().persistent();
@@ -203,6 +203,27 @@ impl GovernanceContract {
 
         participants.set(participant.clone(), stored_participant);
         storage.set(&DataKey::Participants, &participants);
+        Ok(())
+    }
+
+    pub fn whitelist(env: Env, participant: Address) -> Result<(), Error> {
+        let storage = env.storage().persistent();
+        let curator = storage.get::<_, Address>(&DataKey::Curator).unwrap();
+        curator.require_auth();
+
+        let mut participants = storage
+            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
+            .unwrap();
+
+        let mut stored_participant = participants
+            .get(participant.clone())
+            .ok_or(Error::ParticipantNotFound)?;
+
+        stored_participant.whitelisted = true;
+
+        participants.set(participant.clone(), stored_participant);
+        storage.set(&DataKey::Participants, &participants);
+
         Ok(())
     }
 }

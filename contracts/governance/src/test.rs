@@ -429,3 +429,32 @@ fn non_existent_participant_cannot_withdraw() {
     );
     sc.contract_client.leave(&Address::random(&sc.env));
 }
+
+#[test]
+fn curator_can_whitelist_participant() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let curator = &Address::random(&sc.env);
+    let participant = &Address::random(&sc.env);
+    sc.token_admin_client.mint(participant, &1000);
+
+    sc.contract_client.init(
+        curator,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.contract_client.join(participant, &200);
+    sc.contract_client.whitelist(participant);
+
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        curator.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "whitelist"),
+        (participant.clone(),).into_val(&sc.env),
+    );
+}
