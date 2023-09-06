@@ -70,7 +70,7 @@ jobs:
         uses: baptiste0928/cargo-install@v2
         with:
           crate: cargo-make
-          version: "^0.3.65"
+          version: "^0.36.13"
 
       - name: Test
         run: cargo test
