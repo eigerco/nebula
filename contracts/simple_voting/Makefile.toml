@@ -25,16 +25,34 @@ script = '''
 
 [tasks.create_account_admin]
 script = '''
-  soroban config identity generate admin
-  curl "${friendbot}?addr=$(soroban config identity address admin)"
+  { ERR=$( { soroban config identity generate admin 1>&3 ; } 2>&1); } 3>&1
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
+  
+  { ERR=$( { curl "${friendbot}?addr=$(soroban config identity address admin)" 1>&3 ; } 2>&1); } 3>&1
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
 '''
 
 [tasks.create_account_players]
 script = '''
   for PLAYER in 1 2 3
   do
-    soroban config identity generate player_$PLAYER
-    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
+    { ERR=$( { soroban config identity generate player_$PLAYER 1>&3 ; } 2>&1); } 3>&1
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
+
+    { ERR=$( { curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 1>&3 ; } 2>&1); } 3>&1
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
   done
 '''
 
@@ -46,15 +64,20 @@ dependencies = [
 
 [tasks.deploy]
 script = '''
-  soroban contract deploy \
+  ERR=$( { soroban contract deploy \
   --source admin \
   --wasm ../../target/wasm32-unknown-unknown/release/simple_voting.wasm \
-  --network ${network} > /tmp/contract_id.txt
+  --network ${network} 1>/tmp/contract_id.txt ; } 2>&1)
+
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
 '''
 
 [tasks.invoke_init]
 script = '''
-  soroban contract invoke \
+  { ERR=$( { soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
   --source admin \
   --network ${network} \
@@ -62,20 +85,30 @@ script = '''
   init \
   --voting_period_secs 3600 \
   --target_approval_rate_bps 50000 \
-  --total_voters 3
+  --total_voters 3 1>&3 ; } 2>&1); } 3>&1
+
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
 '''
 
 [tasks.invoke_vote]
 script = '''
   for PLAYER in 1 2 3
   do
-    soroban contract invoke \
+    { ERR=$( { soroban contract invoke \
     --id $(cat /tmp/contract_id.txt) \
     --source player_$PLAYER \
     --network ${network} \
     -- \
     vote \
-    --voter $(soroban config identity address player_$PLAYER)
+    --voter $(soroban config identity address player_$PLAYER) 1>&3 ; } 2>&1); } 3>&1
+
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
   done
 '''
 
