@@ -2,7 +2,7 @@
 
 extern crate std;
 
-use super::{GovernanceContract, GovernanceContractClient};
+use super::{voting_contract, GovernanceContract, GovernanceContractClient};
 
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events},
@@ -17,14 +17,24 @@ fn cannot_be_initialized_twice() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client
-        .init(&sc.contract_client.address, &sc.token_client.address);
-    sc.contract_client
-        .init(&sc.contract_client.address, &sc.token_client.address);
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_client.address,
+        &sc.voting_contract_id,
+    );
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_client.address,
+        &sc.voting_contract_id,
+    );
 }
 
 fn setup_scenario<'a>() -> Scenario<'a> {
     let env = Env::default();
+
+    let voting_contract_id =
+        env.register_contract_wasm(Some(&Address::random(&env)), voting_contract::WASM);
+    let voting_contract_client = voting_contract::Client::new(&env, &voting_contract_id);
 
     let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
@@ -36,6 +46,8 @@ fn setup_scenario<'a>() -> Scenario<'a> {
 
     Scenario {
         env,
+        voting_contract_id,
+        voting_contract_client,
         contract_id,
         contract_client,
         token_admin,
@@ -48,6 +60,8 @@ fn setup_scenario<'a>() -> Scenario<'a> {
 #[allow(dead_code)]
 struct Scenario<'a> {
     env: Env,
+    voting_contract_id: Address,
+    voting_contract_client: voting_contract::Client<'a>,
     contract_id: Address,
     contract_client: GovernanceContractClient<'a>,
     token_admin: Address,
@@ -68,8 +82,11 @@ fn participant_can_join() {
 
     // Init contract
     let curator = Address::random(&sc.env);
-    sc.contract_client
-        .init(&curator, &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &curator,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     // Join the participant (in this case same as client)
     let initial_stake = 200;
@@ -139,8 +156,11 @@ fn participant_cant_join_without_enough_funds() {
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &200);
 }
@@ -155,8 +175,11 @@ fn participant_cant_join_with_negative_stake() {
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &-1);
 }
@@ -171,8 +194,11 @@ fn participant_cant_join_with_zero_stake() {
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &0);
 }
@@ -189,8 +215,11 @@ fn participant_can_leave_withdrawing_all_funds() {
 
     // Init contract
     let curator = Address::random(&sc.env);
-    sc.contract_client
-        .init(&curator, &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &curator,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     // Join the participant (in this case same as client)
     let initial_stake = 200;
@@ -247,8 +276,11 @@ fn participant_can_withdraw_partial_funds() {
     sc.token_admin_client.mint(&participant_addr, &1000);
 
     // Init contract
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &200);
 
@@ -293,8 +325,11 @@ fn participant_cannot_withdraw_more_partial_funds_than_it_has() {
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &200);
 
@@ -312,8 +347,11 @@ fn participant_can_deposit_extra_funds() {
     sc.token_admin_client.mint(&participant_addr, &1000);
 
     // Init contract
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
 
     sc.contract_client.join(&participant_addr, &200);
 
@@ -354,8 +392,11 @@ fn non_existent_participant_cannot_stake() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
     sc.contract_client.withdraw(&Address::random(&sc.env), &1);
 }
 
@@ -366,8 +407,11 @@ fn non_existent_participant_cannot_leave() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
     sc.contract_client.leave(&Address::random(&sc.env));
 }
 
@@ -378,7 +422,10 @@ fn non_existent_participant_cannot_withdraw() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client
-        .init(&Address::random(&sc.env), &sc.token_admin_client.address);
+    sc.contract_client.init(
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
     sc.contract_client.leave(&Address::random(&sc.env));
 }

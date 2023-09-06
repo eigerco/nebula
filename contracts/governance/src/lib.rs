@@ -11,6 +11,10 @@ use soroban_sdk::{
     Map, Symbol,
 };
 
+mod voting_contract {
+    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/voting.wasm");
+}
+
 /// Datakey holds all possible storage keys this
 /// contract uses. See https://soroban.stellar.org/docs/getting-started/storing-data .
 #[derive(Clone, Copy)]
@@ -20,6 +24,7 @@ enum DataKey {
     Curator = 2,
     Token = 3,
     Participants = 4,
+    VotingContractAddress = 5,
 }
 
 /// All the expected errors this contract expects.
@@ -43,7 +48,7 @@ pub struct GovernanceContract;
 
 #[contractimpl]
 impl GovernanceContract {
-    pub fn init(env: Env, curator: Address, token: Address) {
+    pub fn init(env: Env, curator: Address, token: Address, voting_contract: Address) {
         let storage = env.storage().persistent();
 
         if storage.has(&DataKey::Initialized) {
@@ -53,6 +58,7 @@ impl GovernanceContract {
         storage.set(&DataKey::Initialized, &());
         storage.set(&DataKey::Curator, &curator);
         storage.set(&DataKey::Token, &token);
+        storage.set(&DataKey::VotingContractAddress, &voting_contract);
         storage.set(
             &DataKey::Participants,
             &Map::<Address, Participant>::new(&env),
