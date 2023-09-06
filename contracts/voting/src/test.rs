@@ -5,8 +5,8 @@ extern crate std;
 use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient};
 use rstest::rstest;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Ledger},
-    Address, Env, IntoVal, Map, Symbol, Val, Vec,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Ledger},
+    Address, BytesN, Env, IntoVal, Map, Symbol, Val, Vec,
 };
 
 #[test]
@@ -16,7 +16,9 @@ fn proposal_creation() {
     env.mock_all_auths();
 
     let id = 1001u64;
-    client.create_custom_proposal(&id, &3600, &50_00, &100);
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(&id, &comment, &3600, &50_00, &100);
 
     assert_auth(
         &env.auths(),
@@ -24,7 +26,7 @@ fn proposal_creation() {
         admin,
         client.address,
         Symbol::new(&env, "create_custom_proposal"),
-        (1001u64, 3600u64, 50_00u32, 100u32).into_val(&env),
+        (1001u64, comment, 3600u64, 50_00u32, 100u32).into_val(&env),
     )
 }
 
@@ -67,17 +69,20 @@ fn cannot_initialize_voting_twice() {
 fn cannot_create_same_id_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
+    let comment = BytesN::random(&env);
 
     let id = 1001u64;
-    client.create_custom_proposal(&id, &3600, &50_00, &2);
-    client.create_custom_proposal(&id, &3600, &50_00, &2);
+    client.create_custom_proposal(&id, &comment, &3600, &50_00, &2);
+    client.create_custom_proposal(&id, &comment, &3600, &50_00, &2);
 }
 
 #[test]
 #[should_panic(expected = "Error(Auth, InvalidAction)")]
 fn only_admin_can_create_proposals() {
-    let (_, client, _) = setup_test();
-    client.create_custom_proposal(&1, &3600, &50_00, &2);
+    let (env, client, _) = setup_test();
+
+    let comment = BytesN::random(&env);
+    client.create_custom_proposal(&1, &comment, &3600, &50_00, &2);
 }
 
 #[test]
@@ -86,8 +91,9 @@ fn voter_can_vote_proposals() {
     env.mock_all_auths();
 
     let id = 12;
+    let comment = BytesN::random(&env);
 
-    client.create_custom_proposal(&id, &3600, &50_00, &2);
+    client.create_custom_proposal(&id, &comment, &3600, &50_00, &2);
     client.vote(&client.address, &id);
 }
 
@@ -97,7 +103,10 @@ fn voter_cannot_vote_a_proposal_twice() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
     let prd_id = 12;
-    client.create_custom_proposal(&prd_id, &3600, &50_00, &2);
+
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(&prd_id, &comment, &3600, &50_00, &2);
     client.vote(&client.address, &prd_id);
     client.vote(&client.address, &prd_id); // Double voting here. Expected panic.
 }
@@ -106,8 +115,11 @@ fn voter_cannot_vote_a_proposal_twice() {
 fn cannot_vote_if_voting_time_exceeded() {
     let (mut env, _, _) = setup_test();
 
+    let comment = BytesN::random(&env);
+
     let mut proposal = Proposal {
         id: 1,
+        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         votes: 0,
         voters: Map::<Address, bool>::new(&env),
@@ -131,8 +143,11 @@ fn cannot_vote_if_total_voters_reached() {
     voters.set(Address::random(&env), true); // Dummy voters
     voters.set(Address::random(&env), true); // Dummy voters
 
+    let comment = BytesN::random(&env);
+
     let mut proposal = Proposal {
         id: 1,
+        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         votes: 2,
         voters,
@@ -169,8 +184,11 @@ fn proposal_calculate_approval_rate(
         voters.set(Address::random(&env), true); // Dummy voters
     }
 
+    let comment = BytesN::random(&env);
+
     let proposal = Proposal {
         id: 1,
+        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         votes,
         target_approval_rate_bps: 50_00,
@@ -187,5 +205,26 @@ fn proposal_calculate_approval_rate(
 fn cannot_create_id0_proposals() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
-    client.create_custom_proposal(&0, &3600, &50_00, &2);
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(&0, &comment, &3600, &50_00, &2);
+}
+
+#[test]
+fn proposal_comment_is_accessible() {
+    let (env, _, _) = setup_test();
+    env.mock_all_auths();
+    let comment = BytesN::random(&env);
+
+    let proposal = Proposal {
+        id: 112,
+        comment: comment.clone(),
+        voting_end_time: 123123,
+        votes: 0,
+        target_approval_rate_bps: 0,
+        total_voters: 0,
+        voters: Map::<Address, bool>::new(&env),
+    };
+
+    assert_eq!(comment, proposal.get_comment().clone());
 }

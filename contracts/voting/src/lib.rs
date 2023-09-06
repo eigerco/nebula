@@ -17,7 +17,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, Address,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, BytesN,
     ConversionError, Env, Map, Symbol,
 };
 
@@ -101,7 +101,7 @@ impl ProposalVotingContract {
     }
 
     /// Creates a new proposal with the default parameters.
-    pub fn create_proposal(env: Env, id: u64) -> Result<(), Error> {
+    pub fn create_proposal(env: Env, id: u64, comment: BytesN<32>) -> Result<(), Error> {
         let storage = env.storage().persistent();
         let voting_period_secs = storage.get::<_, u64>(&DataKey::VotingPeriodSecs).unwrap();
         let target_approval_rate_bps = storage.get(&DataKey::TargetApprovalRate).unwrap();
@@ -110,6 +110,7 @@ impl ProposalVotingContract {
         Self::create_custom_proposal(
             env,
             id,
+            comment,
             voting_period_secs,
             target_approval_rate_bps,
             total_voters,
@@ -123,12 +124,14 @@ impl ProposalVotingContract {
     ///
     /// - `env` - The environment for this contract.
     /// - `id` - The unique identifier of the proposal.
+    /// - `comment` - Comment has enough size for a wasm contract hash. It could also be a string.
     /// - `voting_period_secs` - The number of seconds of proposals lifetime.
     /// - `target_approval_rate_bps` - The required approval rate in basic points. i.e for a 50%, 5000 should be passed.
     /// - `total_voters` - The max number of voters. This will be taken into account for calculating the approval rate.
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
+        comment: BytesN<32>,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
         total_voters: u32,
@@ -156,6 +159,7 @@ impl ProposalVotingContract {
             id,
             Proposal {
                 id,
+                comment,
                 voting_end_time: env
                     .ledger()
                     .timestamp()
@@ -209,6 +213,8 @@ impl ProposalVotingContract {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Proposal {
     id: u64,
+    // Comment has enough size for a wasm contract hash. It could also be a string.
+    comment: BytesN<32>,
     // Unix time in seconds. Voting ends at this time.
     voting_end_time: u64,
     // Number of votes accumulated.
@@ -263,6 +269,10 @@ impl Proposal {
 
     pub fn is_approved(&self) -> bool {
         self.approval_rate_bps().unwrap() >= self.target_approval_rate_bps
+    }
+
+    pub fn get_comment(&self) -> &BytesN<32> {
+        &self.comment
     }
 }
 
