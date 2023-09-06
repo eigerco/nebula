@@ -68,3 +68,6 @@ jobs:
 
       - name: Test
         run: cargo test
+
+      - name: Integration test
+        run: ./integration_tests.sh
