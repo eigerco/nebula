@@ -46,9 +46,6 @@ jobs:
           name: wasm-files
           path: target/wasm32-unknown-unknown/release/*.wasm
 
-      - name: Install cargo make
-        run: cargo install --force cargo-make
-
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -68,6 +65,12 @@ jobs:
             contracts/target
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
+
+      - name: Install cargo make
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-make
+          version: "^0.3.65"
 
       - name: Test
         run: cargo test
