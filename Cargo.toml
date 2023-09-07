@@ -9,6 +9,7 @@ members = [
     "contracts/simple_voting",
     "contracts/raffle",
     "crates/nebula-importer",
+    "crates/nebula-publish",
 ]
 
 [profile.release]

@@ -23,3 +23,12 @@ directories = "5.0"
 tokio = { version = "1", features = ["full"] }
 sha2 = "0.10.7"
 oci-distribution = "0.9.4"
+
+
+[package.metadata.nebula.imports]
+token = "ghcr.io/eigerco/nebula/contracts/token"
+
+[package.metadata.nebula]
+codegen = "./src/contracts"
+cache = ".nebula"
+
