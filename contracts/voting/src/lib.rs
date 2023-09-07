@@ -101,7 +101,8 @@ impl ProposalVotingContract {
     }
 
     /// Creates a new proposal with the default parameters.
-    pub fn create_proposal(env: Env, id: u64, comment: BytesN<32>) -> Result<(), Error> {
+    pub fn create_proposal(env: Env, proposer: Address, id: u64, comment: BytesN<32>) -> Result<(), Error> {
+
         let storage = env.storage().persistent();
         let voting_period_secs = storage.get::<_, u64>(&DataKey::VotingPeriodSecs).unwrap();
         let target_approval_rate_bps = storage.get(&DataKey::TargetApprovalRate).unwrap();
@@ -110,6 +111,7 @@ impl ProposalVotingContract {
         Self::create_custom_proposal(
             env,
             id,
+            proposer,
             comment,
             voting_period_secs,
             target_approval_rate_bps,
@@ -131,11 +133,14 @@ impl ProposalVotingContract {
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
+        proposer: Address,
         comment: BytesN<32>,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
         total_voters: u32,
     ) -> Result<(), Error> {
+        proposer.require_auth();
+
         let storage = env.storage().persistent();
 
         storage
@@ -159,6 +164,7 @@ impl ProposalVotingContract {
             id,
             Proposal {
                 id,
+                proposer,
                 comment,
                 voting_end_time: env
                     .ledger()
@@ -213,6 +219,8 @@ impl ProposalVotingContract {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Proposal {
     id: u64,
+    // The address this proposal is created from.
+    proposer: Address,
     // Comment has enough size for a wasm contract hash. It could also be a string.
     comment: BytesN<32>,
     // Unix time in seconds. Voting ends at this time.
