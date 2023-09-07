@@ -72,6 +72,12 @@ jobs:
           crate: cargo-make
           version: "^0.36.13"
 
+      - name: Install soroban-cli
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: soroban-cli
+          version: "^0.9.4"
+
       - name: Test
         run: cargo test
 
