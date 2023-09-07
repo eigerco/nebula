@@ -82,4 +82,5 @@ jobs:
         run: cargo test
 
       - name: Integration test
+        shell: bash
         run: ./integration_tests.sh
