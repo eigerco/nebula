@@ -44,4 +44,4 @@ jobs:
       - run: mv target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm ${{ matrix.contract }}.wasm
 
       - name: Push GitHub Container Registry
-        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --annotations org.opencontainers.image.title=${{ matrix.contract }},org.opencontainers.image.description=Nebula ${{ matrix.contract }} smart contract
+        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
