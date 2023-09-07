@@ -146,7 +146,8 @@ pub(crate) async fn pull_wasm(
 
 #[cfg(test)]
 mod tests {
-    use crate::Config;
+    use super::*;
+    use figment;
 
     #[test]
     fn test_config() {
