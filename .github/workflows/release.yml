@@ -9,6 +9,9 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [raffle, voting]
 
     permissions:
       # Required to create GH releases
@@ -17,10 +20,6 @@ jobs:
       packages: write
       # Required by cosign keyless signing
       id-token: write
-
-    env:
-      contract-name: raffle
-      oci-target: ghcr.io/eigerco/nebula/contracts/raffle
 
     steps:
       - uses: actions/checkout@v2
@@ -40,9 +39,9 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: -p raffle --target=wasm32-unknown-unknown --release
+          args: -p ${{ matrix.contract }} --target=wasm32-unknown-unknown --release
 
-      - run: mv target/wasm32-unknown-unknown/release/raffle.wasm raffle.wasm
+      - run: mv target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm ${{ matrix.contract }}.wasm
 
       - name: Push GitHub Container Registry
-        run: target/release/nebula-publish --module raffle.wasm --image ghcr.io/eigerco/nebula/contracts/raffle --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
+        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --annotations org.opencontainers.image.title=${{ matrix.contract }},org.opencontainers.image.description=Nebula ${{ matrix.contract }} smart contract

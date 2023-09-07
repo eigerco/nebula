@@ -4,6 +4,7 @@ use figment::{
     providers::{Format, Toml},
     Figment,
 };
+use oci_distribution::{manifest, secrets::RegistryAuth, Client, Reference};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
@@ -23,6 +24,17 @@ pub enum Contract {
 pub struct Config {
     imports: HashMap<String, Contract>,
     cache: Option<PathBuf>,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Metadata {
+    nebula: Config,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Package {
+    pub name: String,
+    pub description: Option<String>,
+    pub metadata: Metadata,
 }
 
 impl Contract {
@@ -47,10 +59,12 @@ macro_rules! throw_warning {
 }
 
 pub fn import_all_contracts() {
-    let config: Config = Figment::new()
+    let package: Package = Figment::new()
         .merge(Toml::file("Cargo.toml"))
         .extract()
         .expect("Could not read config in `Cargo.toml`.");
+
+    let config = &package.metadata.nebula;
 
     let contracts_dir = config.cache.clone().unwrap_or({
         let project_dirs = ProjectDirs::from("co", "eiger", "nebula-importer")
@@ -83,7 +97,6 @@ pub fn sync_contracts(config: &Config, cache: &PathBuf) -> anyhow::Result<()> {
             )))
             .context(format!("Loading contract: {:?}", contract))?;
     }
-
     Ok(())
 }
 
@@ -107,8 +120,6 @@ async fn find_and_sync_contract(
         Err(e) => throw_warning!("{e:?}"),
     };
 }
-
-use oci_distribution::{manifest, secrets::RegistryAuth, Client, Reference};
 
 pub(crate) async fn pull_wasm(
     client: &mut Client,
