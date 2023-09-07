@@ -6,15 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-quote = "1.0"
-syn = "2.0.22"
-paste = "1.0.12"
-
-[lib]
-proc-macro = true
-
-
-[build-dependencies]
 anyhow = "1"
 figment = { version = "0.10", features = ["toml"] }
 serde = { version = "1", features = ["derive"] }
@@ -25,10 +16,10 @@ sha2 = "0.10.7"
 oci-distribution = "0.9.4"
 
 
-[package.metadata.nebula.imports]
-token = "ghcr.io/eigerco/nebula/contracts/token"
+# [package.metadata.nebula.imports]
+# token = "ghcr.io/eigerco/nebula/contracts/token"
 
-[package.metadata.nebula]
-codegen = "./src/contracts"
-cache = ".nebula"
+# [package.metadata.nebula]
+# codegen = "./src/contracts"
+# cache = ".nebula"
 

@@ -17,6 +17,10 @@ struct Push {
     image: String,
     #[clap(long)]
     annotations: Vec<String>,
+    #[clap(long)]
+    username: Option<String>,
+    #[clap(long)]
+    password: Option<String>
 }
 #[tokio::main]
 pub async fn main() {
@@ -39,9 +43,14 @@ pub async fn main() {
         ..Default::default()
     });
     let reference: Reference = config.image.parse().expect("Not a valid image reference");
+    let auth = if let Some(username) = &config.username {
+        RegistryAuth::Basic(username.clone(), config.password.unwrap_or_default().clone())
+    } else {
+        RegistryAuth::Anonymous
+    };
     push_wasm(
         &mut client,
-        &RegistryAuth::Anonymous,
+        &auth,
         &reference,
         &config.module,
         Some(values),

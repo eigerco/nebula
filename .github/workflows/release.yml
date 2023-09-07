@@ -1,0 +1,48 @@
+name: Release Contracts
+on:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required to create GH releases
+      contents: write
+      # Required to push to GHCR
+      packages: write
+      # Required by cosign keyless signing
+      id-token: write
+
+    env:
+      contract-name: raffle
+      oci-target: ghcr.io/eigerco/nebula/contracts/raffle
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+      - name: Build nebula-publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p nebula-publish --release
+
+      - name: Build Wasm module
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p raffle --target=wasm32-unknown-unknown --release
+
+      - run: mv target/wasm32-unknown-unknown/release/raffle.wasm raffle.wasm
+
+      - name: Push GitHub Container Registry
+        run: target/release/nebula-publish --module raffle.wasm --image ghcr.io/eigerco/nebula/contracts/raffle --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
