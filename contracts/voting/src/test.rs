@@ -26,7 +26,7 @@ fn proposal_creation() {
         client.address.clone(),
         client.address.clone(),
         Symbol::new(&env, "create_custom_proposal"),
-        (1001u64, client.address, comment, 3600u64, 50_00u32, 100u32).into_val(&env),
+        (1001u64, client.address, comment, 3600u64, 50_00u32, 100_u128).into_val(&env),
     )
 }
 
@@ -123,15 +123,15 @@ fn cannot_vote_if_voting_time_exceeded() {
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
-        votes: 0,
+        participation: 0,
         voters: Map::<Address, bool>::new(&env),
         target_approval_rate_bps: 50_00,
-        total_voters: 2,
+        total_participation: 2,
     };
 
     advance_ledger_time_in(3600, &mut env);
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env));
+    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env), 1);
 
     assert_eq!(Err(Error::VotingClosed), result)
 }
@@ -153,13 +153,13 @@ fn cannot_vote_if_total_voters_reached() {
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
-        votes: 2,
+        participation: 2,
         voters,
         target_approval_rate_bps: 50_00,
-        total_voters: 2,
+        total_participation: 2,
     };
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env));
+    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env), 1);
     assert_eq!(Err(Error::VotingClosed), result)
 }
 
@@ -175,8 +175,8 @@ fn advance_ledger_time_in(time: u64, env: &mut Env) {
 #[case::rate_100(2, 2, 10_000, true)]
 #[case::no_votes_no_rate(0, 0, 0, false)]
 fn proposal_calculate_approval_rate(
-    #[case] total_voters: u32,
-    #[case] votes: u32,
+    #[case] total_participation: u128,
+    #[case] participation: u128,
     #[case] expected: u32,
     #[case] is_approved: bool,
 ) {
@@ -184,7 +184,7 @@ fn proposal_calculate_approval_rate(
 
     let mut voters = Map::<Address, bool>::new(&env);
 
-    for _ in 0..votes {
+    for _ in 0..participation {
         voters.set(Address::random(&env), true); // Dummy voters
     }
 
@@ -196,10 +196,10 @@ fn proposal_calculate_approval_rate(
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
-        votes,
+        participation,
         target_approval_rate_bps: 50_00,
         voters,
-        total_voters,
+        total_participation,
     };
 
     assert_eq!(Ok(expected), proposal.approval_rate_bps());
@@ -228,9 +228,9 @@ fn proposal_comment_is_accessible() {
         proposer,
         comment: comment.clone(),
         voting_end_time: 123123,
-        votes: 0,
+        participation: 0,
         target_approval_rate_bps: 0,
-        total_voters: 0,
+        total_participation: 0,
         voters: Map::<Address, bool>::new(&env),
     };
 

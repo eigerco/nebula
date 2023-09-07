@@ -101,12 +101,16 @@ impl ProposalVotingContract {
     }
 
     /// Creates a new proposal with the default parameters.
-    pub fn create_proposal(env: Env, proposer: Address, id: u64, comment: BytesN<32>) -> Result<(), Error> {
-
+    pub fn create_proposal(
+        env: Env,
+        proposer: Address,
+        id: u64,
+        comment: BytesN<32>,
+    ) -> Result<(), Error> {
         let storage = env.storage().persistent();
         let voting_period_secs = storage.get::<_, u64>(&DataKey::VotingPeriodSecs).unwrap();
         let target_approval_rate_bps = storage.get(&DataKey::TargetApprovalRate).unwrap();
-        let total_voters = storage.get::<_, u32>(&DataKey::TotalVoters).unwrap();
+        let total_participation = storage.get::<_, u128>(&DataKey::TotalVoters).unwrap();
 
         Self::create_custom_proposal(
             env,
@@ -115,7 +119,7 @@ impl ProposalVotingContract {
             comment,
             voting_period_secs,
             target_approval_rate_bps,
-            total_voters,
+            total_participation,
         )
     }
 
@@ -129,7 +133,7 @@ impl ProposalVotingContract {
     /// - `comment` - Comment has enough size for a wasm contract hash. It could also be a string.
     /// - `voting_period_secs` - The number of seconds of proposals lifetime.
     /// - `target_approval_rate_bps` - The required approval rate in basic points. i.e for a 50%, 5000 should be passed.
-    /// - `total_voters` - The max number of voters. This will be taken into account for calculating the approval rate.
+    /// - `total_participation` - The max number of participation (can be votes, staked amounts ...). This will be taken into account for calculating the approval rate.
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
@@ -137,7 +141,7 @@ impl ProposalVotingContract {
         comment: BytesN<32>,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
-        total_voters: u32,
+        total_participation: u128,
     ) -> Result<(), Error> {
         proposer.require_auth();
 
@@ -172,9 +176,9 @@ impl ProposalVotingContract {
                     .checked_add(voting_period_secs)
                     .unwrap(),
                 target_approval_rate_bps,
-                votes: 0,
+                participation: 0,
                 voters: Map::<Address, bool>::new(&env),
-                total_voters,
+                total_participation,
             },
         );
         storage.set(&DataKey::Proposals, &proposal_storage);
@@ -199,7 +203,7 @@ impl ProposalVotingContract {
 
         let mut proposal = proposal_storage.get(id).ok_or(Error::NotFound)?;
 
-        proposal.vote(env.ledger().timestamp(), voter)?;
+        proposal.vote(env.ledger().timestamp(), voter, 1)?;
         let updated_approval_rate = proposal.approval_rate_bps();
         proposal_storage.set(id, proposal);
 
@@ -226,11 +230,11 @@ pub struct Proposal {
     // Unix time in seconds. Voting ends at this time.
     voting_end_time: u64,
     // Number of votes accumulated.
-    votes: u32,
+    participation: u128,
     // Target approval rate in basic points. i.e 10,43% would be 1043.
     target_approval_rate_bps: u32,
     // The expected, maximum participation.
-    total_voters: u32,
+    total_participation: u128,
     // A registry about who already voted.
     voters: Map<Address, bool>,
 }
@@ -242,7 +246,8 @@ impl Proposal {
     ///
     /// - `current_time` - The current time. Normally obtained from the environment.
     /// - `voter` - The address of the voter. It will be registered to prevent double voting.
-    pub fn vote(&mut self, current_time: u64, voter: Address) -> Result<(), Error> {
+    /// - `weight` - The amount of participation for this vote.
+    pub fn vote(&mut self, current_time: u64, voter: Address, weight: u128) -> Result<(), Error> {
         if self.is_closed(current_time) {
             return Err(Error::VotingClosed);
         }
@@ -251,13 +256,16 @@ impl Proposal {
             return Err(Error::AlreadyVoted);
         }
 
-        self.votes = self.votes.checked_add(1).ok_or(Error::Overflow)?;
+        self.participation = self
+            .participation
+            .checked_add(weight)
+            .ok_or(Error::Overflow)?;
         self.voters.set(voter, true);
         Ok(())
     }
 
     pub fn is_closed(&self, current_time: u64) -> bool {
-        current_time >= self.voting_end_time || self.voters.len() == self.total_voters
+        current_time >= self.voting_end_time || self.participation == self.total_participation
     }
 
     /// It provides a calculation of the approval rate by using fixed point integer arithmetic of
@@ -265,14 +273,17 @@ impl Proposal {
     /// in order to get the original approval percentage. i.e if this function returns 1043 bps,
     /// the equivalent percentage would be 10,43% .
     pub fn approval_rate_bps(&self) -> Result<u32, Error> {
-        if self.votes == 0 {
+        if self.participation == 0 {
             return Ok(0);
         }
-        self.votes
-            .checked_mul(10_000)
-            .ok_or(Error::Overflow)?
-            .checked_div(self.total_voters)
-            .ok_or(Error::Overflow)
+        Ok(u32::try_from(
+            self.participation
+                .checked_mul(10_000)
+                .ok_or(Error::Overflow)?
+                .checked_div(self.total_participation)
+                .ok_or(Error::Overflow)?,
+        )
+        .unwrap())
     }
 
     pub fn is_approved(&self) -> bool {
