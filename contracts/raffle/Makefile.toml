@@ -25,20 +25,20 @@ script = '''
 
 [tasks.create_account_admin]
 script = '''
-  soroban config identity generate admin
-  curl "${friendbot}?addr=$(soroban config identity address admin)"
+  # soroban config identity generate admin
+  # curl "${friendbot}?addr=$(soroban config identity address admin)"
+
+  { ERR=$( { soroban config identity generate admin 1>&$tmp ; } 2>&1); } {tmp}>&1
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
   
-  # { ERR=$( { soroban config identity generate admin 1>&3 ; } 2>&1); } 3>&1
-  # if [ ! -z "$ERR" ]; then
-  #   echo "$ERR"
-  #   exit 1
-  # fi
-  
-  # { ERR=$( { curl "${friendbot}?addr=$(soroban config identity address admin)" 1>&3 ; } 2>&1); } 3>&1
-  # if [ ! -z "$ERR" ]; then
-  #   echo "$ERR"
-  #   exit 1
-  # fi
+  { ERR=$( { curl "${friendbot}?addr=$(soroban config identity address admin)" 1>&$tmp ; } 2>&1); } {tmp}>&1
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
 '''
 
 [tasks.create_account_players]
