@@ -17,17 +17,29 @@ nebula-importer = { git = "https://github.com/eigerco/nebula" }
 
 ```rs
 fn main() {
-    // TODO: Can we just use OUT_DIR?
-    nebula_importer::sync_contracts("Contracts.toml", "./contracts").expect("Could not sync contracts");
+    nebula_importer::sync_all_contracts();
 }
 ```
 
-### Create the dependency file eg `Contracts.toml` with imported contracts
+### Create the dependency metadata in `Cargo.toml` with imported contracts
 
 ```toml
-[imports]
+[package.metadata.nebula.imports]
 token = "ghcr.io/eigerco/nebula/contracts/token"
 voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
+```
+
+### Use the contracts in your lib.rs
+
+```rust
+mod contracts {
+    include!(concat!(env!("OUT_DIR"), "/nebula_imports.rs"));
+}
+
+fn main() {
+    let client = contracts::voting::Client::new();
+    // .....
+}
 ```
 
 ## Read more

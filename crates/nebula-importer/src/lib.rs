@@ -5,9 +5,16 @@ use figment::{
     Figment,
 };
 use oci_distribution::{manifest, secrets::RegistryAuth, Client, Reference};
+use quote::__private::Span;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::{runtime::Builder, sync::Mutex};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -28,6 +35,10 @@ pub struct Config {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Metadata {
     nebula: Config,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PackageConfig {
+    pub package: Package,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -59,7 +70,8 @@ macro_rules! throw_warning {
 }
 
 pub fn import_all_contracts() {
-    let package: Package = Figment::new()
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    let PackageConfig { package } = Figment::new()
         .merge(Toml::file("Cargo.toml"))
         .extract()
         .expect("Could not read config in `Cargo.toml`.");
@@ -106,10 +118,22 @@ async fn find_and_sync_contract(
     mut path: PathBuf,
     client: Arc<Mutex<Client>>,
 ) {
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let dest_path = Path::new(&out_dir).join("nebula_imports.rs");
+
     path.push(format!("{name}_{}.wasm", contract.hash()));
     match path.try_exists() {
         Ok(true) => {
-            std::fs::read(path).unwrap();
+            //let bytes = std::fs::read(path).unwrap();
+            let path_str = path.to_str().unwrap().to_string();
+            let name = syn::Ident::new(&name, Span::call_site());
+
+            let code = quote::quote! {
+                pub (crate) mod #name {
+                    soroban_sdk::contractimport!(file = #path_str);
+                }
+            };
+            generate_file(&dest_path, code.to_string().as_bytes());
         }
         Ok(false) => {
             throw_warning!("Contract [{name}] could not be found in cache, fetching...");
@@ -142,6 +166,11 @@ pub(crate) async fn pull_wasm(
     tokio::fs::write(output, image_content)
         .await
         .expect("Cannot write to file");
+}
+
+fn generate_file<P: AsRef<Path>>(path: P, text: &[u8]) {
+    let mut f = File::create(path).unwrap();
+    f.write_all(text).unwrap()
 }
 
 #[cfg(test)]
