@@ -7,8 +7,8 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
-    Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, BytesN,
+    Env, Map, Symbol,
 };
 
 mod voting_contract {
@@ -41,6 +41,7 @@ pub enum Error {
     // Certain amounts are not valid in some operations.(Like under and/or equal to zero)
     InvalidAmount = 3,
     ParticipantNotFound = 4,
+    ParticipantNotWhitelisted = 5,
 }
 
 #[contract]
@@ -186,7 +187,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {        
+    pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
         participant.require_auth();
 
         let storage = env.storage().persistent();
@@ -220,9 +221,44 @@ impl GovernanceContract {
             .ok_or(Error::ParticipantNotFound)?;
 
         stored_participant.whitelisted = true;
-
         participants.set(participant.clone(), stored_participant);
         storage.set(&DataKey::Participants, &participants);
+
+        Ok(())
+    }
+
+    pub fn propose_code_upgrade(
+        env: Env,
+        participant: Address,
+        id: u64,
+        new_contract_hash: BytesN<32>,
+    ) -> Result<(), Error> {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+
+        let participants = storage
+            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
+            .unwrap();
+
+        let stored_participant = participants
+            .get(participant.clone())
+            .ok_or(Error::ParticipantNotFound)?;
+
+        if !stored_participant.whitelisted {
+            return Err(Error::ParticipantNotWhitelisted);
+        }
+
+        let voting_address = storage
+            .get::<_, Address>(&DataKey::VotingContractAddress)
+            .unwrap();
+
+        let voting_client = voting_contract::Client::new(&env, &voting_address);
+
+        voting_client.create_proposal(&participant, &id, &new_contract_hash);
+
+        env.events()
+            .publish((Symbol::new(&env, "new_proposal"), &participant), id);
 
         Ok(())
     }
