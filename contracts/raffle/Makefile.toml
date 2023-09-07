@@ -77,7 +77,7 @@ script = '''
   soroban contract deploy \
   --source admin \
   --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
-  --network ${network} 1>/tmp/contract_id.txt 2>/tmp/error
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/error
 
   ERR=$(</tmp/error)
   if [ ! -z "$ERR" ]; then
