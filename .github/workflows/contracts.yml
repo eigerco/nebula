@@ -40,7 +40,8 @@ jobs:
         run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
-        run: cargo clippy -p ${{ matrix.contract }} --all-targets --all-features
+        run: cargo clippy --all-targets --all-features
+
       - name: Upload compiled contracts
         uses: actions/upload-artifact@v3
         with:
