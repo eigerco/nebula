@@ -117,9 +117,9 @@ script = '''
     -- \
     buy_ticket \
     --by $(soroban config identity address player_$PLAYER) 2>/tmp/error
-    
-    cat /tmp/error
-    ERR=$(</tmp/error)
+
+    # ERR=$(</tmp/error)
+    ERR = `cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
