@@ -105,6 +105,7 @@ impl ProposalVotingContract {
         env: Env,
         proposer: Address,
         id: u64,
+        kind: u32,
         comment: BytesN<32>,
     ) -> Result<(), Error> {
         let storage = env.storage().persistent();
@@ -115,6 +116,7 @@ impl ProposalVotingContract {
         Self::create_custom_proposal(
             env,
             id,
+            kind,
             proposer,
             comment,
             voting_period_secs,
@@ -137,6 +139,7 @@ impl ProposalVotingContract {
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
+        kind: u32,
         proposer: Address,
         comment: BytesN<32>,
         voting_period_secs: u64,
@@ -168,6 +171,7 @@ impl ProposalVotingContract {
             id,
             Proposal {
                 id,
+                kind,
                 proposer,
                 comment,
                 voting_end_time: env
@@ -223,6 +227,9 @@ impl ProposalVotingContract {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Proposal {
     id: u64,
+    // Allows external systems to discriminate among type of proposal. This probably
+    // goes in hand with the `comment` field.
+    kind: u32,
     // The address this proposal is created from.
     proposer: Address,
     // Comment has enough size for a wasm contract hash. It could also be a string.
@@ -292,6 +299,10 @@ impl Proposal {
 
     pub fn get_comment(&self) -> &BytesN<32> {
         &self.comment
+    }
+
+    pub fn get_kind(&self) -> u32 {
+        self.kind
     }
 
     /// It provides a way to update the current proposal participation
