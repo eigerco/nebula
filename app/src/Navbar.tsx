@@ -27,6 +27,14 @@ function CustomNavbar() {
                 View in Github
               </NavDropdown.Item>
             </NavDropdown>
+            <NavDropdown title="Docs" id="basic-nav-dropdown">
+              <NavDropdown.Item as={Link} href="/docs/importer">Nebula Importer</NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/docs/publish">Publishing Contacts</NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item href="https://github.com/eigerco/nebula">
+                View in Github
+              </NavDropdown.Item>
+            </NavDropdown>
           </Nav>
         </Navbar.Collapse>
       </Container>
