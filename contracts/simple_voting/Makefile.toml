@@ -174,13 +174,13 @@ fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
 script_runner = "node"
 script_extension = "js"
 script = '''
-let fs = require('fs');
+let fs = require('fs')
 
 function calculateFees(file) {
   let fee = 0
   const transactions = fs.readFileSync(file, 'utf8')
 
-  const obj = JSON.parse(transactions);
+  const obj = JSON.parse(transactions)
   const recordsSize = obj['_embedded']['records'].length
   for (let i = 1; i < recordsSize; ++i) {
     const tx = obj['_embedded']['records'][i]
@@ -190,9 +190,12 @@ function calculateFees(file) {
 }
 
 let fee = calculateFees('/tmp/transactions.txt')
-fee += calculateFees('/tmp/admin_transactions.txt')
+console.log('Player fees: ', fee)
 
-console.log('Total fees: ', fee)
+let adminFee = calculateFees('/tmp/admin_transactions.txt')
+console.log('Admin fees: ', adminFee)
+
+console.log('Total fees: ', (fee + adminFee))
 '''
 
 [tasks.check_results]
