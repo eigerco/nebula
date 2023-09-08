@@ -26,9 +26,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set output
-        id: vars
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
       - name: Setup rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -50,4 +47,4 @@ jobs:
       - run: mv target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm ${{ matrix.contract }}.wasm
 
       - name: Push GitHub Container Registry
-        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }}:${{ steps.vars.outputs.tag }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
+        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }}:${{  github.ref_name }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
