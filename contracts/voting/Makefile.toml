@@ -70,7 +70,7 @@ dependencies = [
 script = '''
   soroban contract deploy \
   --source admin \
-  --wasm ../../target/wasm32-unknown-unknown/release/voting.wasm \
+  --wasm ../../voting.wasm \
   --network ${network} > /tmp/contract_id.txt 2>/tmp/error
 
   ERR=$(</tmp/error)
