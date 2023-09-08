@@ -495,7 +495,7 @@ fn not_whitelisted_participant_cannot_create_proposals() {
         &sc.voting_contract_id,
     );
 
-    sc.contract_client.join(&participant, &200);
+    sc.contract_client.join(participant, &200);
     let hash = BytesN::random(&sc.env);
     sc.contract_client
         .propose_code_upgrade(participant, &1, &hash);
