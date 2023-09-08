@@ -293,6 +293,34 @@ impl Proposal {
     pub fn get_comment(&self) -> &BytesN<32> {
         &self.comment
     }
+
+    /// It provides a way to update the current proposal participation
+    /// data from a provided balance in which is assumed there are no negative balances.
+    ///
+    /// All the current proposal voters addresses, must be present in the provided balance.
+    /// If not, it will return with an error on the first not found address.
+    ///
+    /// After calling this function, all quorum calculations will use the calculated data.
+    pub fn set_participation_from_balance(
+        &mut self,
+        balance: &Map<Address, i128>,
+    ) -> Result<(), Error> {
+        self.participation = self
+            .voters
+            .iter()
+            .try_fold::<u128, _, _>(0u128, |acc, (address, _)| {
+                let stake = balance.get(address)?;
+                acc.checked_add(stake as u128)
+            })
+            .ok_or(Error::NotFound)?;
+
+        self.total_participation = balance
+            .values()
+            .iter()
+            .try_fold(0u128, |acc, balance| acc.checked_add(balance as u128))
+            .ok_or(Error::Overflow)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]

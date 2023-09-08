@@ -236,3 +236,39 @@ fn proposal_comment_is_accessible() {
 
     assert_eq!(comment, proposal.get_comment().clone());
 }
+
+#[test]
+fn proposal_total_participation_can_be_set_from_balance() {
+    let (env, _, _) = setup_test();
+    env.mock_all_auths();
+
+    let mut voters = Map::<Address, bool>::new(&env);
+
+    let voter_1 = Address::random(&env);
+    let voter_2 = Address::random(&env);
+
+    voters.set(voter_1.clone(), true); // Only voter_1 votes in favour.
+
+    let mut proposal = Proposal {
+        id: 112,
+        proposer: Address::random(&env),
+        comment: BytesN::random(&env),
+        voting_end_time: 123123,
+        target_approval_rate_bps: 5000, // Half the participation is enough to approve.
+
+        // Participation data is in zero values, as it will be calculated from provided balance.
+        participation: 0,
+        total_participation: 0,
+        voters,
+    };
+
+    let mut balance = Map::<Address, i128>::new(&env);
+
+    balance.set(voter_1, 1000);
+    balance.set(voter_2, 1000);
+
+    proposal.set_participation_from_balance(&balance).unwrap();
+
+    assert_eq!(5000, proposal.approval_rate_bps().unwrap());
+    assert!(proposal.is_approved());
+}
