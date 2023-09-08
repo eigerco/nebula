@@ -76,7 +76,7 @@ soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
 script = '''
   soroban contract deploy \
   --source admin \
-  --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
+  --wasm raffle.wasm \
   --network ${network} > /tmp/contract_id.txt 2>/tmp/error
 
   ERR=$(</tmp/error)
