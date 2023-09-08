@@ -140,6 +140,11 @@ script = '''
 curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
 '''
 
+[tasks.get_admin_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
+'''
+
 [tasks.parse_transactions]
 script_runner = "node"
 script_extension = "js"
@@ -185,9 +190,38 @@ fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
 });
 '''
 
+[tasks.calculate_fees]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+function calculateFees(file) {
+  let fee = 0
+  const transactions = fs.readFileSync(file, 'utf8')
+
+  const obj = JSON.parse(transactions)
+  const recordsSize = obj['_embedded']['records'].length
+  for (let i = 1; i < recordsSize; ++i) {
+    const tx = obj['_embedded']['records'][i]
+    fee += parseInt(tx.fee_charged)
+  }
+  return fee
+}
+
+let fee = calculateFees('/tmp/transactions.txt')
+console.log('Player fees: ', fee)
+
+let adminFee = calculateFees('/tmp/admin_transactions.txt')
+console.log('Admin fees: ', adminFee)
+
+console.log('Total fees: ', (fee + adminFee))
+'''
+
 [tasks.check_results]
 dependencies = [
   "get_transactions",
+  "get_admin_transactions",
   "parse_transactions",
   "decode_xdr",
   "check_result"
@@ -198,5 +232,6 @@ dependencies = [
   "accounts",
   "deploy",
   "invoke_contract",
-  "check_results"
+  "check_results",
+  "calculate_fees"
 ]
