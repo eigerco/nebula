@@ -50,7 +50,8 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    matrix:
+    strategy:
+      matrix:
         contract: [raffle, voting]
     steps:
       - name: Checkout repository
