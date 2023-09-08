@@ -77,14 +77,13 @@ script = '''
   soroban contract deploy \
   --source admin \
   --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
-  --network ${network} > /tmp/contract_id.txt 
-  # 2>/tmp/error
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/error
 
-  # ERR=$(</tmp/error)
-  # if [ ! -z "$ERR" ]; then
-  #   echo "$ERR"
-  #   exit 1
-  # fi
+  ERR=$(</tmp/error)
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
 '''
 
 [tasks.invoke_init]
