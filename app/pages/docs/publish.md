@@ -1,4 +1,4 @@
-# Publishing Soroban contracts to a registry
+# Publishing contracts
 Nebula provides a way of publishing and importing Soroban contracts.
 Using OCI registries we provide a consistent way of managing contracts
 
@@ -10,7 +10,7 @@ The provided binary can be used to push to any OCI registry eg Github Packages w
  nebula-publish --module test.wasm --image ghcr.io/eigerco/nebula/contracts/test --username <....> --password <....>
  ```
 
-## Usage in Github Actions
+### Github Actions
 
 Since OCI registries allow one to add a tag, you can hook this to releases and offer your contracts for extension.
 

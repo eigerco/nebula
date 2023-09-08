@@ -1,10 +1,12 @@
 # Nebula Importer
 
-A simple utility that allows a developer to import soroban contracts. These contracts would need to be published to an OCI registry.
+A simple utility that allows developers to import Soroban contracts into other contracts. These contracts would need to be published to an OCI registry.
+The current cross contract solution offered by Soroban only works on local files.
+This extends on that and allows remote import of contracts
 
 ## Getting Started
 
-The importer hooks to the build process of rustc
+The importer hooks to the build process of rustc.
 
 ### Add a build dependency
 
@@ -21,7 +23,7 @@ fn main() {
 }
 ```
 
-### Create the dependency metadata in `Cargo.toml` with contracts you want to import
+### Add import metadata in `Cargo.toml`
 
 ```toml
 [package.metadata.nebula.imports]
@@ -29,7 +31,7 @@ token = "ghcr.io/eigerco/nebula/contracts/token"
 voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
 ```
 
-### Use the contracts in your lib.rs
+### Use the contracts
 
 ```rust
 mod contracts {
