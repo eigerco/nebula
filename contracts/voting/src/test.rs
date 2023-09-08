@@ -27,7 +27,7 @@ fn proposal_creation() {
         client.address.clone(),
         Symbol::new(&env, "create_custom_proposal"),
         (
-            1001u64,
+            id,
             1u32,
             client.address,
             comment,
