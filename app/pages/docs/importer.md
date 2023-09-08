@@ -17,7 +17,7 @@ nebula-importer = { git = "https://github.com/eigerco/nebula" }
 
 ### Create a `build.rs`
 
-```rs
+```rust
 fn main() {
     nebula_importer::sync_all_contracts();
 }
