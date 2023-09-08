@@ -25,15 +25,15 @@ script = '''
 
 [tasks.create_account_admin]
 script = '''
-  soroban config identity generate admin 2>/tmp/error
-  ERR=`cat /tmp/error`
+  soroban config identity generate admin 2>/tmp/simple_voting_error
+  ERR=`cat /tmp/simple_voting_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
   fi
   
-  curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/error
-  ERR=`cat /tmp/error`
+  curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/simple_voting_error
+  ERR=`cat /tmp/simple_voting_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -44,15 +44,15 @@ script = '''
 script = '''
   for PLAYER in 1 2 3
   do
-    soroban config identity generate player_$PLAYER 2>/tmp/error
-    ERR=`cat /tmp/error`
+    soroban config identity generate player_$PLAYER 2>/tmp/simple_voting_error
+    ERR=`cat /tmp/simple_voting_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
     fi
 
-    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/error
-    ERR=`cat /tmp/error`
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/simple_voting_error
+    ERR=`cat /tmp/simple_voting_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -71,9 +71,9 @@ script = '''
   soroban contract deploy \
   --source admin \
   --wasm ../../target/wasm32-unknown-unknown/release/simple_voting.wasm \
-  --network ${network} > /tmp/contract_id.txt 2>/tmp/error
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/simple_voting_error
 
-  ERR=`cat /tmp/error`
+  ERR=`cat /tmp/simple_voting_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -90,9 +90,9 @@ script = '''
   init \
   --voting_period_secs 3600 \
   --target_approval_rate_bps 50000 \
-  --total_voters 3 2>/tmp/error
+  --total_voters 3 2>/tmp/simple_voting_error
 
-  ERR=`cat /tmp/error`
+  ERR=`cat /tmp/simple_voting_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -109,9 +109,9 @@ script = '''
     --network ${network} \
     -- \
     vote \
-    --voter $(soroban config identity address player_$PLAYER) 2>/tmp/error
+    --voter $(soroban config identity address player_$PLAYER) 2>/tmp/simple_voting_error
 
-    ERR=`cat /tmp/error`
+    ERR=`cat /tmp/simple_voting_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
