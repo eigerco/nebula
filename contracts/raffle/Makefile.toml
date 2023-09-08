@@ -31,7 +31,7 @@ script = '''
   echo "error=$ERR"
   if [ ! -z "$ERR" ]; then
     echo "in if"
-    # exit 1
+    exit 1
   fi
   
   curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/raffle_error
@@ -54,11 +54,11 @@ script = '''
     fi
     
     curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/raffle_error
-    ERR=`cat /tmp/raffle_error`
-    if [ ! -z "$ERR" ]; then
-      echo "$ERR"
-      exit 1
-    fi
+    # ERR=`cat /tmp/raffle_error`
+    # if [ ! -z "$ERR" ]; then
+    #   echo "$ERR"
+    #   exit 1
+    # fi
   done
 '''
 
