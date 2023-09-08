@@ -30,6 +30,7 @@ script = '''
   ERR=`cat /tmp/raffle_error`
   echo "error=$ERR"
   if [ ! -z "$ERR" ]; then
+    echo "in if"
     exit 1
   fi
   
