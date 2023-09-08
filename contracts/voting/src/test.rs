@@ -42,16 +42,16 @@ fn proposal_creation() {
 fn assert_auth(
     auths: &[(Address, AuthorizedInvocation)],
     idx: usize,
+    auth_call: Address,
     call_addr: Address,
-    auth_addr: Address,
     func: Symbol,
     args: Vec<Val>,
 ) {
     let auth = auths.get(idx).unwrap();
-    assert_eq!(auth.0, call_addr);
+    assert_eq!(auth.0, auth_call);
     assert_eq!(
         auth.1.function,
-        AuthorizedFunction::Contract((auth_addr, func, args))
+        AuthorizedFunction::Contract((call_addr, func, args))
     );
 }
 
