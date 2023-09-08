@@ -20,4 +20,5 @@ Since OCI registries allow one to add a tag, you can hook this to releases and o
 
 ## Learn more
 https://www.thorsten-hans.com/distribute-webassembly-modules-as-oci-artifacts/
+
 https://github.com/engineerd/wasm-to-oci

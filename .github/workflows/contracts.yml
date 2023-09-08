@@ -50,6 +50,8 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
+    matrix:
+        contract: [raffle, voting]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -68,4 +70,4 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-build
 
       - name: Test
-        run: cargo test
+        run: cargo test -p ${{ matrix.contract }}
