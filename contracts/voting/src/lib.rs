@@ -45,11 +45,19 @@ impl From<ConversionError> for Error {
     }
 }
 
+#[contracttype]
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u32)]
+pub enum ProposalType {
+    Standard = 1,
+    CodeUpgrade = 2,
+}
+
 /// Datakey holds all possible storage keys this
 /// contract uses. See https://soroban.stellar.org/docs/getting-started/storing-data .
 #[contracttype]
 #[derive(Clone, Copy)]
-pub enum DataKey {
+enum DataKey {
     AlreadyInitialized = 0,
     Admin = 1,
     VoterList = 2,
@@ -105,7 +113,7 @@ impl ProposalVotingContract {
         env: Env,
         proposer: Address,
         id: u64,
-        kind: u32,
+        kind: ProposalType,
         comment: BytesN<32>,
     ) -> Result<(), Error> {
         let storage = env.storage().persistent();
@@ -140,7 +148,7 @@ impl ProposalVotingContract {
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
-        kind: u32,
+        kind: ProposalType,
         proposer: Address,
         comment: BytesN<32>,
         voting_period_secs: u64,
@@ -259,7 +267,7 @@ pub struct Proposal {
     id: u64,
     // Allows external systems to discriminate among type of proposal. This probably
     // goes in hand with the `comment` field.
-    kind: u32,
+    kind: ProposalType,
     // The address this proposal is created from.
     proposer: Address,
     // Comment has enough size for a wasm contract hash. It could also be a string.
@@ -331,7 +339,7 @@ impl Proposal {
         &self.comment
     }
 
-    pub fn get_kind(&self) -> u32 {
+    pub fn get_kind(&self) -> ProposalType {
         self.kind
     }
 
