@@ -11,7 +11,7 @@ use soroban_sdk::{
 
 #[test]
 fn proposal_creation() {
-    let (env, client, admin) = setup_test();
+    let (env, client, _admin) = setup_test();
 
     env.mock_all_auths();
 
@@ -26,7 +26,15 @@ fn proposal_creation() {
         client.address.clone(),
         client.address.clone(),
         Symbol::new(&env, "create_custom_proposal"),
-        (1001u64, client.address, comment, 3600u64, 50_00u32, 100_u128).into_val(&env),
+        (
+            1001u64,
+            client.address,
+            comment,
+            3600u64,
+            50_00u32,
+            100_u128,
+        )
+            .into_val(&env),
     )
 }
 
