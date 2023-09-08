@@ -319,7 +319,7 @@ impl Proposal {
         self.participation = self
             .voters
             .iter()
-            .try_fold::<u128, _, _>(0u128, |acc, (address, _)| {
+            .try_fold(0u128, |acc, (address, _)| {
                 let stake = balance.get(address)?;
                 acc.checked_add(stake as u128)
             })
