@@ -119,7 +119,7 @@ async fn find_and_sync_contract(
     client: Arc<Mutex<Client>>,
 ) {
     let out_dir = std::env::var("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("nebula_imports.rs");
+    let dest_path = Path::new(&out_dir).join("nebula_importer.rs");
 
     path.push(format!("{name}_{}.wasm", contract.hash()));
     match path.try_exists() {
