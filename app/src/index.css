@@ -19,3 +19,15 @@ code {
 @import url("Toolbox.css");
 @import url("Editor.css");
 
+h1,h2,h3,h4,h5,h6{
+  font-weight:700;
+  line-height:1em;
+  -webkit-font-smoothing: antialiased;
+  margin: 15px 0px;
+}
+h1{ font-size:2.5em; }
+h2{ font-size:2em;  border-bottom: 1px solid; padding-bottom: 10px; }
+h3{ font-size:1.5em; }
+h4{ font-size:1.2em; }
+h5{ font-size:1em; }
+h6{ font-size:0.9em; }
