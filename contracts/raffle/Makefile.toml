@@ -28,8 +28,8 @@ script_runner = "@shell"
 script = '''
   soroban config identity generate admin 2>/tmp/raffle_error
   ERR=`cat /tmp/raffle_error`
+  echo "error=$ERR"
   if [ ! -z "$ERR" ]; then
-    echo "$ERR"
     exit 1
   fi
   
