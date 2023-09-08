@@ -26,14 +26,14 @@ script = '''
 [tasks.create_account_admin]
 script = '''
   soroban config identity generate admin 2>/tmp/error
-  ERR=$(</tmp/error)
+  ERR=`cat /tmp/error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
   fi
   
   curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/error
-  ERR=$(</tmp/error)
+  ERR=`cat /tmp/error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -45,14 +45,14 @@ script = '''
   for PLAYER in 1 2 3
   do
     soroban config identity generate player_$PLAYER 2>/tmp/error
-    ERR=$(</tmp/error)
+    ERR=`cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
     fi
 
     curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/error
-    ERR=$(</tmp/error)
+    ERR=`cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -73,7 +73,7 @@ script = '''
   --wasm ../../target/wasm32-unknown-unknown/release/simple_voting.wasm \
   --network ${network} > /tmp/contract_id.txt 2>/tmp/error
 
-  ERR=$(</tmp/error)
+  ERR=`cat /tmp/error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -92,7 +92,7 @@ script = '''
   --target_approval_rate_bps 50000 \
   --total_voters 3 2>/tmp/error
 
-  ERR=$(</tmp/error)
+  ERR=`cat /tmp/error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -111,7 +111,7 @@ script = '''
     vote \
     --voter $(soroban config identity address player_$PLAYER) 2>/tmp/error
 
-    ERR=$(</tmp/error)
+    ERR=`cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1

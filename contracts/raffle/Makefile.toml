@@ -118,7 +118,6 @@ script = '''
     buy_ticket \
     --by $(soroban config identity address player_$PLAYER) 2>/tmp/error
 
-    # ERR=$(</tmp/error)
     ERR=`cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
@@ -137,7 +136,7 @@ script = '''
   play_raffle \
   --random_seed 1234 2>/tmp/error
 
-  ERR=$(</tmp/error)
+  ERR=`cat /tmp/error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -163,7 +162,7 @@ for PLAYER in 1 2 3
     balance \
     --id $(soroban config identity address player_$PLAYER) 2>/tmp/error
 
-    ERR=$(</tmp/error)
+    ERR=`cat /tmp/error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
