@@ -80,7 +80,7 @@ impl ProposalVotingContract {
         admin: Address,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
-        total_voters: u32,
+        participation: u128,
     ) {
         let storage = env.storage().persistent();
 
@@ -97,7 +97,7 @@ impl ProposalVotingContract {
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
         storage.set(&DataKey::VotingPeriodSecs, &voting_period_secs);
         storage.set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
-        storage.set(&DataKey::TotalVoters, &total_voters);
+        storage.set(&DataKey::TotalVoters, &participation);
     }
 
     /// Creates a new proposal with the default parameters.
