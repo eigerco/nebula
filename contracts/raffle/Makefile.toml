@@ -28,18 +28,12 @@ script_runner = "@shell"
 script = '''
   soroban config identity generate admin 2>/tmp/raffle_error
   ERR=`cat /tmp/raffle_error`
-  echo "error=$ERR"
   if [ ! -z "$ERR" ]; then
-    echo "in if"
+    echo "error=$ERR"
     exit 1
   fi
   
-  curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/raffle_error
-  # ERR=`cat /tmp/raffle_error`
-  # if [ ! -z "$ERR" ]; then
-  #   echo "$ERR"
-  #   exit 1
-  # fi
+  curl "${friendbot}?addr=$(soroban config identity address admin)"
 '''
 
 [tasks.create_account_players]
@@ -53,12 +47,7 @@ script = '''
       exit 1
     fi
     
-    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/raffle_error
-    # ERR=`cat /tmp/raffle_error`
-    # if [ ! -z "$ERR" ]; then
-    #   echo "$ERR"
-    #   exit 1
-    # fi
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
   done
 '''
 

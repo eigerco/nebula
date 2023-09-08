@@ -32,12 +32,7 @@ script = '''
     exit 1
   fi
 
-  curl "${friendbot}?addr=$(soroban config identity address admin)" 2>/tmp/voting_error
-  ERR=`cat /tmp/voting_error`
-  if [ ! -z "$ERR" ]; then
-    echo "$ERR"
-    exit 1
-  fi
+  curl "${friendbot}?addr=$(soroban config identity address admin)"
 '''
 
 [tasks.create_account_players]
@@ -51,12 +46,7 @@ script = '''
       exit 1
     fi
     
-    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)" 2>/tmp/voting_error
-    ERR=`cat /tmp/voting_error`
-    if [ ! -z "$ERR" ]; then
-      echo "$ERR"
-      exit 1
-    fi
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
   done
 '''
 
