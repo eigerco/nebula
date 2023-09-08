@@ -256,7 +256,7 @@ impl GovernanceContract {
 
         let voting_client = voting_contract::Client::new(&env, &voting_address);
 
-        voting_client.create_proposal(&participant, &id, &new_contract_hash);
+        voting_client.create_proposal(&participant, &id, &voting_contract::ProposalType::CodeUpgrade, &new_contract_hash);
 
         env.events()
             .publish((Symbol::new(&env, "new_proposal"), &participant), id);
