@@ -286,3 +286,15 @@ fn proposal_total_participation_can_be_set_from_balance() {
     assert_eq!(5000, proposal.approval_rate_bps().unwrap());
     assert!(proposal.is_approved());
 }
+
+#[test]
+fn proposals_can_be_queried_by_anyone() {
+    let (env, client, _) = setup_test();
+    env.mock_all_auths();
+
+    client.create_proposal(&client.address, &1, &1, &BytesN::random(&env));
+
+    let proposal = client.find_proposal(&1);
+
+    assert_eq!(1, proposal.id);
+}

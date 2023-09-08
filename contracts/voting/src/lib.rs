@@ -219,6 +219,16 @@ impl ProposalVotingContract {
         );
         Ok(())
     }
+
+    pub fn find_proposal(env: Env, id: u64) -> Result<Proposal, Error> {
+        let storage = env.storage().persistent();
+
+        let proposal_storage = storage
+            .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
+            .ok_or(Error::KeyExpected)?;
+
+        proposal_storage.get(id).ok_or(Error::NotFound)
+    }
 }
 
 /// Proposal represent a proposal in th voting system
