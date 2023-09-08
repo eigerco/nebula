@@ -26,7 +26,8 @@ script = '''
 [tasks.create_account_admin]
 script_runner = "@shell"
 script = '''
-  { ERR=$( { soroban config identity generate admin 1>&3 ; } 2>&1); } 3>&1
+  soroban config identity generate admin 2>/tmp/raffle_error
+  ERR=`cat /tmp/raffle_error`
   if [ ! -z "$ERR" ]; then
     echo "error=$ERR"
     exit 1
@@ -39,7 +40,8 @@ script = '''
 script = '''
   for PLAYER in 1 2 3
   do
-    { ERR=$( { soroban config identity generate player_$PLAYER 1>&3 ; } 2>&1); } 3>&1
+    soroban config identity generate player_$PLAYER 2>/tmp/raffle_error
+    ERR=`cat /tmp/raffle_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -62,11 +64,12 @@ soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
 
 [tasks.deploy]
 script = '''
-  ERR=$( { soroban contract deploy \
+  soroban contract deploy \
   --source admin \
   --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
-  --network ${network} > /tmp/contract_id.txt ; } 2>&1)
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/raffle_error
 
+  ERR=`cat /tmp/raffle_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -75,7 +78,7 @@ script = '''
 
 [tasks.invoke_init]
 script = '''
-  { ERR=$( { soroban contract invoke \
+  soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
   --source admin \
   --network ${network} \
@@ -84,8 +87,9 @@ script = '''
   --admin $(soroban config identity address admin) \
   --token $(cat /tmp/token_id.txt) \
   --max_winners_count 1 \
-  --ticket_price 5001 1>&3 ; } 2>&1); } 3>&1
+  --ticket_price 5001 2>/tmp/raffle_error
 
+  ERR=`cat /tmp/raffle_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -96,14 +100,15 @@ script = '''
 script = '''
   for PLAYER in 1 2 3
   do
-    { ERR=$( { soroban contract invoke \
+    soroban contract invoke \
     --id $(cat /tmp/contract_id.txt) \
     --source player_$PLAYER \
     --network ${network} \
     -- \
     buy_ticket \
-    --by $(soroban config identity address player_$PLAYER) 1>&3 ; } 2>&1); } 3>&1
+    --by $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
 
+    ERR=`cat /tmp/raffle_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -113,7 +118,7 @@ script = '''
 
 [tasks.invoke_play_raffle]
 script = '''
-  { ERR=$( { soroban contract invoke \
+  soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
   --source admin \
   --network ${network} \
@@ -121,6 +126,7 @@ script = '''
   play_raffle \
   --random_seed 1234 2>/tmp/raffle_error
 
+  ERR=`cat /tmp/raffle_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -139,13 +145,14 @@ dependencies = [
 script = '''
 for PLAYER in 1 2 3
   do
-    { ERR=$( { soroban contract invoke \
+    soroban contract invoke \
     --id $(cat /tmp/token_id.txt) \
     --network ${network} \
     -- \
     balance \
-    --id $(soroban config identity address player_$PLAYER) 1>&3 ; } 2>&1); } 3>&1
+    --id $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
 
+    ERR=`cat /tmp/raffle_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
