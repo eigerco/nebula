@@ -11,6 +11,7 @@ use soroban_sdk::{
     Env, Map, Symbol,
 };
 
+#[allow(clippy::too_many_arguments)]
 mod voting_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/voting.wasm");
 }
