@@ -85,6 +85,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: wasm-files
+          path: target/wasm32-unknown-unknown/release/
 
       - name: Integration test
         run: ./integration_tests.sh
