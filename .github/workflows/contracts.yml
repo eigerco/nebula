@@ -81,8 +81,10 @@ jobs:
       - name: Test
         run: cargo test
 
-      - name: Integration test
+      - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
           name: wasm-files
+
+      - name: Integration test
         run: ./integration_tests.sh
