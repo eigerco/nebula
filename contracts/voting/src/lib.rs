@@ -229,6 +229,25 @@ impl ProposalVotingContract {
 
         proposal_storage.get(id).ok_or(Error::NotFound)
     }
+
+    pub fn update_proposal(env: Env, proposal: Proposal) -> Result<(), Error> {
+        let storage = env.storage().persistent();
+
+        storage
+            .get::<_, Address>(&DataKey::Admin)
+            .ok_or(Error::KeyExpected)?
+            .require_auth();
+
+        let mut proposal_storage = storage
+            .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
+            .ok_or(Error::KeyExpected)?;
+
+        proposal_storage.get(proposal.id).ok_or(Error::NotFound)?;
+        proposal_storage.set(proposal.id, proposal);
+
+        storage.set(&DataKey::Proposals, &proposal_storage);
+        Ok(())
+    }
 }
 
 /// Proposal represent a proposal in th voting system

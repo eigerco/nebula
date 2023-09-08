@@ -298,3 +298,64 @@ fn proposals_can_be_queried_by_anyone() {
 
     assert_eq!(1, proposal.id);
 }
+
+#[test]
+fn proposals_can_be_updated_only_by_admin() {
+    let (env, client, admin) = setup_test();
+    env.mock_all_auths();
+
+    let comment = BytesN::random(&env);
+
+    client.create_proposal(&client.address, &1, &1, &comment);
+
+    let voter_1 = Address::random(&env);
+    let voter_2 = Address::random(&env);
+
+    client.vote(&voter_1, &1);
+    client.vote(&voter_2, &1);
+
+    let mut proposal = client.find_proposal(&1);
+
+    let mut balance = Map::<Address, i128>::new(&env);
+    balance.set(voter_1, 1000);
+    balance.set(voter_2, 1000);
+
+    proposal.set_participation_from_balance(&balance).unwrap();
+
+    client.update_proposal(&proposal);
+
+    assert_auth(
+        &env.auths(),
+        0,
+        admin,
+        client.address.clone(),
+        Symbol::new(&env, "update_proposal"),
+        (proposal,).into_val(&env),
+    );
+
+    // If we retrieve the proposal again, is updated.
+    let stored_proposal = client.find_proposal(&1);
+    assert!(stored_proposal.is_approved());
+    assert_eq!(10_000, stored_proposal.approval_rate_bps().unwrap());
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn proposals_can_be_updated_only_if_they_exist_first() {
+    let (env, client, admin) = setup_test();
+    env.mock_all_auths();
+
+    let proposal = Proposal {
+        id: 112,
+        kind: 1,
+        proposer: admin,
+        comment: BytesN::random(&env),
+        voting_end_time: 3600,
+        participation: 0,
+        target_approval_rate_bps: 0,
+        total_participation: 0,
+        voters: Map::<Address, bool>::new(&env),
+    };
+
+    client.update_proposal(&proposal);
+}
