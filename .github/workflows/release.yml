@@ -7,7 +7,7 @@ env:
 
 jobs:
   release:
-    name: Release
+    name: Release Contracts
     runs-on: ubuntu-latest
     strategy:
       matrix:
