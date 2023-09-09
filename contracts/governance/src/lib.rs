@@ -16,6 +16,8 @@ mod voting_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/voting.wasm");
 }
 
+mod participant;
+
 /// Datakey holds all possible storage keys this
 /// contract uses. See https://soroban.stellar.org/docs/getting-started/storing-data .
 #[derive(Clone, Copy)]
@@ -43,6 +45,7 @@ pub enum Error {
     InvalidAmount = 3,
     ParticipantNotFound = 4,
     ParticipantNotWhitelisted = 5,
+    ExpectedStorageKeyNotFound = 6,
 }
 
 #[contract]
@@ -71,18 +74,12 @@ impl GovernanceContract {
         participant_addr.require_auth();
 
         let storage = env.storage().persistent();
-
-        let mut participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
-
+        let mut participant_repo = participant::Repository::new(&storage)?;
         let mut participant = Participant::new(participant_addr.clone());
 
         Self::stake_funds(&env, &mut participant, amount)?;
 
-        participants.set(participant_addr.clone(), participant);
-
-        storage.set(&DataKey::Participants, &participants);
+        participant_repo.save(participant);
 
         env.events().publish(
             (Symbol::new(&env, "participant_joined"), participant_addr),
@@ -111,7 +108,7 @@ impl GovernanceContract {
             &amount,
         );
 
-        participant.current_balance += amount;
+        participant.current_balance = participant.current_balance.checked_add(amount).unwrap();
 
         env.events()
             .publish((Symbol::new(env, "stake"), &participant.address), amount);
@@ -123,18 +120,13 @@ impl GovernanceContract {
 
         let storage = env.storage().persistent();
 
-        let mut participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
+        let mut participant_repo = participant::Repository::new(&storage)?;
 
-        let mut stored_participant = participants
-            .get(participant.clone())
-            .ok_or(Error::ParticipantNotFound)?;
+        let mut stored_participant = participant_repo.find(participant.clone())?;
 
         Self::stake_funds(&env, &mut stored_participant, amount)?;
 
-        participants.set(participant.clone(), stored_participant);
-        storage.set(&DataKey::Participants, &participants);
+        participant_repo.save(stored_participant);
 
         Ok(())
     }
@@ -143,21 +135,15 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+        let mut participant_repo = participant::Repository::new(&storage)?;
 
-        let mut participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
-
-        let mut stored_participant = participants
-            .get(participant.clone())
-            .ok_or(Error::ParticipantNotFound)?;
+        let mut stored_participant = participant_repo.find(participant.clone())?;
 
         let amount = stored_participant.current_balance;
 
         Self::withdraw_funds(&env, &mut stored_participant, amount).unwrap();
 
-        participants.remove(participant.clone());
-        storage.set(&DataKey::Participants, &participants);
+        participant_repo.remove(participant.clone())?;
 
         env.events()
             .publish((Symbol::new(&env, "participant_left"), &participant), ());
@@ -192,19 +178,14 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+        let mut participant_repo = participant::Repository::new(&storage)?;
 
-        let mut participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
-
-        let mut stored_participant = participants
-            .get(participant.clone())
-            .ok_or(Error::ParticipantNotFound)?;
+        let mut stored_participant = participant_repo.find(participant.clone())?;
 
         Self::withdraw_funds(&env, &mut stored_participant, amount)?;
 
-        participants.set(participant.clone(), stored_participant);
-        storage.set(&DataKey::Participants, &participants);
+        participant_repo.save(stored_participant);
+
         Ok(())
     }
 
@@ -213,17 +194,13 @@ impl GovernanceContract {
         let curator = storage.get::<_, Address>(&DataKey::Curator).unwrap();
         curator.require_auth();
 
-        let mut participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
+        let mut participant_repo = participant::Repository::new(&storage)?;
 
-        let mut stored_participant = participants
-            .get(participant.clone())
-            .ok_or(Error::ParticipantNotFound)?;
+        let mut stored_participant = participant_repo.find(participant.clone())?;
 
         stored_participant.whitelisted = true;
-        participants.set(participant.clone(), stored_participant);
-        storage.set(&DataKey::Participants, &participants);
+
+        participant_repo.save(stored_participant);
 
         Ok(())
     }
@@ -237,14 +214,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+        let mut participant_repo = participant::Repository::new(&storage)?;
 
-        let participants = storage
-            .get::<_, Map<Address, Participant>>(&DataKey::Participants)
-            .unwrap();
-
-        let stored_participant = participants
-            .get(participant.clone())
-            .ok_or(Error::ParticipantNotFound)?;
+        let stored_participant = participant_repo.find(participant.clone())?;
 
         if !stored_participant.whitelisted {
             return Err(Error::ParticipantNotWhitelisted);
@@ -256,7 +228,12 @@ impl GovernanceContract {
 
         let voting_client = voting_contract::Client::new(&env, &voting_address);
 
-        voting_client.create_proposal(&participant, &id, &voting_contract::ProposalType::CodeUpgrade, &new_contract_hash);
+        voting_client.create_proposal(
+            &participant,
+            &id,
+            &voting_contract::ProposalType::CodeUpgrade,
+            &new_contract_hash,
+        );
 
         env.events()
             .publish((Symbol::new(&env, "new_proposal"), &participant), id);
@@ -265,8 +242,9 @@ impl GovernanceContract {
     }
 }
 
+#[derive(Debug, Clone)]
 #[contracttype]
-struct Participant {
+pub struct Participant {
     address: Address,
     whitelisted: bool,
     current_balance: i128,
