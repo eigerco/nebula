@@ -542,7 +542,12 @@ fn whitelisted_participant_can_create_code_upgrade_proposals() {
             &sc.env,
             (
                 sc.contract_id.clone(),
-                (Symbol::new(&sc.env, "new_proposal"), participant.clone()).into_val(&sc.env),
+                (
+                    Symbol::new(&sc.env, "new_proposal"),
+                    participant.clone(),
+                    ProposalType::CodeUpgrade
+                )
+                    .into_val(&sc.env),
                 1u64.into_val(&sc.env)
             ),
         ]

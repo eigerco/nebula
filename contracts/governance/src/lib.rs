@@ -234,8 +234,18 @@ impl GovernanceContract {
             &new_contract_hash,
         );
 
-        env.events()
-            .publish((Symbol::new(&env, "new_proposal"), &participant), id);
+        env.events().publish(
+            (
+                Symbol::new(&env, "new_proposal"),
+                &participant,
+                voting_contract::ProposalType::CodeUpgrade,
+            ),
+            id,
+        );
+
+        Ok(())
+    }
+
 
         Ok(())
     }
