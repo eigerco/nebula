@@ -478,7 +478,7 @@ fn not_existent_participant_cannot_create_proposals() {
     let hash = BytesN::random(&sc.env);
 
     sc.contract_client
-        .propose_code_upgrade(participant, &1, &hash);
+        .new_proposal(participant, &1, &ProposalType::CodeUpgrade, &hash);
 }
 
 #[test]
@@ -500,7 +500,7 @@ fn not_whitelisted_participant_cannot_create_proposals() {
     sc.contract_client.join(participant, &200);
     let hash = BytesN::random(&sc.env);
     sc.contract_client
-        .propose_code_upgrade(participant, &1, &hash);
+        .new_proposal(participant, &1, &ProposalType::CodeUpgrade, &hash);
 }
 
 #[test]
@@ -525,16 +525,26 @@ fn whitelisted_participant_can_create_code_upgrade_proposals() {
     sc.contract_client.whitelist(&participant);
 
     let new_contract_hash = BytesN::random(&sc.env);
-    sc.contract_client
-        .propose_code_upgrade(&participant, &1, &new_contract_hash);
+    sc.contract_client.new_proposal(
+        &participant,
+        &1,
+        &ProposalType::CodeUpgrade,
+        &new_contract_hash,
+    );
 
     assert_auth(
         &sc.env.auths(),
         0,
         participant.clone(),
         sc.contract_client.address.clone(),
-        Symbol::new(&sc.env, "propose_code_upgrade"),
-        (participant.clone(), 1u64, new_contract_hash).into_val(&sc.env),
+        Symbol::new(&sc.env, "new_proposal"),
+        (
+            participant.clone(),
+            1u64,
+            ProposalType::CodeUpgrade,
+            new_contract_hash,
+        )
+            .into_val(&sc.env),
     );
 
     let last_event = sc.env.events().all().last().unwrap();
@@ -578,8 +588,12 @@ fn whitelisted_participant_can_vote_proposals() {
     sc.contract_client.whitelist(&participant);
 
     let new_contract_hash = BytesN::random(&sc.env);
-    sc.contract_client
-        .propose_code_upgrade(&participant, &1, &new_contract_hash);
+    sc.contract_client.new_proposal(
+        &participant,
+        &1,
+        &ProposalType::CodeUpgrade,
+        &new_contract_hash,
+    );
 
     sc.contract_client.vote(&participant, &1);
 

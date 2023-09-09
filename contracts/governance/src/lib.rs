@@ -11,6 +11,7 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, BytesN,
     Env, Map, Symbol,
 };
+use voting_contract::ProposalType;
 
 #[allow(clippy::too_many_arguments)]
 mod voting_contract {
@@ -204,10 +205,11 @@ impl GovernanceContract {
         Ok(())
     }
 
-    pub fn propose_code_upgrade(
+    pub fn new_proposal(
         env: Env,
         participant: Address,
         id: u64,
+        kind: ProposalType,
         new_contract_hash: BytesN<32>,
     ) -> Result<(), Error> {
         participant.require_auth();
@@ -227,21 +229,10 @@ impl GovernanceContract {
 
         let voting_client = voting_contract::Client::new(&env, &voting_address);
 
-        voting_client.create_proposal(
-            &participant,
-            &id,
-            &voting_contract::ProposalType::CodeUpgrade,
-            &new_contract_hash,
-        );
+        voting_client.create_proposal(&participant, &id, &kind, &new_contract_hash);
 
-        env.events().publish(
-            (
-                Symbol::new(&env, "new_proposal"),
-                &participant,
-                voting_contract::ProposalType::CodeUpgrade,
-            ),
-            id,
-        );
+        env.events()
+            .publish((Symbol::new(&env, "new_proposal"), &participant, kind), id);
 
         Ok(())
     }
