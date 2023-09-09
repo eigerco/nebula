@@ -6,6 +6,7 @@
 
 #![no_std]
 
+use participant::Participant;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, BytesN,
     Env, Map, Symbol,
@@ -96,22 +97,22 @@ impl GovernanceContract {
         let storage = env.storage().persistent();
         let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(env, &token_addr);
-        let balance = token_client.balance(&participant.address);
+        let balance = token_client.balance(participant.address());
 
         if balance < amount {
             return Err(Error::InsufficientFunds);
         }
 
         token_client.transfer(
-            &participant.address,
+            participant.address(),
             &env.current_contract_address(),
             &amount,
         );
 
-        participant.current_balance = participant.current_balance.checked_add(amount).unwrap();
+        participant.increase_balance(amount)?;
 
         env.events()
-            .publish((Symbol::new(env, "stake"), &participant.address), amount);
+            .publish((Symbol::new(env, "stake"), participant.address()), amount);
         Ok(())
     }
 
@@ -139,9 +140,9 @@ impl GovernanceContract {
 
         let mut stored_participant = participant_repo.find(participant.clone())?;
 
-        let amount = stored_participant.current_balance;
+        let amount = stored_participant.balance();
 
-        Self::withdraw_funds(&env, &mut stored_participant, amount).unwrap();
+        Self::withdraw_funds(&env, &mut stored_participant, amount)?;
 
         participant_repo.remove(participant.clone())?;
 
@@ -152,24 +153,22 @@ impl GovernanceContract {
     }
 
     fn withdraw_funds(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
-        if participant.current_balance < amount {
-            return Err(Error::InsufficientFunds);
-        }
-
         let storage = env.storage().persistent();
         let token_addr = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(env, &token_addr);
 
+        participant.decrease_balance(amount)?;
+
         token_client.transfer(
             &env.current_contract_address(),
-            &participant.address,
+            participant.address(),
             &amount,
         );
 
-        participant.current_balance -= amount;
-
-        env.events()
-            .publish((Symbol::new(env, "withdraw"), &participant.address), amount);
+        env.events().publish(
+            (Symbol::new(env, "withdraw"), participant.address()),
+            amount,
+        );
 
         Ok(())
     }
@@ -198,7 +197,7 @@ impl GovernanceContract {
 
         let mut stored_participant = participant_repo.find(participant.clone())?;
 
-        stored_participant.whitelisted = true;
+        stored_participant.whitelist();
 
         participant_repo.save(stored_participant);
 
@@ -218,7 +217,7 @@ impl GovernanceContract {
 
         let stored_participant = participant_repo.find(participant.clone())?;
 
-        if !stored_participant.whitelisted {
+        if !stored_participant.is_whitelisted() {
             return Err(Error::ParticipantNotWhitelisted);
         }
 
@@ -239,24 +238,6 @@ impl GovernanceContract {
             .publish((Symbol::new(&env, "new_proposal"), &participant), id);
 
         Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-#[contracttype]
-pub struct Participant {
-    address: Address,
-    whitelisted: bool,
-    current_balance: i128,
-}
-
-impl Participant {
-    pub fn new(address: Address) -> Self {
-        Participant {
-            address,
-            whitelisted: false,
-            current_balance: 0,
-        }
     }
 }
 
