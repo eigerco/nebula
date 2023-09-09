@@ -246,6 +246,34 @@ impl GovernanceContract {
         Ok(())
     }
 
+    pub fn vote(env: Env, participant: Address, id: u64) -> Result<(), Error> {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+        let mut participant_repo = participant::Repository::new(&storage)?;
+
+        let stored_participant = participant_repo.find(participant.clone())?;
+
+        if !stored_participant.is_whitelisted() {
+            return Err(Error::ParticipantNotWhitelisted);
+        }
+
+        let voting_address = storage
+            .get::<_, Address>(&DataKey::VotingContractAddress)
+            .unwrap();
+
+        let voting_client = voting_contract::Client::new(&env, &voting_address);
+
+        voting_client.vote(&participant, &id);
+
+        env.events().publish(
+            (
+                Symbol::new(&env, "proposal_voted"),
+                &participant,
+                voting_contract::ProposalType::CodeUpgrade,
+            ),
+            stored_participant.balance(),
+        );
 
         Ok(())
     }

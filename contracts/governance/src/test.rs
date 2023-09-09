@@ -2,6 +2,8 @@
 
 extern crate std;
 
+use crate::voting_contract::ProposalType;
+
 use super::{voting_contract, GovernanceContract, GovernanceContractClient};
 
 use soroban_sdk::{
@@ -552,4 +554,83 @@ fn whitelisted_participant_can_create_code_upgrade_proposals() {
             ),
         ]
     )
+}
+
+#[test]
+fn whitelisted_participant_can_vote_proposals() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant = Address::random(&sc.env);
+    sc.token_admin_client.mint(&participant, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &50_000, &1000);
+
+    sc.contract_client.join(&participant, &200);
+    sc.contract_client.whitelist(&participant);
+
+    let new_contract_hash = BytesN::random(&sc.env);
+    sc.contract_client
+        .propose_code_upgrade(&participant, &1, &new_contract_hash);
+
+    sc.contract_client.vote(&participant, &1);
+
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        participant.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "vote"),
+        (participant.clone(), 1u64).into_val(&sc.env),
+    );
+
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id.clone(),
+                (
+                    Symbol::new(&sc.env, "proposal_voted"),
+                    participant.clone(),
+                    voting_contract::ProposalType::CodeUpgrade,
+                )
+                    .into_val(&sc.env),
+                200i128.into_val(&sc.env)
+            ),
+        ]
+    )
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #5)")]
+fn non_whitelisted_participant_cant_vote_proposals() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant = Address::random(&sc.env);
+    sc.token_admin_client.mint(&participant, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &50_000, &1000);
+
+    sc.contract_client.join(&participant, &200);
+
+    sc.contract_client.vote(&participant, &1);
 }
