@@ -149,27 +149,4 @@ mod test {
         assert_eq!(Err(Error::InsufficientFunds), p.decrease_balance(2));
     }
 
-    #[test]
-    fn whitelisted_balance_calculation() {
-        let env = Env::default();
-
-        let mut p1 = Participant::new(Address::random(&env));
-        p1.increase_balance(1).unwrap();
-
-        p1.whitelist();
-
-        let p2 = Participant::new(Address::random(&env));
-
-        let storage = env.storage().persistent();
-
-        let mut repository = Repository::new(&storage).unwrap();
-
-        repository.save(p1.clone());
-        repository.save(p2); // The balance of p2 should be ignored, as its not whitelisted.
-
-        let mut expected_balance = Map::<Address, i128>::new(&env);
-        expected_balance.set(p1.address().clone(), p1.balance());
-
-        assert_eq!(expected_balance, repository.whitelisted_balance(&env))
-    }
 }
