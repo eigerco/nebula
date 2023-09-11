@@ -380,23 +380,21 @@ fn proposals_can_be_updated_only_by_admin() {
     client.vote(&voter_1, &1);
     client.vote(&voter_2, &1);
 
-    let mut proposal = client.find_proposal(&1);
+    let proposal = client.find_proposal(&1);
 
     let mut balance = Map::<Address, i128>::new(&env);
     balance.set(voter_1, 1000);
     balance.set(voter_2, 1000);
 
-    proposal.set_participation_from_balance(&balance).unwrap();
-
-    client.update_proposal(&proposal);
+    client.update_proposal_with_balance(&proposal.id, &balance);
 
     assert_auth(
         &env.auths(),
         0,
         admin,
         client.address.clone(),
-        Symbol::new(&env, "update_proposal"),
-        (proposal,).into_val(&env),
+        Symbol::new(&env, "update_proposal_with_balance"),
+        (proposal.id,balance).into_val(&env),
     );
 
     // If we retrieve the proposal again, is updated.
@@ -408,7 +406,11 @@ fn proposals_can_be_updated_only_by_admin() {
 #[test]
 #[should_panic(expected = "Error(Contract, #4)")]
 fn proposals_can_be_updated_only_if_they_exist_first() {
-    let (env, client, admin) = setup_test();
+    let (env, client, _) = setup_test();
+    env.mock_all_auths();
+    let balance = Map::<Address, i128>::new(&env);
+    client.update_proposal_with_balance(&1, &balance);
+}
     env.mock_all_auths();
 
     let proposal = Proposal {
