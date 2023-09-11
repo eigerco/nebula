@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, storage::Persistent, Address, Map};
+use soroban_sdk::{contracttype, storage::Persistent, Address, Env, Map};
 
 use crate::{DataKey, Error};
 
@@ -96,6 +96,18 @@ impl<'a> Repository<'a> {
             .remove(address)
             .ok_or(Error::ParticipantNotFound)
     }
+
+    pub fn whitelisted_balance(&self, env: &Env) -> Map<Address, i128> {
+        self.participants_storage.iter().fold(
+            Map::<Address, i128>::new(env),
+            |mut whitelisted_balance, (addr, participant)| {
+                if participant.is_whitelisted() {
+                    whitelisted_balance.set(addr, participant.balance())
+                }
+                whitelisted_balance
+            },
+        )
+    }
 }
 
 impl<'a> Drop for Repository<'a> {
@@ -135,5 +147,29 @@ mod test {
         let mut p = Participant::new(Address::random(&env));
         p.increase_balance(1).unwrap();
         assert_eq!(Err(Error::InsufficientFunds), p.decrease_balance(2));
+    }
+
+    #[test]
+    fn whitelisted_balance_calculation() {
+        let env = Env::default();
+
+        let mut p1 = Participant::new(Address::random(&env));
+        p1.increase_balance(1).unwrap();
+
+        p1.whitelist();
+
+        let p2 = Participant::new(Address::random(&env));
+
+        let storage = env.storage().persistent();
+
+        let mut repository = Repository::new(&storage).unwrap();
+
+        repository.save(p1.clone());
+        repository.save(p2); // The balance of p2 should be ignored, as its not whitelisted.
+
+        let mut expected_balance = Map::<Address, i128>::new(&env);
+        expected_balance.set(p1.address().clone(), p1.balance());
+
+        assert_eq!(expected_balance, repository.whitelisted_balance(&env))
     }
 }
