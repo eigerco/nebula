@@ -470,7 +470,5 @@ fn is_proposal_approved_for_balance() {
     balance.set(voter_1, 1000);
     balance.set(voter_2, 1000);
 
-    client.update_proposal_with_balance(&proposal.id, &balance);
-
     assert!(client.is_proposal_approved_for_balance(&proposal.id, &balance))
 }
