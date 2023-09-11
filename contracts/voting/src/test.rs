@@ -428,7 +428,7 @@ fn proposals_can_be_updated_only_by_admin() {
         admin,
         client.address.clone(),
         Symbol::new(&env, "update_proposal_with_balance"),
-        (proposal.id,balance).into_val(&env),
+        (proposal.id, balance).into_val(&env),
     );
 
     // If we retrieve the proposal again, is updated.
