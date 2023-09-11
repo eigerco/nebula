@@ -258,6 +258,14 @@ impl GovernanceContract {
         voting_client.vote(&participant, &id);
 
         env.events().publish(
+            (Symbol::new(&env, "proposal_voted"), &participant, id),
+            (),
+        );
+
+        Ok(())
+    }
+
+        env.events().publish(
             (
                 Symbol::new(&env, "proposal_voted"),
                 &participant,
