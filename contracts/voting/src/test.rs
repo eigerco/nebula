@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-extern crate std;
-
 use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient};
 use rstest::rstest;
 use soroban_sdk::{
