@@ -147,7 +147,15 @@ fn voter_cannot_vote_a_proposal_twice() {
 
     let comment = BytesN::random(&env);
 
-    client.create_custom_proposal(&prd_id, &crate::ProposalType::Standard, &client.address, &comment, &3600, &50_00, &2);
+    client.create_custom_proposal(
+        &prd_id,
+        &crate::ProposalType::Standard,
+        &client.address,
+        &comment,
+        &3600,
+        &50_00,
+        &2,
+    );
     client.vote(&client.address, &prd_id);
     client.vote(&client.address, &prd_id); // Double voting here. Expected panic.
 }
