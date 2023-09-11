@@ -616,7 +616,7 @@ fn whitelisted_participant_can_vote_proposals() {
                 (
                     Symbol::new(&sc.env, "proposal_voted"),
                     participant.clone(),
-                    1u64                   
+                    1u64
                 )
                     .into_val(&sc.env),
                 ().into_val(&sc.env)
