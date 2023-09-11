@@ -648,3 +648,142 @@ fn non_whitelisted_participant_cant_vote_proposals() {
 
     sc.contract_client.vote(&participant, &1);
 }
+
+#[test]
+#[should_panic(expected = "Error(Contract, #5)")]
+fn non_whitelisted_participant_cant_execute_proposals() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant = Address::random(&sc.env);
+    sc.token_admin_client.mint(&participant, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &5000, &1000);
+
+    sc.contract_client.join(&participant, &200);
+
+    sc.contract_client.execute_proposal(&participant, &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #8)")]
+fn only_author_can_execute_proposals() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_1 = Address::random(&sc.env);
+    let participant_2 = Address::random(&sc.env);
+
+    sc.token_admin_client.mint(&participant_1, &1000);
+    sc.token_admin_client.mint(&participant_2, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &5000, &1000);
+
+    sc.contract_client.join(&participant_1, &800);
+    sc.contract_client.join(&participant_2, &200);
+
+    sc.contract_client.whitelist(&participant_1);
+    sc.contract_client.whitelist(&participant_2);
+
+    let proposal_id = 1;
+
+    sc.contract_client.new_proposal(
+        &participant_1,
+        &proposal_id,
+        &ProposalType::Standard,
+        &BytesN::random(&sc.env),
+    );
+    sc.env.budget().reset_unlimited(); // Todo review this limits.
+
+    sc.contract_client.vote(&participant_1, &proposal_id);
+    sc.contract_client.vote(&participant_2, &proposal_id);
+
+    sc.contract_client
+        .execute_proposal(&participant_2, &proposal_id); // A different, whitelisted tries to execute the proposal of participant_1 . It should fail.
+}
+
+#[test]
+fn whitelisted_participant_can_execute_standard_proposal() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_1 = Address::random(&sc.env);
+    let participant_2 = Address::random(&sc.env);
+
+    sc.token_admin_client.mint(&participant_1, &1000);
+    sc.token_admin_client.mint(&participant_2, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &5000, &1000);
+
+    sc.contract_client.join(&participant_1, &800);
+    sc.contract_client.join(&participant_2, &200);
+
+    sc.contract_client.whitelist(&participant_1);
+
+    let proposal_id = 1;
+
+    sc.contract_client.new_proposal(
+        &participant_1,
+        &proposal_id,
+        &ProposalType::Standard,
+        &BytesN::random(&sc.env),
+    );
+
+    sc.contract_client.vote(&participant_1, &proposal_id);
+
+    sc.env.budget().reset_unlimited(); // Todo review this limits.
+
+    sc.contract_client
+        .execute_proposal(&participant_1, &proposal_id);
+
+    assert_auth(
+        &sc.env.auths(),
+        0,
+        participant_1.clone(),
+        sc.contract_client.address.clone(),
+        Symbol::new(&sc.env, "execute_proposal"),
+        (participant_1.clone(), proposal_id).into_val(&sc.env),
+    );
+
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id.clone(),
+                (
+                    Symbol::new(&sc.env, "proposal_executed"),
+                    participant_1.clone(),
+                    proposal_id
+                )
+                    .into_val(&sc.env),
+                ().into_val(&sc.env)
+            ),
+        ]
+    )
+}

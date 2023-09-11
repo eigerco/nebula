@@ -48,6 +48,8 @@ pub enum Error {
     ParticipantNotFound = 4,
     ParticipantNotWhitelisted = 5,
     ExpectedStorageKeyNotFound = 6,
+    ProposalNeedsApproval = 7,
+    OnlyAuthorCanExecuteProposals = 8
 }
 
 #[contract]
@@ -263,13 +265,49 @@ impl GovernanceContract {
         Ok(())
     }
 
+    pub fn execute_proposal(env: Env, participant: Address, id: u64) -> Result<(), Error> {
+        participant.require_auth();
+
+        let storage = env.storage().persistent();
+        let mut participant_repo = Repository::new(&storage)?;
+
+        let stored_participant = participant_repo.find(participant.clone())?;
+
+        if !stored_participant.is_whitelisted() {
+            return Err(Error::ParticipantNotWhitelisted);
+        }
+
+        let voting_address = storage
+            .get::<_, Address>(&DataKey::VotingContractAddress)
+            .unwrap();
+
+        let voting_client = voting_contract::Client::new(&env, &voting_address);
+
+        let whitelisted_balance = participant_repo.whitelisted_balance(&env);
+
+        let proposal = voting_client.find_proposal(&id);
+
+        if proposal.proposer != participant {
+            return Err(Error::OnlyAuthorCanExecuteProposals);
+        }
+
+        if !voting_client.is_proposal_approved_for_balance(&proposal.id, &whitelisted_balance) {
+            return Err(Error::ProposalNeedsApproval);
+        }
+
+        match proposal.kind {
+            ProposalType::Standard => {
+                // TODO - should we do anything for standard proposal ?
+            }
+            ProposalType::CodeUpgrade => {}
+            ProposalType::CuratorChange => {}
+        }
+
+        voting_client.update_proposal_with_balance(&id, &whitelisted_balance);
+
         env.events().publish(
-            (
-                Symbol::new(&env, "proposal_voted"),
-                &participant,
-                voting_contract::ProposalType::CodeUpgrade,
-            ),
-            stored_participant.balance(),
+            (Symbol::new(&env, "proposal_executed"), &participant, id),
+            (),
         );
 
         Ok(())
