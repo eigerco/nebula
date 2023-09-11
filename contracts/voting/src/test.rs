@@ -18,7 +18,15 @@ fn proposal_creation() {
     let id = 1001u64;
     let comment = BytesN::random(&env);
 
-    client.create_custom_proposal(&id, &crate::ProposalType::Standard, &client.address, &comment, &3600, &50_00, &100);
+    client.create_custom_proposal(
+        &id,
+        &crate::ProposalType::Standard,
+        &client.address,
+        &comment,
+        &3600,
+        &50_00,
+        &100,
+    );
 
     assert_auth(
         &env.auths(),
