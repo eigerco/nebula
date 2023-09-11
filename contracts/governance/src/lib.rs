@@ -6,7 +6,7 @@
 
 #![no_std]
 
-use participant::Participant;
+use participant::{Participant, Repository};
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, BytesN,
     Env, Map, Symbol,
