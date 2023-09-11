@@ -51,6 +51,7 @@ impl From<ConversionError> for Error {
 pub enum ProposalType {
     Standard = 1,
     CodeUpgrade = 2,
+    CuratorChange = 3,
 }
 
 /// Datakey holds all possible storage keys this
