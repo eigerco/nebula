@@ -241,11 +241,7 @@ fn proposal_calculate_approval_rate(
 ) {
     let (env, _, _) = setup_test();
 
-    let mut voters = Map::<Address, bool>::new(&env);
-
-    for _ in 0..participation {
-        voters.set(Address::random(&env), true); // Dummy voters
-    }
+    let voters = Map::<Address, bool>::new(&env);
 
     let comment = BytesN::random(&env);
     let proposer = Address::random(&env);
