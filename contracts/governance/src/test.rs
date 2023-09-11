@@ -519,7 +519,7 @@ fn whitelisted_participant_can_create_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &50_000, &0);
+        .init(&sc.contract_id, &864000, &5000, &0);
 
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
@@ -582,7 +582,7 @@ fn whitelisted_participant_can_vote_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &50_000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000);
 
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
@@ -642,7 +642,7 @@ fn non_whitelisted_participant_cant_vote_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &50_000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000);
 
     sc.contract_client.join(&participant, &200);
 
