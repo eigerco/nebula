@@ -789,7 +789,7 @@ fn whitelisted_participant_can_execute_standard_proposal() {
 }
 
 #[test]
-//#[ignore = "To investigate if we are able to do this from tests, currently getting an error."]
+#[ignore = "To investigate if we are able to do this from tests, currently getting an error."]
 fn execute_a_code_upgrade_proposal_flow() {
     let sc = setup_scenario();
 
