@@ -9,7 +9,7 @@ use super::{voting_contract, GovernanceContract, GovernanceContractClient};
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Events},
     token::{self, AdminClient, Client},
-    vec, Address, BytesN, Env, IntoVal, Symbol, Val, Vec,
+    vec, Address, Bytes, BytesN, Env, IntoVal, Symbol, Val, Vec,
 };
 
 #[test]
@@ -786,4 +786,52 @@ fn whitelisted_participant_can_execute_standard_proposal() {
             ),
         ]
     )
+}
+
+#[test]
+//#[ignore = "To investigate if we are able to do this from tests, currently getting an error."]
+fn execute_a_code_upgrade_proposal_flow() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let bytes =
+        std::fs::read("../../target/wasm32-unknown-unknown/release/governance.wasm").unwrap();
+
+    let wasm_hash = sc
+        .env
+        .deployer()
+        .upload_contract_wasm(Bytes::from_slice(&sc.env, &bytes));
+
+    let participant_1 = Address::random(&sc.env);
+
+    sc.token_admin_client.mint(&participant_1, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &5000, &1000);
+
+    sc.contract_client.join(&participant_1, &800);
+    sc.contract_client.whitelist(&participant_1);
+
+    let proposal_id = 1;
+
+    sc.contract_client.new_proposal(
+        &participant_1,
+        &proposal_id,
+        &ProposalType::CodeUpgrade,
+        &wasm_hash,
+    );
+
+    sc.contract_client.vote(&participant_1, &proposal_id);
+
+    sc.env.budget().reset_unlimited(); // Todo review this limits.
+
+    sc.contract_client
+        .execute_proposal(&participant_1, &proposal_id);
 }

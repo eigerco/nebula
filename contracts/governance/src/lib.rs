@@ -299,7 +299,9 @@ impl GovernanceContract {
             ProposalType::Standard => {
                 // TODO - should we do anything for standard proposal ?
             }
-            ProposalType::CodeUpgrade => {}
+            ProposalType::CodeUpgrade => {
+                env.deployer().update_current_contract_wasm(proposal.comment)
+            }
             ProposalType::CuratorChange => {}
         }
 
