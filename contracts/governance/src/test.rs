@@ -483,7 +483,7 @@ fn not_existent_participant_cannot_create_proposals() {
 
 #[test]
 #[should_panic(expected = "Error(Contract, #5)")]
-fn not_whitelisted_participant_cannot_create_proposals() {
+fn non_whitelisted_participant_cannot_create_proposals() {
     let sc = setup_scenario();
 
     sc.env.mock_all_auths();
@@ -504,7 +504,7 @@ fn not_whitelisted_participant_cannot_create_proposals() {
 }
 
 #[test]
-fn whitelisted_participant_can_create_code_upgrade_proposals() {
+fn whitelisted_participant_can_create_proposals() {
     let sc = setup_scenario();
 
     sc.env.mock_all_auths();
