@@ -340,6 +340,44 @@ fn proposal_total_participation_can_be_set_from_balance() {
 }
 
 #[test]
+fn set_participation_from_balance_checks_all_local_addresses_exist_in_balance() {
+    let (env, _, _) = setup_test();
+    env.mock_all_auths();
+
+    let mut voters = Map::<Address, bool>::new(&env);
+
+    let voter_1 = Address::random(&env);
+    let voter_2 = Address::random(&env);
+
+    voters.set(voter_1.clone(), true); // Only voter_1 votes in favour.
+    voters.set(voter_2.clone(), true); // Only voter_1 votes in favour.
+
+    let mut proposal = Proposal {
+        id: 112,
+        kind: crate::ProposalType::Standard,
+        proposer: Address::random(&env),
+        comment: BytesN::random(&env),
+        voting_end_time: 123123,
+        target_approval_rate_bps: 5000, // Half the participation is enough to approve.
+
+        // Participation data is in zero values, as it will be calculated from provided balance.
+        participation: 0,
+        total_participation: 0,
+        voters,
+    };
+
+    let mut balance = Map::<Address, i128>::new(&env);
+
+    balance.set(voter_1, 1000);
+    //balance.set(voter_2, 1000); This should exist, so we expect an error.
+
+    assert_eq!(
+        Err(Error::NotFound),
+        proposal.set_participation_from_balance(&balance)
+    );
+}
+
+#[test]
 fn proposals_can_be_queried_by_anyone() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
