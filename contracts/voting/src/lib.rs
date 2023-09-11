@@ -240,6 +240,16 @@ impl ProposalVotingContract {
         proposal_storage.get(id).ok_or(Error::NotFound)
     }
 
+    pub fn is_proposal_approved_for_balance(
+        env: Env,
+        id: u64,
+        balance: Map<Address, i128>,
+    ) -> Result<bool, Error> {
+        let mut proposal = Self::find_proposal(env, id)?;
+        proposal.set_participation_from_balance(&balance)?;
+        Ok(proposal.is_approved())
+    }
+
     pub fn update_proposal_with_balance(
         env: Env,
         id: u64,

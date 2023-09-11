@@ -411,19 +411,32 @@ fn proposals_can_be_updated_only_if_they_exist_first() {
     let balance = Map::<Address, i128>::new(&env);
     client.update_proposal_with_balance(&1, &balance);
 }
+
+#[test]
+fn is_proposal_approved_for_balance() {
+    let (env, client, _) = setup_test();
     env.mock_all_auths();
 
-    let proposal = Proposal {
-        id: 112,
-        kind: crate::ProposalType::Standard,
-        proposer: admin,
-        comment: BytesN::random(&env),
-        voting_end_time: 3600,
-        participation: 0,
-        target_approval_rate_bps: 0,
-        total_participation: 0,
-        voters: Map::<Address, bool>::new(&env),
-    };
+    client.create_proposal(
+        &client.address,
+        &1,
+        &crate::ProposalType::Standard,
+        &BytesN::random(&env),
+    );
 
-    client.update_proposal(&proposal);
+    let voter_1 = Address::random(&env);
+    let voter_2 = Address::random(&env);
+
+    client.vote(&voter_1, &1);
+    client.vote(&voter_2, &1);
+
+    let proposal = client.find_proposal(&1);
+
+    let mut balance = Map::<Address, i128>::new(&env);
+    balance.set(voter_1, 1000);
+    balance.set(voter_2, 1000);
+
+    client.update_proposal_with_balance(&proposal.id, &balance);
+
+    assert!(client.is_proposal_approved_for_balance(&proposal.id, &balance))
 }
