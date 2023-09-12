@@ -176,6 +176,35 @@ fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn buy_ticket_panics_if_invoked_after_raffle_is_played() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, RaffleContract);
+    let client = RaffleContractClient::new(&env, &contract_id);
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    client.init(&client.address, &test_token_client.address, &1, &100);
+
+    let ticket_buyer_1 = Address::random(&env);
+    let ticket_buyer_2 = Address::random(&env);
+    let ticket_buyer_3 = Address::random(&env);
+
+    // Transfer some funds to the buyer
+    test_token_client.mint(&ticket_buyer_1, &101);
+    test_token_client.mint(&ticket_buyer_2, &101);
+    test_token_client.mint(&ticket_buyer_3, &101);
+
+    client.buy_ticket(&ticket_buyer_1);
+    client.buy_ticket(&ticket_buyer_2);
+
+    client.play_raffle(&666);
+    client.buy_ticket(&ticket_buyer_3);
+}
+
+#[test]
 fn calculate_winners_works_seed_is_deterministic() {
     let env = Env::default();
     let result = calculate_winners(&env, 2, 12, 666);

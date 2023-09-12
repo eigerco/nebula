@@ -128,6 +128,10 @@ impl RaffleContract {
             return Err(Error::NotInitialized);
         }
 
+        if storage.get::<_, bool>(&DataKey::AlreadyPlayed).unwrap() {
+            return Err(Error::AlreadyPlayed);
+        }
+
         let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
         let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token);
