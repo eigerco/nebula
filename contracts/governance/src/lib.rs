@@ -8,8 +8,8 @@
 
 use participant::{Participant, Repository};
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, BytesN,
-    Env, Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, storage::Persistent,
+    token, Address, BytesN, Env, Map, Symbol,
 };
 use voting_contract::ProposalType;
 
@@ -30,6 +30,7 @@ enum DataKey {
     Token = 3,
     Participants = 4,
     VotingContractAddress = 5,
+    ExecutedProposals = 6,
 }
 
 /// All the expected errors this contract expects.
@@ -50,6 +51,7 @@ pub enum Error {
     ExpectedStorageKeyNotFound = 6,
     ProposalNeedsApproval = 7,
     OnlyAuthorCanExecuteProposals = 8,
+    AlreadyExecuted = 9,
 }
 
 #[contract]
@@ -99,6 +101,7 @@ impl GovernanceContract {
             &DataKey::Participants,
             &Map::<Address, Participant>::new(&env),
         );
+        storage.set(&DataKey::ExecutedProposals, &Map::<u64, ()>::new(&env));
     }
 
     pub fn join(env: Env, participant_addr: Address, amount: i128) -> Result<(), Error> {
@@ -315,6 +318,10 @@ impl GovernanceContract {
             return Err(Error::OnlyAuthorCanExecuteProposals);
         }
 
+        if Self::is_proposal_executed(&storage, id) {
+            return Err(Error::AlreadyExecuted);
+        }
+
         if !voting_client.is_proposal_approved_for_balance(&proposal.id, &whitelisted_balance) {
             return Err(Error::ProposalNeedsApproval);
         }
@@ -332,6 +339,8 @@ impl GovernanceContract {
             }
         }
 
+        Self::mark_proposal_as_executed(&storage, id);
+
         voting_client.update_proposal_with_balance(&id, &whitelisted_balance);
 
         env.events().publish(
@@ -340,6 +349,22 @@ impl GovernanceContract {
         );
 
         Ok(())
+    }
+
+    fn is_proposal_executed(storage: &Persistent, id: u64) -> bool {
+        Self::executed_proposal_storage(storage).contains_key(id)
+    }
+
+    fn mark_proposal_as_executed(storage: &Persistent, id: u64) {
+        let mut executed_proposal_storage = Self::executed_proposal_storage(storage);
+        executed_proposal_storage.set(id, ());
+        storage.set(&DataKey::ExecutedProposals, &executed_proposal_storage);
+    }
+
+    fn executed_proposal_storage(storage: &Persistent) -> Map<u64, ()> {
+        storage
+            .get::<_, Map<u64, ()>>(&DataKey::ExecutedProposals)
+            .unwrap()
     }
 }
 

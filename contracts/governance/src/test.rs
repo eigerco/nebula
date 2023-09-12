@@ -625,6 +625,38 @@ fn whitelisted_participant_can_execute_standard_proposal() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #9)")]
+fn proposals_can_only_be_executed_once() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let participant_1 = Address::random(&sc.env);
+    sc.token_admin_client.mint(&participant_1, &1000);
+    sc.contract_client.join(&participant_1, &800);
+    sc.contract_client.whitelist(&participant_1);
+
+    let proposal_id = 1;
+
+    sc.contract_client.new_proposal(
+        &participant_1,
+        &proposal_id,
+        &ProposalType::Standard,
+        &BytesN::random(&sc.env),
+    );
+
+    sc.contract_client.vote(&participant_1, &proposal_id);
+
+    sc.env.budget().reset_unlimited(); // Todo review this limits.
+
+    sc.contract_client
+        .execute_proposal(&participant_1, &proposal_id);
+
+    sc.contract_client
+        .execute_proposal(&participant_1, &proposal_id);
+}
+
+#[test]
 #[ignore = "To investigate if we are able to do this from tests, currently getting an error."]
 fn execute_a_code_upgrade_proposal_flow() {
     let sc = setup_scenario();
