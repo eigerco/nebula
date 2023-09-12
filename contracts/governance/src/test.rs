@@ -664,7 +664,6 @@ fn execute_a_code_upgrade_proposal_flow() {
 }
 
 #[test]
-#[ignore]
 fn execute_a_curator_change_flow() {
     let sc = setup_scenario();
 
@@ -686,9 +685,12 @@ fn execute_a_curator_change_flow() {
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::CodeUpgrade,
+        &ProposalType::CuratorChange,
         &proposal_comment,
     );
+
+    sc.contract_client.vote(&participant_1, &proposal_id);
+
     sc.env.budget().reset_unlimited(); // Todo review this limits.
 
     sc.contract_client
