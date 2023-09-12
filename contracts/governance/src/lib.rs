@@ -231,6 +231,9 @@ impl GovernanceContract {
 
         participant_repo.save(stored_participant);
 
+        env.events()
+            .publish((Symbol::new(&env, "participant_whitelisted"),), participant);
+
         Ok(())
     }
 

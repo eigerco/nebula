@@ -384,6 +384,19 @@ fn curator_can_whitelist_participant() {
         Symbol::new(&sc.env, "whitelist"),
         (participant.clone(),).into_val(&sc.env),
     );
+
+    let last_event = sc.env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&sc.env, last_event],
+        vec![
+            &sc.env,
+            (
+                sc.contract_id.clone(),
+                (Symbol::new(&sc.env, "participant_whitelisted"),).into_val(&sc.env),
+                participant.into_val(&sc.env)
+            ),
+        ]
+    )
 }
 
 #[test]
