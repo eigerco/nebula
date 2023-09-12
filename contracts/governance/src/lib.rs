@@ -263,9 +263,6 @@ impl GovernanceContract {
 
         voting_client.create_proposal(&participant, &id, &kind, &new_contract_hash);
 
-        env.events()
-            .publish((Symbol::new(&env, "new_proposal"), &participant, kind), id);
-
         Ok(())
     }
 

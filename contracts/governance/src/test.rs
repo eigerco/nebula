@@ -462,24 +462,6 @@ fn whitelisted_participant_can_create_proposals() {
             new_contract_hash,
         )
             .into_val(&sc.env),
-    );
-
-    let last_event = sc.env.events().all().last().unwrap();
-    assert_eq!(
-        vec![&sc.env, last_event],
-        vec![
-            &sc.env,
-            (
-                sc.contract_id.clone(),
-                (
-                    Symbol::new(&sc.env, "new_proposal"),
-                    participant.clone(),
-                    ProposalType::CodeUpgrade
-                )
-                    .into_val(&sc.env),
-                1u64.into_val(&sc.env)
-            ),
-        ]
     )
 }
 
