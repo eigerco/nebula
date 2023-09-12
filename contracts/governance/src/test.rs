@@ -835,3 +835,45 @@ fn execute_a_code_upgrade_proposal_flow() {
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
 }
+
+#[test]
+#[ignore]
+fn execute_a_curator_change_flow() {
+    let sc = setup_scenario();
+
+    sc.env.mock_all_auths();
+
+    let new_curator = Address::random(&sc.env);
+
+    let participant_1 = Address::random(&sc.env);
+
+    sc.token_admin_client.mint(&participant_1, &1000);
+
+    sc.contract_client.init(
+        &sc.contract_client.address,
+        &sc.token_admin_client.address,
+        &sc.voting_contract_id,
+    );
+
+    sc.voting_contract_client
+        .init(&sc.contract_id, &864000, &5000, &1000);
+
+    sc.contract_client.join(&participant_1, &800);
+    sc.contract_client.whitelist(&participant_1);
+
+    let proposal_id = 1;
+
+    let proposal_comment = utils::address_to_bytes_n32(&new_curator);
+
+    sc.contract_client.new_proposal(
+        &participant_1,
+        &proposal_id,
+        &ProposalType::CodeUpgrade,
+        &proposal_comment,
+    );
+    sc.env.budget().reset_unlimited(); // Todo review this limits.
+
+    sc.contract_client
+        .execute_proposal(&participant_1, &proposal_id);
+}
+

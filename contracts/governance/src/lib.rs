@@ -302,7 +302,10 @@ impl GovernanceContract {
             ProposalType::CodeUpgrade => {
                 env.deployer().update_current_contract_wasm(proposal.comment)
             }
-            ProposalType::CuratorChange => {}
+            ProposalType::CuratorChange => {
+                let new_curator = utils::bytes_n32_to_address(&proposal.comment);
+                storage.set(&DataKey::Curator, &new_curator);                
+            }
         }
 
         voting_client.update_proposal_with_balance(&id, &whitelisted_balance);
