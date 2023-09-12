@@ -156,6 +156,19 @@ fn voter_can_vote_proposals() {
         &2,
     );
     client.vote(&client.address, &id);
+
+    let last_event = env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&env, last_event],
+        vec![
+            &env,
+            (
+                client.address.clone(),
+                (Symbol::new(&env, "proposal_voted"), id, client.address).into_val(&env),
+                5000u32.into_val(&env)
+            ),
+        ]
+    )
 }
 
 #[test]

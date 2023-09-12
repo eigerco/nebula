@@ -248,14 +248,14 @@ impl ProposalVotingContract {
 
         let mut proposal = proposal_storage.get(id).ok_or(Error::NotFound)?;
 
-        proposal.vote(env.ledger().timestamp(), voter, 1)?;
+        proposal.vote(env.ledger().timestamp(), voter.clone(), 1)?;
         let updated_approval_rate = proposal.approval_rate_bps();
         proposal_storage.set(id, proposal);
 
         storage.set(&DataKey::Proposals, &proposal_storage);
 
         env.events().publish(
-            (Symbol::new(&env, "proposal_voted"), id),
+            (Symbol::new(&env, "proposal_voted"), id, voter),
             updated_approval_rate,
         );
         Ok(())
