@@ -1,3 +1,13 @@
+//! The utils crate
+//!
+//! This crate provides a place in which we can temporary put
+//! implementations of tools that are of common use. Some examples 
+//! are testing tools (unit tests) and also conversion tools.
+//!
+//! It can be seen as an incubator of tools. It will also avoid
+//! entangling the dependency tree among contracts for things are
+//! note related with them.
+
 #![no_std]
 
 use soroban_sdk::{Address, BytesN, TryFromVal, Val};
