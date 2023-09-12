@@ -4,7 +4,7 @@ extern crate std;
 
 use crate::voting_contract::ProposalType;
 
-use super::{voting_contract, GovernanceContract, GovernanceContractClient};
+use super::{GovernanceContract, GovernanceContractClient};
 
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Events},
@@ -20,23 +20,16 @@ fn cannot_be_initialized_twice() {
     sc.env.mock_all_auths();
 
     sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_client.address,
-        &sc.voting_contract_id,
-    );
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_client.address,
-        &sc.voting_contract_id,
+        &Address::random(&sc.env),
+        &sc.token_admin_client.address,
+        &864000,
+        &5000,
+        &BytesN::from_array(&sc.env, &[0; 32]),
     );
 }
 
 fn setup_scenario<'a>() -> Scenario<'a> {
     let env = Env::default();
-
-    let voting_contract_id =
-        env.register_contract_wasm(Some(&Address::random(&env)), voting_contract::WASM);
-    let voting_contract_client = voting_contract::Client::new(&env, &voting_contract_id);
 
     let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
@@ -46,30 +39,38 @@ fn setup_scenario<'a>() -> Scenario<'a> {
     let token_admin_client = token::AdminClient::new(&env, &token_addr);
     let token_client = token::Client::new(&env, &token_addr);
 
+    let curator = Address::random(&env);
+
+    contract_client.init(
+        &curator.clone(),
+        &token_admin_client.address,
+        &864000,
+        &5000,
+        &BytesN::from_array(&env, &[0; 32]),
+    );
+
     Scenario {
         env,
-        voting_contract_id,
-        voting_contract_client,
         contract_id,
         contract_client,
         token_admin,
         token_addr,
         token_client,
         token_admin_client,
+        curator,
     }
 }
 
 #[allow(dead_code)]
 struct Scenario<'a> {
     env: Env,
-    voting_contract_id: Address,
-    voting_contract_client: voting_contract::Client<'a>,
     contract_id: Address,
     contract_client: GovernanceContractClient<'a>,
     token_admin: Address,
     token_addr: Address,
     token_client: Client<'a>,
     token_admin_client: AdminClient<'a>,
+    curator: Address,
 }
 
 #[test]
@@ -81,14 +82,6 @@ fn participant_can_join() {
     let participant_addr = Address::random(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
-
-    // Init contract
-    let curator = Address::random(&sc.env);
-    sc.contract_client.init(
-        &curator,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     // Join the participant (in this case same as client)
     let initial_stake = 200;
@@ -158,12 +151,6 @@ fn participant_cant_join_without_enough_funds() {
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
     sc.contract_client.join(&participant_addr, &200);
 }
 
@@ -176,12 +163,6 @@ fn participant_cant_join_with_negative_stake() {
 
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
-
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     sc.contract_client.join(&participant_addr, &-1);
 }
@@ -196,12 +177,6 @@ fn participant_cant_join_with_zero_stake() {
     let participant_addr = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
     sc.contract_client.join(&participant_addr, &0);
 }
 
@@ -214,14 +189,6 @@ fn participant_can_leave_withdrawing_all_funds() {
     let participant_addr = Address::random(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
-
-    // Init contract
-    let curator = Address::random(&sc.env);
-    sc.contract_client.init(
-        &curator,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     // Join the participant (in this case same as client)
     let initial_stake = 200;
@@ -277,13 +244,6 @@ fn participant_can_withdraw_partial_funds() {
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
-    // Init contract
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
     sc.contract_client.join(&participant_addr, &200);
 
     sc.contract_client.withdraw(&participant_addr, &100);
@@ -327,12 +287,6 @@ fn participant_cannot_withdraw_more_partial_funds_than_it_has() {
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
     sc.contract_client.join(&participant_addr, &200);
 
     sc.contract_client.withdraw(&participant_addr, &201);
@@ -347,13 +301,6 @@ fn participant_can_deposit_extra_funds() {
     let participant_addr = Address::random(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
-
-    // Init contract
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     sc.contract_client.join(&participant_addr, &200);
 
@@ -394,11 +341,6 @@ fn non_existent_participant_cannot_stake() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
     sc.contract_client.withdraw(&Address::random(&sc.env), &1);
 }
 
@@ -409,11 +351,6 @@ fn non_existent_participant_cannot_leave() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
     sc.contract_client.leave(&Address::random(&sc.env));
 }
 
@@ -424,11 +361,6 @@ fn non_existent_participant_cannot_withdraw() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
     sc.contract_client.leave(&Address::random(&sc.env));
 }
 
@@ -438,15 +370,8 @@ fn curator_can_whitelist_participant() {
 
     sc.env.mock_all_auths();
 
-    let curator = &Address::random(&sc.env);
     let participant = &Address::random(&sc.env);
     sc.token_admin_client.mint(participant, &1000);
-
-    sc.contract_client.init(
-        curator,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     sc.contract_client.join(participant, &200);
     sc.contract_client.whitelist(participant);
@@ -454,7 +379,7 @@ fn curator_can_whitelist_participant() {
     assert_auth(
         &sc.env.auths(),
         0,
-        curator.clone(),
+        sc.curator.clone(),
         sc.contract_client.address.clone(),
         Symbol::new(&sc.env, "whitelist"),
         (participant.clone(),).into_val(&sc.env),
@@ -467,12 +392,6 @@ fn not_existent_participant_cannot_create_proposals() {
     let sc = setup_scenario();
 
     sc.env.mock_all_auths();
-
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
 
     let participant = &Address::random(&sc.env);
     let hash = BytesN::random(&sc.env);
@@ -491,12 +410,6 @@ fn non_whitelisted_participant_cannot_create_proposals() {
     let participant = &Address::random(&sc.env);
     sc.token_admin_client.mint(participant, &1000);
 
-    sc.contract_client.init(
-        &Address::random(&sc.env),
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
     sc.contract_client.join(participant, &200);
     let hash = BytesN::random(&sc.env);
     sc.contract_client
@@ -511,15 +424,6 @@ fn whitelisted_participant_can_create_proposals() {
 
     let participant = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
-
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &0, &true);
 
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
@@ -575,15 +479,6 @@ fn whitelisted_participant_can_vote_proposals() {
     let participant = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
-
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
 
@@ -635,15 +530,6 @@ fn non_whitelisted_participant_cant_vote_proposals() {
     let participant = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
-
     sc.contract_client.join(&participant, &200);
 
     sc.contract_client.vote(&participant, &1);
@@ -658,15 +544,6 @@ fn non_whitelisted_participant_cant_execute_proposals() {
 
     let participant = Address::random(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
-
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant, &200);
 
@@ -685,15 +562,6 @@ fn only_author_can_execute_proposals() {
 
     sc.token_admin_client.mint(&participant_1, &1000);
     sc.token_admin_client.mint(&participant_2, &1000);
-
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.join(&participant_2, &200);
@@ -729,15 +597,6 @@ fn whitelisted_participant_can_execute_standard_proposal() {
 
     sc.token_admin_client.mint(&participant_1, &1000);
     sc.token_admin_client.mint(&participant_2, &1000);
-
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.join(&participant_2, &200);
@@ -807,15 +666,6 @@ fn execute_a_code_upgrade_proposal_flow() {
 
     sc.token_admin_client.mint(&participant_1, &1000);
 
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
-
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.whitelist(&participant_1);
 
@@ -848,15 +698,6 @@ fn execute_a_curator_change_flow() {
     let participant_1 = Address::random(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
-
-    sc.contract_client.init(
-        &sc.contract_client.address,
-        &sc.token_admin_client.address,
-        &sc.voting_contract_id,
-    );
-
-    sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.whitelist(&participant_1);

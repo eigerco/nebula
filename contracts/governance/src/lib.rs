@@ -57,17 +57,44 @@ pub struct GovernanceContract;
 
 #[contractimpl]
 impl GovernanceContract {
-    pub fn init(env: Env, curator: Address, token: Address, voting_contract: Address) {
+    pub fn init(
+        env: Env,
+        curator: Address,
+        token: Address,
+        voting_period_secs: u64,
+        target_approval_rate_bps: u32,
+        salt: BytesN<32>,
+    ) {
         let storage = env.storage().persistent();
 
         if storage.has(&DataKey::Initialized) {
             panic_with_error!(&env, Error::AlreadyInitialized)
         }
 
+        // Deploy the voting contract (A dependency of this one)
+        let voting_contract_hash = env.deployer().upload_contract_wasm(voting_contract::WASM);
+        let deployer = env.deployer().with_current_contract(salt);
+        let voting_contract_address = deployer.deploy(voting_contract_hash);
+        let voting_client = voting_contract::Client::new(&env, &voting_contract_address);
+
+        // Init the voting contract.
+        voting_client.init(
+            &env.current_contract_address(),
+            &voting_period_secs,
+            &target_approval_rate_bps,
+            &u128::MAX, // This is a dummy value as participation state will be managed by this contract due to data locality.  It needs to be positive.
+            &true,      // Only this contract can do operation on behalf of the participants.
+        );
+
+        env.events().publish(
+            (Symbol::new(&env, "voting_contract_initialized"),),
+            voting_contract_address.clone(),
+        );
+
         storage.set(&DataKey::Initialized, &());
         storage.set(&DataKey::Curator, &curator);
         storage.set(&DataKey::Token, &token);
-        storage.set(&DataKey::VotingContractAddress, &voting_contract);
+        storage.set(&DataKey::VotingContractAddress, &voting_contract_address);
         storage.set(
             &DataKey::Participants,
             &Map::<Address, Participant>::new(&env),
