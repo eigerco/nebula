@@ -206,7 +206,7 @@ impl ProposalVotingContract {
             Proposal {
                 id,
                 kind,
-                proposer,
+                proposer: proposer.clone(),
                 comment,
                 voting_end_time: env
                     .ledger()
@@ -220,6 +220,11 @@ impl ProposalVotingContract {
             },
         );
         storage.set(&DataKey::Proposals, &proposal_storage);
+
+        env.events().publish(
+            (Symbol::new(&env, "proposal_created"), id, kind, proposer),
+            ()
+        );
         Ok(())
     }
 

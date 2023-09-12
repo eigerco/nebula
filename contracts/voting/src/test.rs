@@ -1,10 +1,10 @@
 #![cfg(test)]
 
-use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient};
+use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient, ProposalType};
 use rstest::rstest;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Ledger},
-    Address, BytesN, Env, IntoVal, Map, Symbol, Val, Vec,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Ledger, Events},
+    Address, BytesN, Env, IntoVal, Map, Symbol, Val, Vec, vec,
 };
 
 #[test]
@@ -14,11 +14,12 @@ fn proposal_creation() {
     env.mock_all_auths();
 
     let id = 1001u64;
+    let kind = ProposalType::Standard;
     let comment = BytesN::random(&env);
 
     client.create_custom_proposal(
         &id,
-        &crate::ProposalType::Standard,
+        &kind,
         &client.address,
         &comment,
         &3600,
@@ -35,13 +36,26 @@ fn proposal_creation() {
         (
             id,
             1u32,
-            client.address,
+            client.address.clone(),
             comment,
             3600u64,
             50_00u32,
             100_u128,
         )
             .into_val(&env),
+    );
+
+    let last_event = env.events().all().last().unwrap();
+    assert_eq!(
+        vec![&env, last_event],
+        vec![
+            &env,
+            (
+                client.address.clone(),
+                (Symbol::new(&env, "proposal_created"), id, kind, client.address).into_val(&env),
+                ().into_val(&env)
+            ),
+        ]
     )
 }
 
@@ -89,7 +103,7 @@ fn cannot_create_same_id_proposals() {
     let id = 1001u64;
     client.create_custom_proposal(
         &id,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -98,7 +112,7 @@ fn cannot_create_same_id_proposals() {
     );
     client.create_custom_proposal(
         &id,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -115,7 +129,7 @@ fn only_admin_can_create_proposals() {
     let comment = BytesN::random(&env);
     client.create_custom_proposal(
         &1,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -134,7 +148,7 @@ fn voter_can_vote_proposals() {
 
     client.create_custom_proposal(
         &id,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -155,7 +169,7 @@ fn voter_cannot_vote_a_proposal_twice() {
 
     client.create_custom_proposal(
         &prd_id,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -175,7 +189,7 @@ fn cannot_vote_if_voting_time_exceeded() {
 
     let mut proposal = Proposal {
         id: 1,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
@@ -206,7 +220,7 @@ fn cannot_vote_if_total_voters_reached() {
 
     let mut proposal = Proposal {
         id: 1,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
@@ -246,7 +260,7 @@ fn proposal_calculate_approval_rate(
 
     let proposal = Proposal {
         id: 1,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer,
         comment,
         voting_end_time: env.ledger().timestamp() + 3600,
@@ -269,7 +283,7 @@ fn cannot_create_id0_proposals() {
 
     client.create_custom_proposal(
         &0,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &client.address,
         &comment,
         &3600,
@@ -287,7 +301,7 @@ fn proposal_comment_is_accessible() {
 
     let proposal = Proposal {
         id: 112,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer,
         comment: comment.clone(),
         voting_end_time: 123123,
@@ -314,7 +328,7 @@ fn proposal_total_participation_can_be_set_from_balance() {
 
     let mut proposal = Proposal {
         id: 112,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer: Address::random(&env),
         comment: BytesN::random(&env),
         voting_end_time: 123123,
@@ -352,7 +366,7 @@ fn set_participation_from_balance_checks_all_local_addresses_exist_in_balance() 
 
     let mut proposal = Proposal {
         id: 112,
-        kind: crate::ProposalType::Standard,
+        kind: ProposalType::Standard,
         proposer: Address::random(&env),
         comment: BytesN::random(&env),
         voting_end_time: 123123,
@@ -383,7 +397,7 @@ fn proposals_can_be_queried_by_anyone() {
     client.create_proposal(
         &client.address,
         &1,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &BytesN::random(&env),
     );
 
@@ -402,7 +416,7 @@ fn proposals_can_be_updated_only_by_admin() {
     client.create_proposal(
         &client.address,
         &1,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &comment,
     );
 
@@ -452,7 +466,7 @@ fn is_proposal_approved_for_balance() {
     client.create_proposal(
         &client.address,
         &1,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &BytesN::random(&env),
     );
 
@@ -485,7 +499,7 @@ fn non_admin_user_cannot_vote_if_admin_mode_is_on() {
     client.create_proposal(
         &proposer,
         &1,
-        &crate::ProposalType::Standard,
+        &ProposalType::Standard,
         &BytesN::random(&env),
     );
     client.vote(&client.address, &1);
