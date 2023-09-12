@@ -49,7 +49,7 @@ pub enum Error {
     ParticipantNotWhitelisted = 5,
     ExpectedStorageKeyNotFound = 6,
     ProposalNeedsApproval = 7,
-    OnlyAuthorCanExecuteProposals = 8
+    OnlyAuthorCanExecuteProposals = 8,
 }
 
 #[contract]
@@ -299,12 +299,12 @@ impl GovernanceContract {
             ProposalType::Standard => {
                 // TODO - should we do anything for standard proposal ?
             }
-            ProposalType::CodeUpgrade => {
-                env.deployer().update_current_contract_wasm(proposal.comment)
-            }
+            ProposalType::CodeUpgrade => env
+                .deployer()
+                .update_current_contract_wasm(proposal.comment),
             ProposalType::CuratorChange => {
                 let new_curator = utils::bytes_n32_to_address(&proposal.comment);
-                storage.set(&DataKey::Curator, &new_curator);                
+                storage.set(&DataKey::Curator, &new_curator);
             }
         }
 
