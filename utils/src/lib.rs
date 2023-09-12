@@ -1,3 +1,5 @@
+#![no_std]
+
 use soroban_sdk::{Address, BytesN, TryFromVal, Val};
 
 pub fn address_to_bytes_n32(addr: &Address) -> BytesN<32> {
