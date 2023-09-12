@@ -4,7 +4,7 @@ The Raffle contract implements a simple raffle: users buy tickets and one or mor
 
 ## Features
 * everyone can join the raffle by buying the ticket,
-* each player can buy only one ticket,
+* each player can buy many tickets - the more he buys, the more chanes of win he has,
 * there is always a winner in the raffle,
 * once the raffle is finished, no more tickets can be bought.
 
