@@ -83,7 +83,7 @@ impl ProposalVotingContract {
     /// - `admin` - The address that can create proposals.
     /// - `voting_period_secs` - The default number of seconds of proposals lifetime for new proposals.
     /// - `target_approval_rate_bps` - The default required approval rate in basic points for new proposals.
-    /// - `total_voters` - The default max number of voters for new proposals.
+    /// - `participation` - The default max number of participation for new proposals.
     pub fn init(
         env: Env,
         admin: Address,
