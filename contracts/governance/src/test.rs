@@ -519,7 +519,7 @@ fn whitelisted_participant_can_create_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &0);
+        .init(&sc.contract_id, &864000, &5000, &0, &true);
 
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
@@ -582,7 +582,7 @@ fn whitelisted_participant_can_vote_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant, &200);
     sc.contract_client.whitelist(&participant);
@@ -642,7 +642,7 @@ fn non_whitelisted_participant_cant_vote_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant, &200);
 
@@ -666,7 +666,7 @@ fn non_whitelisted_participant_cant_execute_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant, &200);
 
@@ -693,7 +693,7 @@ fn only_author_can_execute_proposals() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.join(&participant_2, &200);
@@ -737,7 +737,7 @@ fn whitelisted_participant_can_execute_standard_proposal() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.join(&participant_2, &200);
@@ -814,7 +814,7 @@ fn execute_a_code_upgrade_proposal_flow() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.whitelist(&participant_1);
@@ -856,7 +856,7 @@ fn execute_a_curator_change_flow() {
     );
 
     sc.voting_contract_client
-        .init(&sc.contract_id, &864000, &5000, &1000);
+        .init(&sc.contract_id, &864000, &5000, &1000, &true);
 
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.whitelist(&participant_1);
@@ -876,4 +876,3 @@ fn execute_a_curator_change_flow() {
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
 }
-
