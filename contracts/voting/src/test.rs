@@ -66,7 +66,7 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
     let contract_id = env.register_contract(None, ProposalVotingContract);
     let client = ProposalVotingContractClient::new(&env, &contract_id);
     let admin = Address::random(&env);
-    client.init(&admin, &3600, &50_00, &1000);
+    client.init(&admin, &3600, &50_00, &1000, &false);
 
     (env, client, admin)
 }
@@ -76,7 +76,7 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
 fn cannot_initialize_voting_twice() {
     let (env, client, admin) = setup_test();
     env.mock_all_auths();
-    client.init(&admin, &3600, &50_00, &1000);
+    client.init(&admin, &3600, &50_00, &1000, &false);
 }
 
 #[test]
@@ -469,4 +469,33 @@ fn is_proposal_approved_for_balance() {
     balance.set(voter_2, 1000);
 
     assert!(client.is_proposal_approved_for_balance(&proposal.id, &balance))
+}
+
+#[test]
+fn non_admin_user_cannot_vote_if_admin_mode_is_on() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, ProposalVotingContract);
+    let client = ProposalVotingContractClient::new(&env, &contract_id);
+    let admin = Address::random(&env);
+    client.init(&admin, &3600, &50_00, &1000, &true);
+
+    let proposer = Address::random(&env);
+    client.create_proposal(
+        &proposer,
+        &1,
+        &crate::ProposalType::Standard,
+        &BytesN::random(&env),
+    );
+    client.vote(&client.address, &1);
+
+    assert_auth(
+        &env.auths(),
+        1, // The second auth should admin
+        admin,
+        client.address.clone(),
+        Symbol::new(&env, "vote"),
+        (client.address, 1u64).into_val(&env),
+    );
 }

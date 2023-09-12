@@ -17,8 +17,8 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, BytesN,
-    ConversionError, Env, Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, storage::Persistent,
+    Address, BytesN, ConversionError, Env, Map, Symbol,
 };
 
 /// All the expected errors this contract expects.
@@ -66,6 +66,7 @@ enum DataKey {
     VotingPeriodSecs = 4,
     TargetApprovalRate = 5,
     TotalVoters = 6,
+    AdminMode = 7,
 }
 
 #[contract]
@@ -84,12 +85,17 @@ impl ProposalVotingContract {
     /// - `voting_period_secs` - The default number of seconds of proposals lifetime for new proposals.
     /// - `target_approval_rate_bps` - The default required approval rate in basic points for new proposals.
     /// - `participation` - The default max number of participation for new proposals.
+    /// - `admin_mode` - Certain functions like `voting` are open for anyone who wants to invoke them. This
+    /// doable, but if we are using this contract as dependency of another contract and we are interested in
+    /// restricting all operations to be only performed by the Admin address (see admin params), this should
+    /// be set to true.
     pub fn init(
         env: Env,
         admin: Address,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
         participation: u128,
+        admin_mode: bool,
     ) {
         let storage = env.storage().persistent();
 
@@ -107,6 +113,24 @@ impl ProposalVotingContract {
         storage.set(&DataKey::VotingPeriodSecs, &voting_period_secs);
         storage.set(&DataKey::TargetApprovalRate, &target_approval_rate_bps);
         storage.set(&DataKey::TotalVoters, &participation);
+        storage.set(&DataKey::AdminMode, &admin_mode);
+    }
+
+    /// Check admin mode is an internal function that will ensure
+    /// Admin is required depending on a dynamic configuration
+    /// that can be configured in the init function.
+    fn check_admin_mode(storage: &Persistent) {
+        let require_admin_mode = storage
+            .get::<_, bool>(&DataKey::AdminMode)
+            .ok_or(Error::KeyExpected)
+            .unwrap();
+
+        if require_admin_mode {
+            storage
+                .get::<_, Address>(&DataKey::Admin)
+                .unwrap()
+                .require_auth();
+        }
     }
 
     /// Creates a new proposal with the default parameters.
@@ -211,6 +235,8 @@ impl ProposalVotingContract {
 
         let storage = env.storage().persistent();
 
+        Self::check_admin_mode(&storage);
+
         let mut proposal_storage = storage
             .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
             .ok_or(Error::KeyExpected)?;
@@ -233,6 +259,8 @@ impl ProposalVotingContract {
     pub fn find_proposal(env: Env, id: u64) -> Result<Proposal, Error> {
         let storage = env.storage().persistent();
 
+        Self::check_admin_mode(&storage);
+
         let proposal_storage = storage
             .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
             .ok_or(Error::KeyExpected)?;
@@ -245,6 +273,8 @@ impl ProposalVotingContract {
         id: u64,
         balance: Map<Address, i128>,
     ) -> Result<bool, Error> {
+        Self::check_admin_mode(&env.storage().persistent());
+
         let mut proposal = Self::find_proposal(env, id)?;
         proposal.set_participation_from_balance(&balance)?;
         Ok(proposal.is_approved())
