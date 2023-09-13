@@ -1,6 +1,6 @@
 ---
 name: Security issue
-about: Please for a security issue, please contact tbd@eiger.co .
+about: Please for a security issue, please contact hello@eiger.co .
 title: ''
 labels: ''
 assignees: ''
