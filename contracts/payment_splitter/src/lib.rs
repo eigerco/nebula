@@ -44,6 +44,7 @@ pub struct PaymentSplitterContract;
 
 #[contractimpl]
 impl PaymentSplitterContract {
+    /// Initialize the contract with a list of stakeholders to split the payments.
     pub fn init(
         env: Env,
         admin: Address,
@@ -51,6 +52,9 @@ impl PaymentSplitterContract {
         stakeholders: Vec<Address>,
     ) -> Result<(), Error> {
         admin.require_auth();
+        if stakeholders.len() == 0 {
+            panic_with_error!(&env, Error::Overflow);
+        }
         let storage = env.storage().persistent();
         if storage
             .get::<_, bool>(&DataKey::AlreadyInitialized)
@@ -65,6 +69,7 @@ impl PaymentSplitterContract {
         Ok(())
     }
 
+    /// Split an amount between the saved stakeholders
     pub fn split(env: Env, amount: i128) -> Result<(), Error> {
         if amount == 0 {
             panic_with_error!(&env, Error::Overflow);
@@ -89,3 +94,6 @@ impl PaymentSplitterContract {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test;
