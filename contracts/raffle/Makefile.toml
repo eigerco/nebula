@@ -1,0 +1,211 @@
+[env]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.futurenet]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.standalone]
+friendbot = "http://localhost:8000/friendbot"
+network = "standalone"
+server = "http://localhost:8000"
+
+[tasks.run_standalone_server]
+script = '''
+  docker run --rm -it \
+    -p 8000:8000 \
+    --name stellar \
+    stellar/quickstart:soroban-dev@sha256:a6b03cf6b0433c99f2f799b719f0faadbb79684b1b763e7674ba749fb0f648ee \
+    --standalone \
+    --enable-soroban-rpc
+'''
+
+[tasks.create_account_admin]
+script_runner = "@shell"
+script = '''
+  soroban config identity generate admin 2>/tmp/raffle_error
+  ERR=`cat /tmp/raffle_error`
+  if [ ! -z "$ERR" ]; then
+    echo "error=$ERR"
+    exit 1
+  fi
+  
+  curl "${friendbot}?addr=$(soroban config identity address admin)"
+'''
+
+[tasks.create_account_players]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    soroban config identity generate player_$PLAYER 2>/tmp/raffle_error
+    ERR=`cat /tmp/raffle_error`
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
+    
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
+  done
+'''
+
+[tasks.accounts]
+dependencies = [
+  "create_account_admin",
+  "create_account_players"
+]
+
+[tasks.get_token]
+script = '''
+soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
+'''
+
+[tasks.deploy]
+script = '''
+  soroban contract deploy \
+  --source admin \
+  --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/raffle_error
+
+  ERR=`cat /tmp/raffle_error`
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_init]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  init \
+  --admin $(soroban config identity address admin) \
+  --token $(cat /tmp/token_id.txt) \
+  --max_winners_count 1 \
+  --ticket_price 5001 2>/tmp/raffle_error
+
+  ERR=`cat /tmp/raffle_error`
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_buy_ticket]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    buy_ticket \
+    --by $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
+
+    ERR=`cat /tmp/raffle_error`
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
+  done
+'''
+
+[tasks.invoke_play_raffle]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  play_raffle \
+  --random_seed 1234 2>/tmp/raffle_error
+
+  ERR=`cat /tmp/raffle_error`
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_contract]
+dependencies = [
+  "invoke_init",
+  "invoke_buy_ticket",
+  "invoke_play_raffle"
+]
+
+# currently this only displays balance of each player, without checking who has the most
+[tasks.get_balances]
+script = '''
+for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/token_id.txt) \
+    --network ${network} \
+    -- \
+    balance \
+    --id $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
+
+    ERR=`cat /tmp/raffle_error`
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
+  done
+'''
+
+[tasks.get_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
+'''
+
+[tasks.get_admin_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
+'''
+
+[tasks.calculate_fees]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+function calculateFees(file) {
+  let fee = 0
+  const transactions = fs.readFileSync(file, 'utf8')
+
+  const obj = JSON.parse(transactions)
+  const recordsSize = obj['_embedded']['records'].length
+  for (let i = 1; i < recordsSize; ++i) {
+    const tx = obj['_embedded']['records'][i]
+    fee += parseInt(tx.fee_charged)
+  }
+  return fee
+}
+
+let fee = calculateFees('/tmp/transactions.txt')
+console.log('Player fees: ', fee)
+
+let adminFee = calculateFees('/tmp/admin_transactions.txt')
+console.log('Admin fees: ', adminFee)
+
+console.log('Total fees: ', (fee + adminFee))
+'''
+
+[tasks.run_test]
+dependencies = [
+  "accounts",
+  "get_token",
+  "deploy",
+  "invoke_contract",
+  "get_balances",
+  "get_transactions",
+  "get_admin_transactions",
+  "calculate_fees"
+]
