@@ -188,20 +188,16 @@ fn buy_ticket_panics_if_invoked_after_raffle_is_played() {
 
     client.init(&client.address, &test_token_client.address, &1, &100);
 
-    let ticket_buyer_1 = Address::random(&env);
-    let ticket_buyer_2 = Address::random(&env);
-    let ticket_buyer_3 = Address::random(&env);
+    let ticket_buyer = Address::random(&env);
 
     // Transfer some funds to the buyer
-    test_token_client.mint(&ticket_buyer_1, &101);
-    test_token_client.mint(&ticket_buyer_2, &101);
-    test_token_client.mint(&ticket_buyer_3, &101);
+    test_token_client.mint(&ticket_buyer, &400);
 
-    client.buy_ticket(&ticket_buyer_1);
-    client.buy_ticket(&ticket_buyer_2);
+    client.buy_ticket(&ticket_buyer);
+    client.buy_ticket(&ticket_buyer);
 
     client.play_raffle(&666);
-    client.buy_ticket(&ticket_buyer_3);
+    client.buy_ticket(&ticket_buyer);
 }
 
 #[test]
