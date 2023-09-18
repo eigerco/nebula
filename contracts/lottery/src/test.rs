@@ -2,9 +2,9 @@
 
 extern crate std;
 
-use crate::{draw_numbers, count_matches, get_winners, count_total_prizes_percentage, recalculate_new_thresholds, LotteryResult, LotteryTicket, calculate_prizes};
+//use crate::{draw_numbers, count_matches, get_winners, count_total_prizes_percentage, recalculate_new_thresholds, LotteryResult, LotteryTicket, calculate_prizes};
 
-use super::{LotteryContract, LotteryContractClient};
+use super::*;//{LotteryContract, LotteryContractClient};
 
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedInvocation, Events},
@@ -335,4 +335,3 @@ fn setup_test(add1: Address, add2: Address, add3: Address) -> (LotteryResult, Ma
 
     (result, tickets, thresholds)
 }
-

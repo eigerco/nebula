@@ -92,9 +92,8 @@ pub enum Error {
     WrongLotteryNumber = 12,
     // At least 1 lottery should be played to have results
     NoLotteryResultsAvailable = 13,
-    
     AlreadyActive = 14,
-    NotActive = 15
+    NotActive = 15,
 }
 
 /// Helper types for lottery tickets and results
@@ -361,17 +360,12 @@ impl LotteryContract {
 
         // store numbers drawn in this lottery
         let lottery_number = storage.get::<_, u32>(&DataKey::LotteryNumber).unwrap();
-        let lottery_results_opt = storage
-            .get::<_, Map::<u32, LotteryResult>>(&DataKey::LotteryResults);
-        if lottery_results_opt.is_some() {
-            let mut lottery_results = lottery_results_opt.unwrap();
-            lottery_results.set(lottery_number, drawn_numbers);
-            storage.set(&DataKey::LotteryResults, &lottery_results);
-        }
-        else {
-            let current_lottery_results = map![&env, (lottery_number, drawn_numbers)];
-            storage.set(&DataKey::LotteryResults, &current_lottery_results);
-        }
+        let mut lottery_results = storage
+            .get::<_, Map::<u32, LotteryResult>>(&DataKey::LotteryResults)
+            .unwrap_or(map![&env]);
+            
+        lottery_results.set(lottery_number, drawn_numbers);
+        storage.set(&DataKey::LotteryResults, &lottery_results);
 
         storage.set(&DataKey::LotteryState, &LotteryState::Finished);
 
