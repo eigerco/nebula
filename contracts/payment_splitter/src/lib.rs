@@ -52,7 +52,7 @@ impl PaymentSplitterContract {
         stakeholders: Vec<Address>,
     ) -> Result<(), Error> {
         admin.require_auth();
-        if stakeholders.len() == 0 {
+        if stakeholders.is_empty() {
             panic_with_error!(&env, Error::Overflow);
         }
         let storage = env.storage().persistent();
