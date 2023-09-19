@@ -50,8 +50,8 @@ fn assert_auth(
     );
 }
 
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::AdminClient<'a> {
-    token::AdminClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
+fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::StellarAssetClient<'a> {
+    token::StellarAssetClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
 #[test]
