@@ -58,8 +58,8 @@ impl Contract {
     fn hash(&self) -> String {
         let mut hasher = Sha256::new();
         hasher.update(self.reference().to_string().as_bytes());
-        let bytes = hasher.finalize().to_vec();
-        format!("{:x?}", bytes)
+        let bytes = hasher.finalize();
+        hex::encode(bytes)
     }
 }
 
@@ -88,6 +88,7 @@ pub fn import_all_contracts() {
     sync_contracts(&config, &contracts_dir).expect("[importer] Could not sync contracts.");
 }
 
+/// Syncs contracts to a specific path
 pub fn sync_contracts(config: &Config, cache: &PathBuf) -> anyhow::Result<()> {
     let client = Client::new(oci_distribution::client::ClientConfig {
         protocol: oci_distribution::client::ClientProtocol::Https,
@@ -95,7 +96,7 @@ pub fn sync_contracts(config: &Config, cache: &PathBuf) -> anyhow::Result<()> {
     });
     let client = Arc::new(Mutex::new(client));
     let runtime = Builder::new_multi_thread()
-        .worker_threads(1)
+        .worker_threads(2)
         .enable_all()
         .build()?;
 
@@ -124,7 +125,6 @@ async fn find_and_sync_contract(
     path.push(format!("{name}_{}.wasm", contract.hash()));
     match path.try_exists() {
         Ok(true) => {
-            //let bytes = std::fs::read(path).unwrap();
             let path_str = path.to_str().unwrap().to_string();
             let name = syn::Ident::new(&name, Span::call_site());
 

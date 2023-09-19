@@ -1,5 +1,5 @@
 [package]
-name = "cross_contract"
+name = "oci_cross_contract"
 version = "0.1.0"
 edition = "2021"
 

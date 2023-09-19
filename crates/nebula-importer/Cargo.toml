@@ -16,4 +16,5 @@ sha2 = "0.10.7"
 oci-distribution = "0.9.4"
 quote = "1"
 syn = "2"
+hex = "0.4"
 

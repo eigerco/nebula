@@ -44,7 +44,7 @@ jobs:
       - name: Upload compiled contracts
         uses: actions/upload-artifact@v3
         with:
-          name: wasm-files
+          name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm
 
   test:
