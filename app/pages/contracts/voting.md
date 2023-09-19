@@ -13,7 +13,7 @@ The voting contract implements a proposal voting strategy: allows admins to crea
 
 ````toml
 [package.metadata.nebula.imports]
-raffle = "ghcr.io/eigerco/nebula/contracts/voting:latest"
+voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
 ````
 
 ## Contract methods
