@@ -66,5 +66,26 @@ jobs:
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
 
+      - name: Install cargo make
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-make
+          version: "^0.36.13"
+
+      - name: Install soroban-cli
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: soroban-cli
+          version: "^0.9.4"
+
       - name: Test
         run: cargo test
+
+      - name: Download wasm-files
+        uses: actions/download-artifact@v3
+        with:
+          name: wasm-files
+          path: target/wasm32-unknown-unknown/release/
+
+      - name: Integration test
+        run: ./integration_tests.sh
