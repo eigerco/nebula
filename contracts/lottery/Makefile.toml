@@ -25,8 +25,8 @@ script = '''
 
 [tasks.create_account_admin]
 script = '''
-  soroban config identity generate admin 2>/tmp/raffle_error
-  ERR=`cat /tmp/raffle_error`
+  soroban config identity generate admin 2>/tmp/lottery_error
+  ERR=`cat /tmp/lottery_error`
   if [ ! -z "$ERR" ]; then
     echo "error=$ERR"
     exit 1
@@ -39,8 +39,8 @@ script = '''
 script = '''
   for PLAYER in 1 2 3
   do
-    soroban config identity generate player_$PLAYER 2>/tmp/raffle_error
-    ERR=`cat /tmp/raffle_error`
+    soroban config identity generate player_$PLAYER 2>/tmp/lottery_error
+    ERR=`cat /tmp/lottery_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -65,10 +65,10 @@ soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
 script = '''
   soroban contract deploy \
   --source admin \
-  --wasm ../../target/wasm32-unknown-unknown/release/raffle.wasm \
-  --network ${network} > /tmp/contract_id.txt 2>/tmp/raffle_error
+  --wasm ../../target/wasm32-unknown-unknown/release/lottery.wasm \
+  --network ${network} > /tmp/contract_id.txt 2>/tmp/lottery_error
 
-  ERR=`cat /tmp/raffle_error`
+  ERR=`cat /tmp/lottery_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -86,9 +86,9 @@ script = '''
   --admin $(soroban config identity address admin) \
   --token $(cat /tmp/token_id.txt) \
   --max_winners_count 1 \
-  --ticket_price 5001 2>/tmp/raffle_error
+  --ticket_price 5001 2>/tmp/lottery_error
 
-  ERR=`cat /tmp/raffle_error`
+  ERR=`cat /tmp/lottery_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -105,9 +105,9 @@ script = '''
     --network ${network} \
     -- \
     buy_ticket \
-    --by $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
+    --by $(soroban config identity address player_$PLAYER) 2>/tmp/lottery_error
 
-    ERR=`cat /tmp/raffle_error`
+    ERR=`cat /tmp/lottery_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1
@@ -123,9 +123,9 @@ script = '''
   --network ${network} \
   -- \
   play_raffle \
-  --random_seed 1234 2>/tmp/raffle_error
+  --random_seed 1234 2>/tmp/lottery_error
 
-  ERR=`cat /tmp/raffle_error`
+  ERR=`cat /tmp/lottery_error`
   if [ ! -z "$ERR" ]; then
     echo "$ERR"
     exit 1
@@ -149,9 +149,9 @@ for PLAYER in 1 2 3
     --network ${network} \
     -- \
     balance \
-    --id $(soroban config identity address player_$PLAYER) 2>/tmp/raffle_error
+    --id $(soroban config identity address player_$PLAYER) 2>/tmp/lottery_error
 
-    ERR=`cat /tmp/raffle_error`
+    ERR=`cat /tmp/lottery_error`
     if [ ! -z "$ERR" ]; then
       echo "$ERR"
       exit 1

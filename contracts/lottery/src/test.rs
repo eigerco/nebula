@@ -63,7 +63,7 @@ fn lottery_cannot_be_initialized_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #10)")]
+#[should_panic(expected = "Error(Contract, #3)")]
 fn lottery_cannot_be_created_without_initialization() {
     let env = Env::default();
     env.mock_all_auths();
@@ -73,6 +73,30 @@ fn lottery_cannot_be_created_without_initialization() {
 
     let thresholds = map![&env, (5, 30), (4, 15)];
     client.create_lottery(&2, &5, &50, &thresholds, &10);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #12)")]
+fn lottery_cannot_be_created_if_it_is_initialized() {
+    let test_scenario = setup_test_scenario();
+    let thresholds = map![&test_scenario.env, (5, 30), (4, 15)];
+
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &thresholds,
+        &10,
+    );
+    test_scenario.client.create_lottery(
+        &2,
+        &5,
+        &50,
+        &thresholds,
+        &10,
+    );
 }
 
 #[test]
@@ -159,6 +183,49 @@ fn users_can_buy_tickets() {
 
     assert_eq!(1, test_scenario.token_client.balance(&ticket_buyer));
     assert_eq!(100, test_scenario.token_client.balance(&test_scenario.contract_id));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn tickets_cannot_be_bought_for_not_initialized_lottery() {
+    let test_scenario = setup_test_scenario();
+
+    let ticket_buyer = Address::random(&test_scenario.env);
+
+    test_scenario.test_token_client.mint(&ticket_buyer, &101);
+    let ticket = vec![&test_scenario.env, 3, 5, 10, 20, 33];
+
+    test_scenario.client.buy_ticket(&ticket_buyer, &ticket);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #13)")]
+fn tickets_cannot_be_bought_for_finished_lottery() {
+    let test_scenario = setup_test_scenario();
+
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &100,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 30), (4, 15), (3, 10)],
+        &2,
+    );
+
+    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer2 = Address::random(&test_scenario.env);
+
+    test_scenario.test_token_client.mint(&ticket_buyer1, &200);
+    test_scenario.test_token_client.mint(&ticket_buyer2, &101);
+
+    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 3, 5, 14, 22, 35]);
+    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 22, 14, 35, 44, 29]);
+
+    assert_eq!(2, tickets);
+
+    test_scenario.client.play_lottery(&666);
+    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 3, 5, 14, 22, 35]);
 }
 
 #[test]
@@ -251,6 +318,43 @@ fn play_lottery_works_as_expected() {
         (Symbol::new(&test_scenario.env, "won_prize"), &ticket_buyer2).into_val(&test_scenario.env),
         60i128.into_val(&test_scenario.env)
     )));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn lottery_cannot_be_played_not_initialized() {
+    let test_scenario = setup_test_scenario();
+    test_scenario.client.play_lottery(&666);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #13)")]
+fn lottery_cannot_be_played_if_finished() {
+    let test_scenario = setup_test_scenario();
+
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &100,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 30), (4, 15), (3, 10)],
+        &2,
+    );
+
+    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer2 = Address::random(&test_scenario.env);
+
+    test_scenario.test_token_client.mint(&ticket_buyer1, &200);
+    test_scenario.test_token_client.mint(&ticket_buyer2, &101);
+
+    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 3, 5, 14, 22, 35]);
+    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 22, 14, 35, 44, 29]);
+
+    assert_eq!(2, tickets);
+
+    test_scenario.client.play_lottery(&666);
+    test_scenario.client.play_lottery(&666);
 }
 
 #[test]
@@ -359,7 +463,7 @@ fn correct_lottery_results_are_returned() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #211)")]
+#[should_panic(expected = "Error(Contract, #10)")]
 fn should_not_return_results_for_wrong_lottery_number() {
     let test_scenario = setup_test_scenario();
     
@@ -384,7 +488,7 @@ fn should_not_return_results_for_wrong_lottery_number() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #12)")]
+#[should_panic(expected = "Error(Contract, #11)")]
 fn should_not_return_results_for_not_played_lottery() {
     let test_scenario = setup_test_scenario();
     

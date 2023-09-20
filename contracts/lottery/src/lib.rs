@@ -12,7 +12,7 @@
 //! any number of tickets and select the appropriate number of numbers.
 //! If all numbers are correctly selected player wins the main prize.
 //! In case when not all numbers are correct smaller prizes can be paid out,
-//! accordingly to the lottery specification. It is possible there will be
+//! accordingly to the setup thresholds. It is possible there will be
 //! no winners, in which case gathered tokens will be carried over to the next
 //! lottery.
 //!
@@ -61,20 +61,18 @@ enum DataKey {
     LotteryState = 12,
 }
 
-/// All the expected errors this contract expects.
-/// This error codes will appear as output in the transaction
-/// receipt.
+/// All errors this contract expects.
 #[contracterror]
 #[derive(Clone, Debug, Copy, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum Error {
-    /// The contract should be only initialised once.
+    // The contract should be only initialised once.
     AlreadyInitialized = 1,
     // Participants needs to have enough funds to buy a raffle ticket.
     InsufficientFunds = 2,
-    // The raffle can only be executed once.
-    AlreadyPlayed = 3,
-    // In order to play the raffle, at least the min amount of participants should be in.
+    // If not initialized, raffle should not be able to execute actions.
+    NotInitialized = 3,
+    // In order to play the lottery, at least the min amount of participants should be in.
     MinParticipantsNotSatisfied = 4,
     // Max possible number to select must be at least as high as number of numbers to choose from
     MaxRangeTooLow = 5,
@@ -86,14 +84,14 @@ pub enum Error {
     NotEnoughOrTooManyNumbers = 8,
     // All numbers must be in range (1, max_range)
     InvalidNumbers = 9,
-    // If not initialized, raffle should not be able to execute actions.
-    NotInitialized = 10,
     // Lottery ID should be already stored in DB
-    WrongLotteryNumber = 211,
+    WrongLotteryNumber = 10,
     // At least 1 lottery should be played to have results
-    NoLotteryResultsAvailable = 12,
-    AlreadyActive = 13,
-    NotActive = 14,
+    NoLotteryResultsAvailable = 11,
+    // Lottery is already active
+    AlreadyActive = 12,
+    // There is no active contract at the moment
+    NotActive = 13,
 }
 
 /// Helper types for lottery tickets and results
@@ -107,15 +105,16 @@ pub struct LotteryContract;
 impl LotteryContract {
     /// It initializes the contract with all the needed parameters.
     /// This function must be invoked byt the administrator just
-    /// after the contract deployment.
+    /// after the contract deployment. 
+    /// It invokes the `create_lottery` function at the end of initialization.
     ///
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
-    /// - `admin` - The address can play the raffle anytime.
-    /// - `token` - The asset contract address we are using for this raffle. See [token interface](https://soroban.stellar.org/docs/reference/interfaces/token-interface).
-    /// - `ticket_price` - Unitary ticket price for the current raffle.
-    /// - `number_of_elements` - Number of numbers possible to select by players
+    /// - `admin` - Admin account address.
+    /// - `token` - The asset contract address we are using for this lottery. See [token interface](https://soroban.stellar.org/docs/reference/interfaces/token-interface).
+    /// - `ticket_price` - Unitary ticket price for the current lottery.
+    /// - `number_of_numbers` - Number of numbers possible to select by players
     /// - `max_range` - Right boundary of the range players will select numbers from (1, max_range)
     /// - `thresholds` - Thresholds with prizes for correctly selected numbers (specified as percentage of the pool balance)
     /// - `min_players_count` - Minimum number of players needed to play the lottery
@@ -134,19 +133,8 @@ impl LotteryContract {
 
         if storage
             .get::<_, LotteryState>(&DataKey::LotteryState)
-            .is_some()
-        {
-            let lottery_state = storage
-                .get::<_, LotteryState>(&DataKey::LotteryState)
-                .unwrap();
-
-            if lottery_state == LotteryState::Initialized || lottery_state == LotteryState::Active {
-                panic_with_error!(&env, Error::AlreadyInitialized);
-            }
-
-            if lottery_state == LotteryState::Finished {
-                panic_with_error!(&env, Error::AlreadyPlayed);
-            }
+            .is_some() {
+            panic_with_error!(&env, Error::AlreadyInitialized);
         }
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
@@ -162,7 +150,7 @@ impl LotteryContract {
     }
 
     /// Creates the new lottery.
-    /// This function must be invoked byt the administrator.
+    /// This function must be invoked by the administrator.
     /// It can be called each time after previous lottery
     /// has been completed. New lottery can have different specs,
     /// pool balance is carried over from the previous one.
@@ -171,8 +159,8 @@ impl LotteryContract {
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
-    /// - `ticket_price` - Unitary ticket price for the current raffle.
-    /// - `number_of_elements` - Number of numbers possible to select by players
+    /// - `ticket_price` - Unitary ticket price for the current lottery.
+    /// - `number_of_numbers` - Number of numbers possible to select by players
     /// - `max_range` - Right boundary of the range players will select numbers from (1, max_range)
     /// - `thresholds` - Thresholds with prizes for correctly selected numbers (specified as percentage of the pool balance)
     /// - `min_players_count` - Minimum number of players needed to play the lottery
@@ -187,10 +175,8 @@ impl LotteryContract {
         let storage = env.storage().persistent();
         if storage
             .get::<_, LotteryState>(&DataKey::LotteryState)
-            .is_none()
-        {
+            .is_none() {
             panic_with_error!(&env, Error::NotInitialized);
-            // return Err(Error::NotInitialized);
         }
 
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
@@ -201,22 +187,18 @@ impl LotteryContract {
             .unwrap();
         if lottery_state == LotteryState::Active {
             panic_with_error!(&env, Error::AlreadyActive);
-            // return Err(Error::AlreadyActive);
         }
 
         if max_range < number_of_numbers {
             panic_with_error!(&env, Error::MaxRangeTooLow);
-            // return Err(Error::MaxRangeTooLow);
         }
 
         if number_of_numbers < 2 {
             panic_with_error!(&env, Error::NumberOfNumbersTooLow);
-            // return Err(Error::NumberOfNumbersTooLow);
         }
 
         if thresholds.len() < 1 {
             panic_with_error!(&env, Error::NumberOfThresholdsTooLow);
-            // return Err(Error::NumberOfThresholdsTooLow);
         }
 
         let lottery_number = storage
@@ -258,6 +240,7 @@ impl LotteryContract {
             return Err(Error::NotEnoughOrTooManyNumbers);
         }
 
+        //each number must be within (1, max_range) range
         for number in ticket.iter() {
             if number <= 0 || number > max_range {
                 return Err(Error::InvalidNumbers);
@@ -278,7 +261,8 @@ impl LotteryContract {
             .get::<_, Map<Address, Vec<LotteryTicket>>>(&DataKey::Tickets)
             .unwrap();
 
-        let player_selection = tickets.get(by.clone()).unwrap_or(vec![&env, ticket]);
+        let mut player_selection = tickets.get(by.clone()).unwrap_or(vec![&env]);
+        player_selection.push_back(ticket);
         tickets.set(by, player_selection);
 
         storage.set(&DataKey::Tickets, &tickets);
@@ -304,6 +288,10 @@ impl LotteryContract {
     /// Returns results of a given lottery. If no results are available, or wrong lottery number
     /// was given an error is returned
     ///
+    /// # Returns
+    /// 
+    /// - Results of the lottery
+    /// 
     /// # Arguments
     ///
     /// - `lottery_number` - Number of the lottery
@@ -328,7 +316,7 @@ impl LotteryContract {
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
-    /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements. See calculate_winners function.
+    /// - `random_seed` - A seed provided by the admin that will be combined with other environment elements.
     pub fn play_lottery(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
 
@@ -383,7 +371,7 @@ impl LotteryContract {
 }
 
 /// Ensures lottery is initialized and not finished.
-/// If not error is returned.
+/// If not, error is returned.
 ///
 /// # Arguments
 ///
@@ -502,11 +490,13 @@ fn count_total_prizes_percentage(
     winners: &Map<u32, Vec<Address>>,
     thresholds: &Map<u32, u32>,
 ) -> u32 {
-    winners.iter().fold(0u32, |acc, (threshold_number, _)| {
-        let threshold_percentage = thresholds.get(threshold_number).unwrap();
-        let winners_count = winners.get(threshold_number).unwrap().len();
-        acc.add(threshold_percentage * winners_count)
-    })
+    winners
+        .iter()
+        .fold(0u32, |acc, (threshold_number, _)| {
+            let threshold_percentage = thresholds.get(threshold_number).unwrap();
+            let winners_count = winners.get(threshold_number).unwrap().len();
+            acc.add(threshold_percentage * winners_count)
+        })
 }
 
 /// Recalculates new thresholds in case total prizes percentage is above 100%
