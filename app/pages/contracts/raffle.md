@@ -5,7 +5,7 @@ The Raffle contract implements a simple raffle: users buy tickets and one or mor
 ## Features
 
 * everyone can join the raffle by buying the ticket,
-* each player can buy many tickets - the more he buys, the more chanes of win he has,
+* each player can buy many tickets - the more he buys, the more chances of win he has,
 * there is always a winner in the raffle,
 * once the raffle is finished, no more tickets can be bought.
 
@@ -77,4 +77,4 @@ soroban contract invoke \
   play_raffle \
     --random_seed 1234
 ```
-After this method is called a winner(s) is randomly selected and the raffle prize is paid out. Additionaly an event with winner(s) address(es) and the value of pay out is emitted. No more tickets can be bought after the raffle has been played.
+After this method is called a winner(s) is randomly selected and the raffle prize is paid out. Additionally an event with winner(s) address(es) and the value of pay out is emitted. No more tickets can be bought after the raffle has been played.
