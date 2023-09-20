@@ -88,8 +88,9 @@ jobs:
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
-          name: wasm-files
+          name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
 
+      - run: cd contracts/${{ matrix.contract }}
       - name: Integration test
-        run: ./integration_tests.sh
+        run: cargo make run_test
