@@ -49,7 +49,7 @@ Contract can only be initialized once.
 
 ### Creating Proposals
 
-And admin can create a proposal with the defaults.
+An admin can create a proposal with the defaults.
 * `id` - id of the proposal
 
 ```bash
