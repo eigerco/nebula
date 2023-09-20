@@ -9,6 +9,9 @@ members = [
     "contracts/simple_voting",
     "contracts/raffle",
     "contracts/payment_splitter",
+    "contracts/oci_cross_contract",
+    "crates/nebula-importer",
+    "crates/nebula-publish",
 ]
 
 [profile.release]

@@ -1,0 +1,20 @@
+[package]
+name = "nebula-importer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+figment = { version = "0.10", features = ["toml"] }
+serde = { version = "1", features = ["derive"] }
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+directories = "5.0" 
+tokio = { version = "1", features = ["full"] }
+sha2 = "0.10.7"
+oci-distribution = "0.9.4"
+quote = "1"
+syn = "2"
+hex = "0.4"
+

@@ -12,6 +12,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [raffle, voting]
 
     steps:
       - name: Checkout repository
@@ -33,22 +36,23 @@ jobs:
       - name: Prepare target
         run: rustup target add wasm32-unknown-unknown
 
-      # This will attempt to build all contracts in the workspace.
-      # This command will likely change when we have more than contracts in the workspace
-      - name: Build All
-        run: cargo build --release --target wasm32-unknown-unknown --verbose
+      - name: Build
+        run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
-        run: cargo clippy --all-targets --all-features
+        run: cargo clippy -p ${{ matrix.contract }} --all-targets --all-features
       - name: Upload compiled contracts
         uses: actions/upload-artifact@v3
         with:
-          name: wasm-files
-          path: target/wasm32-unknown-unknown/release/*.wasm
+          name: wasm-files-${{ matrix.contract }}
+          path: target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm
 
   test:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [raffle, voting]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -66,5 +70,27 @@ jobs:
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
 
+      - name: Install cargo make
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-make
+          version: "^0.36.13"
+
+      - name: Install soroban-cli
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: soroban-cli
+          version: "^0.9.4"
+
       - name: Test
-        run: cargo test
+        run: cargo test -p ${{ matrix.contract }}
+      ## @mauriusz: There are some errors returned from futurenet, I would disable it for now
+      # - name: Download wasm-files
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: wasm-files-${{ matrix.contract }}
+      #     path: target/wasm32-unknown-unknown/release/
+
+      # - run: cd contracts/${{ matrix.contract }}
+      # - name: Integration test
+      #   run: cargo make run_test

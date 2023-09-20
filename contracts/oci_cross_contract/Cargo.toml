@@ -1,5 +1,5 @@
 [package]
-name = "voting"
+name = "oci_cross_contract"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,9 @@ soroban-sdk = { workspace = true }
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 rstest = "0.17.0"
+
+[build-dependencies]
+nebula-importer = { path = "../../crates/nebula-importer" }
+
+[package.metadata.nebula.imports]
+voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
