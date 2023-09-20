@@ -18,6 +18,7 @@
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
+use soroban_sdk::storage::Persistent;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env,
     Map, Symbol, Vec,
@@ -122,11 +123,7 @@ impl RaffleContract {
 
         let storage = env.storage().persistent();
 
-        if storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized).is_none()
-        {
-            return Err(Error::NotInitialized);
-        }
+        must_be_initialized_and_not_already_played(&storage)?;
 
         let price = storage.get::<_, i128>(&DataKey::TicketPrice).unwrap();
         let token = storage.get::<_, Address>(&DataKey::Token).unwrap();
@@ -156,18 +153,10 @@ impl RaffleContract {
     pub fn play_raffle(env: Env, random_seed: u64) -> Result<(), Error> {
         let storage = env.storage().persistent();
 
-        if storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized).is_none()
-        {
-            return Err(Error::NotInitialized);
-        }
+        must_be_initialized_and_not_already_played(&storage)?;
 
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();
-
-        if storage.get::<_, bool>(&DataKey::AlreadyPlayed).unwrap() {
-            return Err(Error::AlreadyPlayed);
-        }
 
         let token: Address = storage.get::<_, Address>(&DataKey::Token).unwrap();
 
@@ -205,6 +194,25 @@ impl RaffleContract {
         storage.set(&DataKey::AlreadyPlayed, &true);
         Ok(())
     }
+}
+
+/// Checks if raffle is initialized and has not been played already
+/// 
+/// # Arguments
+/// 
+/// - `storage` - The data storage for this contract
+fn must_be_initialized_and_not_already_played(storage: &Persistent) -> Result<(), Error> {
+    if storage
+        .get::<_, bool>(&DataKey::AlreadyInitialized).is_none()
+    {
+        return Err(Error::NotInitialized);
+    }
+    if storage
+        .get::<_, bool>(&DataKey::AlreadyPlayed).unwrap() 
+    {
+        return Err(Error::AlreadyPlayed);
+    }
+    Ok(())
 }
 
 /// It calculates the winners of a raffle in a best effort way, avoiding
