@@ -1,0 +1,50 @@
+name: Release Contracts
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Release Contracts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [raffle, voting]
+
+    permissions:
+      # Required to create GH releases
+      contents: write
+      # Required to push to GHCR
+      packages: write
+      # Required by cosign keyless signing
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+      - name: Build nebula-publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p nebula-publish --release
+
+      - name: Build Wasm module
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p ${{ matrix.contract }} --target=wasm32-unknown-unknown --release
+
+      - run: mv target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm ${{ matrix.contract }}.wasm
+
+      - name: Push GitHub Container Registry
+        run: target/release/nebula-publish --module ${{ matrix.contract }}.wasm --image ghcr.io/eigerco/nebula/contracts/${{ matrix.contract }}:${{  github.ref_name }} --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }}
