@@ -84,13 +84,13 @@ jobs:
 
       - name: Test
         run: cargo test -p ${{ matrix.contract }}
+      ## @mauriusz: There are some errors returned from futurenet, I would disable it for now
+      # - name: Download wasm-files
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: wasm-files-${{ matrix.contract }}
+      #     path: target/wasm32-unknown-unknown/release/
 
-      - name: Download wasm-files
-        uses: actions/download-artifact@v3
-        with:
-          name: wasm-files-${{ matrix.contract }}
-          path: target/wasm32-unknown-unknown/release/
-
-      - run: cd contracts/${{ matrix.contract }}
-      - name: Integration test
-        run: cargo make run_test
+      # - run: cd contracts/${{ matrix.contract }}
+      # - name: Integration test
+      #   run: cargo make run_test
