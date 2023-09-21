@@ -90,8 +90,10 @@ pub enum Error {
     NoLotteryResultsAvailable = 11,
     // Lottery is already active
     AlreadyActive = 12,
-    // There is no active contract at the moment
+    // There is no active lottery at the moment
     NotActive = 13,
+    // Sum of thresholds percentages must be below 100
+    InvalidThresholds = 14
 }
 
 /// Helper types for lottery tickets and results
@@ -199,6 +201,24 @@ impl LotteryContract {
 
         if thresholds.len() < 1 {
             panic_with_error!(&env, Error::NumberOfThresholdsTooLow);
+        }
+
+        let sum_of_percentages = thresholds.values()
+            .iter()
+            .fold(0u32, |acc, percentage| acc.add(percentage));
+
+        if sum_of_percentages > 100 {
+            panic_with_error!(&env, Error::InvalidThresholds);
+        }
+
+        if sum_of_percentages < 1 {
+            panic_with_error!(&env, Error::InvalidThresholds);
+        }
+
+        for threshold_number in thresholds.keys() {
+            if threshold_number < 1 || threshold_number > number_of_numbers {
+                panic_with_error!(&env, Error::InvalidThresholds);
+            }
         }
 
         let lottery_number = storage
@@ -453,7 +473,7 @@ fn calculate_prizes(
 
     // sum total percentage of prizes won - if it's bigger than 100%, recalculate new thresholds to be equal to 100%
     let total_prizes_percentage = count_total_prizes_percentage(&winners, &thresholds);
-    recalculate_new_thresholds(winners, thresholds, total_prizes_percentage);
+    recalculate_new_thresholds(&winners, thresholds, total_prizes_percentage);
 
     winners.iter().for_each(|(threshold_number, addresses)| {
         let pool_percentage = thresholds.get(threshold_number).unwrap();

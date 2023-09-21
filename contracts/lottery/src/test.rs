@@ -177,6 +177,71 @@ fn lottery_should_have_at_least_1_threshold_defined() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #14)")]
+fn thresholds_percentage_sum_should_be_below_100() {
+    let test_scenario = setup_test_scenario();
+    
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 70), (4, 40)],
+        &10,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #14)")]
+fn thresholds_percentage_sum_should_be_above_0() {
+    let test_scenario = setup_test_scenario();
+    
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 0)],
+        &10,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #14)")]
+fn threshold_numbers_should_be_below_number_of_numbers() {
+    let test_scenario = setup_test_scenario();
+    
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &map![&test_scenario.env, (6, 30), (1, 15)],
+        &10,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #14)")]
+fn threshold_numbers_should_be_above_1() {
+    let test_scenario = setup_test_scenario();
+    
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 30), (0, 15)],
+        &10,
+    );
+}
+
+
+#[test]
 fn users_can_buy_tickets() {
     let test_scenario = setup_test_scenario();
 
