@@ -207,11 +207,7 @@ impl LotteryContract {
             .iter()
             .fold(0u32, |acc, percentage| acc.add(percentage));
 
-        if sum_of_percentages > 100 {
-            panic_with_error!(&env, Error::InvalidThresholds);
-        }
-
-        if sum_of_percentages < 1 {
+        if sum_of_percentages < 1 || sum_of_percentages > 100 {
             panic_with_error!(&env, Error::InvalidThresholds);
         }
 
