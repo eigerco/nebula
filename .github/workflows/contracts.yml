@@ -91,6 +91,5 @@ jobs:
           name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
 
-      - run: cd contracts/${{ matrix.contract }}
       - name: Integration test
         run: cargo make run_test
