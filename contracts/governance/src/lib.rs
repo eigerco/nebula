@@ -11,7 +11,8 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, storage::Persistent,
     token, Address, BytesN, Env, Map, Symbol,
 };
-use voting_contract::ProposalType;
+
+use voting_contract::ProposalPayload;
 
 #[allow(clippy::too_many_arguments)]
 mod voting_contract {
@@ -244,8 +245,7 @@ impl GovernanceContract {
         env: Env,
         participant: Address,
         id: u64,
-        kind: ProposalType,
-        new_contract_hash: BytesN<32>,
+        payload: ProposalPayload,
     ) -> Result<(), Error> {
         participant.require_auth();
 
@@ -264,7 +264,7 @@ impl GovernanceContract {
 
         let voting_client = voting_contract::Client::new(&env, &voting_address);
 
-        voting_client.create_proposal(&participant, &id, &kind, &new_contract_hash);
+        voting_client.create_proposal(&participant, &id, &payload);
 
         Ok(())
     }
@@ -326,16 +326,13 @@ impl GovernanceContract {
             return Err(Error::ProposalNeedsApproval);
         }
 
-        match proposal.kind {
-            ProposalType::Standard => {
-                // TODO - should we do anything for standard proposal ?
+        match proposal.payload {
+            ProposalPayload::Comment(_) => {}
+            ProposalPayload::CodeUpgrade(wasm_hash) => {
+                env.deployer().update_current_contract_wasm(wasm_hash)
             }
-            ProposalType::CodeUpgrade => env
-                .deployer()
-                .update_current_contract_wasm(proposal.comment),
-            ProposalType::CuratorChange => {
-                let new_curator = utils::bytes_n32_to_address(&proposal.comment);
-                storage.set(&DataKey::Curator, &new_curator);
+            ProposalPayload::NewCurator(address) => {
+                storage.set(&DataKey::Curator, &address);
             }
         }
 

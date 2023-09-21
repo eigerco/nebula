@@ -10,8 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-utils = { path = "../../utils" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-utils = { path = "../../utils" }

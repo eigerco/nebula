@@ -45,13 +45,23 @@ impl From<ConversionError> for Error {
     }
 }
 
+/// ProposalPayload provides an composite
+/// data type that allows using a different
+/// proposal content for the different proposal
+/// types.
+///
+/// It composes the type: proposal type + payload,
+/// That later can be easily matched in other contracts.
 #[contracttype]
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[repr(u32)]
-pub enum ProposalType {
-    Standard = 1,
-    CodeUpgrade = 2,
-    CuratorChange = 3,
+#[derive(Clone, Debug, PartialEq)]
+pub enum ProposalPayload {
+    // A proposal type for changing the curator.
+    NewCurator(Address),
+    // A proposal type for doing a code upgrade. Needs the new
+    // wasm hash as first parameter.
+    CodeUpgrade(BytesN<32>),
+    // A plain proposal voting of an arbitrary comment, without further actions.
+    Comment(BytesN<32>),
 }
 
 /// Datakey holds all possible storage keys this
@@ -138,8 +148,7 @@ impl ProposalVotingContract {
         env: Env,
         proposer: Address,
         id: u64,
-        kind: ProposalType,
-        comment: BytesN<32>,
+        payload: ProposalPayload,
     ) -> Result<(), Error> {
         let storage = env.storage().persistent();
         let voting_period_secs = storage.get::<_, u64>(&DataKey::VotingPeriodSecs).unwrap();
@@ -149,9 +158,8 @@ impl ProposalVotingContract {
         Self::create_custom_proposal(
             env,
             id,
-            kind,
+            payload,
             proposer,
-            comment,
             voting_period_secs,
             target_approval_rate_bps,
             total_participation,
@@ -165,7 +173,6 @@ impl ProposalVotingContract {
     ///
     /// - `env` - The environment for this contract.
     /// - `id` - The unique identifier of the proposal.
-    /// - `comment` - Comment has enough size for a wasm contract hash. It could also be a string.
     /// - `voting_period_secs` - The number of seconds of proposals lifetime.
     /// - `target_approval_rate_bps` - The required approval rate in basic points. i.e for a 50%, 5000 should be passed.
     /// - `total_participation` - The max number of participation (can be votes, staked amounts ...). This will be taken into account for calculating the approval rate.
@@ -173,9 +180,8 @@ impl ProposalVotingContract {
     pub fn create_custom_proposal(
         env: Env,
         id: u64,
-        kind: ProposalType,
+        payload: ProposalPayload,
         proposer: Address,
-        comment: BytesN<32>,
         voting_period_secs: u64,
         target_approval_rate_bps: u32,
         total_participation: u128,
@@ -205,9 +211,8 @@ impl ProposalVotingContract {
             id,
             Proposal {
                 id,
-                kind,
+                payload: payload.clone(),
                 proposer: proposer.clone(),
-                comment,
                 voting_end_time: env
                     .ledger()
                     .timestamp()
@@ -222,8 +227,8 @@ impl ProposalVotingContract {
         storage.set(&DataKey::Proposals, &proposal_storage);
 
         env.events().publish(
-            (Symbol::new(&env, "proposal_created"), id, kind, proposer),
-            ()
+            (Symbol::new(&env, "proposal_created"), id, payload, proposer),
+            (),
         );
         Ok(())
     }
@@ -320,11 +325,9 @@ pub struct Proposal {
     id: u64,
     // Allows external systems to discriminate among type of proposal. This probably
     // goes in hand with the `comment` field.
-    kind: ProposalType,
+    payload: ProposalPayload,
     // The address this proposal is created from.
     proposer: Address,
-    // Comment has enough size for a wasm contract hash. It could also be a string.
-    comment: BytesN<32>,
     // Unix time in seconds. Voting ends at this time.
     voting_end_time: u64,
     // Number of votes accumulated.
@@ -388,12 +391,8 @@ impl Proposal {
         self.approval_rate_bps().unwrap() >= self.target_approval_rate_bps
     }
 
-    pub fn get_comment(&self) -> &BytesN<32> {
-        &self.comment
-    }
-
-    pub fn get_kind(&self) -> ProposalType {
-        self.kind
+    pub fn payload(&self) -> &ProposalPayload {
+        &self.payload
     }
 
     /// It provides a way to update the current proposal participation

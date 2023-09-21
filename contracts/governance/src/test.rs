@@ -2,7 +2,7 @@
 
 extern crate std;
 
-use crate::voting_contract::ProposalType;
+use crate::voting_contract::ProposalPayload;
 
 use super::{GovernanceContract, GovernanceContractClient};
 
@@ -410,7 +410,7 @@ fn not_existent_participant_cannot_create_proposals() {
     let hash = BytesN::random(&sc.env);
 
     sc.contract_client
-        .new_proposal(participant, &1, &ProposalType::CodeUpgrade, &hash);
+        .new_proposal(participant, &1, &ProposalPayload::CodeUpgrade(hash));
 }
 
 #[test]
@@ -426,7 +426,7 @@ fn non_whitelisted_participant_cannot_create_proposals() {
     sc.contract_client.join(participant, &200);
     let hash = BytesN::random(&sc.env);
     sc.contract_client
-        .new_proposal(participant, &1, &ProposalType::CodeUpgrade, &hash);
+        .new_proposal(participant, &1, &ProposalPayload::CodeUpgrade(hash));
 }
 
 #[test]
@@ -445,8 +445,7 @@ fn whitelisted_participant_can_create_proposals() {
     sc.contract_client.new_proposal(
         &participant,
         &1,
-        &ProposalType::CodeUpgrade,
-        &new_contract_hash,
+        &ProposalPayload::CodeUpgrade(new_contract_hash.clone()),
     );
 
     assert_auth(
@@ -458,8 +457,7 @@ fn whitelisted_participant_can_create_proposals() {
         (
             participant.clone(),
             1u64,
-            ProposalType::CodeUpgrade,
-            new_contract_hash,
+            ProposalPayload::CodeUpgrade(new_contract_hash),
         )
             .into_val(&sc.env),
     )
@@ -481,8 +479,7 @@ fn whitelisted_participant_can_vote_proposals() {
     sc.contract_client.new_proposal(
         &participant,
         &1,
-        &ProposalType::CodeUpgrade,
-        &new_contract_hash,
+        &ProposalPayload::CodeUpgrade(new_contract_hash),
     );
 
     sc.contract_client.vote(&participant, &1);
@@ -551,8 +548,7 @@ fn only_author_can_execute_proposals() {
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::Standard,
-        &BytesN::random(&sc.env),
+        &ProposalPayload::Comment(BytesN::random(&sc.env)),
     );
     sc.env.budget().reset_unlimited(); // Todo review this limits.
 
@@ -585,8 +581,7 @@ fn whitelisted_participant_can_execute_standard_proposal() {
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::Standard,
-        &BytesN::random(&sc.env),
+        &ProposalPayload::Comment(BytesN::random(&sc.env)),
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);
@@ -641,8 +636,7 @@ fn proposals_can_only_be_executed_once() {
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::Standard,
-        &BytesN::random(&sc.env),
+        &ProposalPayload::Comment(BytesN::random(&sc.env)),
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);
@@ -683,8 +677,7 @@ fn execute_a_code_upgrade_proposal_flow() {
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::CodeUpgrade,
-        &wasm_hash,
+        &ProposalPayload::CodeUpgrade(wasm_hash),
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);
@@ -701,8 +694,6 @@ fn execute_a_curator_change_flow() {
 
     sc.env.mock_all_auths();
 
-    let new_curator = Address::random(&sc.env);
-
     let participant_1 = Address::random(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
@@ -712,13 +703,11 @@ fn execute_a_curator_change_flow() {
 
     let proposal_id = 1;
 
-    let proposal_comment = utils::address_to_bytes_n32(&new_curator);
 
     sc.contract_client.new_proposal(
         &participant_1,
         &proposal_id,
-        &ProposalType::CuratorChange,
-        &proposal_comment,
+        &ProposalPayload::Comment(BytesN::random(&sc.env)),
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);

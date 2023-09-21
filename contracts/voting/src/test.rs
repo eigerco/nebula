@@ -1,10 +1,14 @@
 #![cfg(test)]
 
-use crate::{Error, Proposal, ProposalVotingContract, ProposalVotingContractClient, ProposalType};
+use crate::{
+    Error, Proposal, ProposalPayload, ProposalVotingContract, ProposalVotingContractClient,
+};
 use rstest::rstest;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Ledger, Events},
-    Address, BytesN, Env, IntoVal, Map, Symbol, Val, Vec, vec,
+    testutils::{
+        Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Events, Ledger,
+    },
+    vec, Address, BytesN, Env, IntoVal, Map, Symbol, Val, Vec,
 };
 
 #[test]
@@ -14,18 +18,10 @@ fn proposal_creation() {
     env.mock_all_auths();
 
     let id = 1001u64;
-    let kind = ProposalType::Standard;
     let comment = BytesN::random(&env);
+    let payload = ProposalPayload::Comment(comment.clone());
 
-    client.create_custom_proposal(
-        &id,
-        &kind,
-        &client.address,
-        &comment,
-        &3600,
-        &50_00,
-        &100,
-    );
+    client.create_custom_proposal(&id, &payload, &client.address, &3600, &50_00, &100);
 
     assert_auth(
         &env.auths(),
@@ -35,9 +31,8 @@ fn proposal_creation() {
         Symbol::new(&env, "create_custom_proposal"),
         (
             id,
-            1u32,
+            payload.clone(),
             client.address.clone(),
-            comment,
             3600u64,
             50_00u32,
             100_u128,
@@ -52,7 +47,13 @@ fn proposal_creation() {
             &env,
             (
                 client.address.clone(),
-                (Symbol::new(&env, "proposal_created"), id, kind, client.address).into_val(&env),
+                (
+                    Symbol::new(&env, "proposal_created"),
+                    id,
+                    payload,
+                    client.address
+                )
+                    .into_val(&env),
                 ().into_val(&env)
             ),
         ]
@@ -103,18 +104,16 @@ fn cannot_create_same_id_proposals() {
     let id = 1001u64;
     client.create_custom_proposal(
         &id,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment.clone()),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
     );
     client.create_custom_proposal(
         &id,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
@@ -129,9 +128,8 @@ fn only_admin_can_create_proposals() {
     let comment = BytesN::random(&env);
     client.create_custom_proposal(
         &1,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
@@ -148,9 +146,8 @@ fn voter_can_vote_proposals() {
 
     client.create_custom_proposal(
         &id,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
@@ -182,9 +179,8 @@ fn voter_cannot_vote_a_proposal_twice() {
 
     client.create_custom_proposal(
         &prd_id,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
@@ -202,9 +198,8 @@ fn cannot_vote_if_voting_time_exceeded() {
 
     let mut proposal = Proposal {
         id: 1,
-        kind: ProposalType::Standard,
+        payload: ProposalPayload::Comment(comment),
         proposer,
-        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         participation: 0,
         voters: Map::<Address, bool>::new(&env),
@@ -233,9 +228,8 @@ fn cannot_vote_if_total_voters_reached() {
 
     let mut proposal = Proposal {
         id: 1,
-        kind: ProposalType::Standard,
+        payload: ProposalPayload::Comment(comment),
         proposer,
-        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         participation: 2,
         voters,
@@ -273,9 +267,8 @@ fn proposal_calculate_approval_rate(
 
     let proposal = Proposal {
         id: 1,
-        kind: ProposalType::Standard,
+        payload: ProposalPayload::Comment(comment),
         proposer,
-        comment,
         voting_end_time: env.ledger().timestamp() + 3600,
         participation,
         target_approval_rate_bps: 50_00,
@@ -296,9 +289,8 @@ fn cannot_create_id0_proposals() {
 
     client.create_custom_proposal(
         &0,
-        &ProposalType::Standard,
+        &ProposalPayload::Comment(comment),
         &client.address,
-        &comment,
         &3600,
         &50_00,
         &2,
@@ -309,14 +301,13 @@ fn cannot_create_id0_proposals() {
 fn proposal_comment_is_accessible() {
     let (env, _, _) = setup_test();
     env.mock_all_auths();
-    let comment = BytesN::random(&env);
+    let payload = ProposalPayload::Comment(BytesN::random(&env));
     let proposer = Address::random(&env);
 
     let proposal = Proposal {
         id: 112,
-        kind: ProposalType::Standard,
+        payload: payload.clone(),
         proposer,
-        comment: comment.clone(),
         voting_end_time: 123123,
         participation: 0,
         target_approval_rate_bps: 0,
@@ -324,7 +315,7 @@ fn proposal_comment_is_accessible() {
         voters: Map::<Address, bool>::new(&env),
     };
 
-    assert_eq!(comment, proposal.get_comment().clone());
+    assert_eq!(payload, proposal.payload().clone());
 }
 
 #[test]
@@ -341,12 +332,10 @@ fn proposal_total_participation_can_be_set_from_balance() {
 
     let mut proposal = Proposal {
         id: 112,
-        kind: ProposalType::Standard,
+        payload: ProposalPayload::Comment(BytesN::random(&env)),
         proposer: Address::random(&env),
-        comment: BytesN::random(&env),
         voting_end_time: 123123,
         target_approval_rate_bps: 5000, // Half the participation is enough to approve.
-
         // Participation data is in zero values, as it will be calculated from provided balance.
         participation: 0,
         total_participation: 0,
@@ -379,9 +368,8 @@ fn set_participation_from_balance_checks_all_local_addresses_exist_in_balance() 
 
     let mut proposal = Proposal {
         id: 112,
-        kind: ProposalType::Standard,
+        payload: ProposalPayload::Comment(BytesN::random(&env)),
         proposer: Address::random(&env),
-        comment: BytesN::random(&env),
         voting_end_time: 123123,
         target_approval_rate_bps: 5000, // Half the participation is enough to approve.
 
@@ -410,8 +398,7 @@ fn proposals_can_be_queried_by_anyone() {
     client.create_proposal(
         &client.address,
         &1,
-        &ProposalType::Standard,
-        &BytesN::random(&env),
+        &ProposalPayload::Comment(BytesN::random(&env)),
     );
 
     let proposal = client.find_proposal(&1);
@@ -424,13 +411,10 @@ fn proposals_can_be_updated_only_by_admin() {
     let (env, client, admin) = setup_test();
     env.mock_all_auths();
 
-    let comment = BytesN::random(&env);
-
     client.create_proposal(
         &client.address,
         &1,
-        &ProposalType::Standard,
-        &comment,
+        &ProposalPayload::Comment(BytesN::random(&env)),
     );
 
     let voter_1 = Address::random(&env);
@@ -479,8 +463,7 @@ fn is_proposal_approved_for_balance() {
     client.create_proposal(
         &client.address,
         &1,
-        &ProposalType::Standard,
-        &BytesN::random(&env),
+        &ProposalPayload::Comment(BytesN::random(&env)),
     );
 
     let voter_1 = Address::random(&env);
@@ -512,8 +495,7 @@ fn non_admin_user_cannot_vote_if_admin_mode_is_on() {
     client.create_proposal(
         &proposer,
         &1,
-        &ProposalType::Standard,
-        &BytesN::random(&env),
+        &ProposalPayload::Comment(BytesN::random(&env)),
     );
     client.vote(&client.address, &1);
 
