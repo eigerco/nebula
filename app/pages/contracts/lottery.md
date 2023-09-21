@@ -1,6 +1,6 @@
 # Lottery contract
 
-The Lottery contract implements a lottery. Lottery creator specifies how many numbers players will need to select, from what range (always starting from 1), thresholds with available prizes for a given number of properly selected numbers, and what minimum number of players are required for the lottery to be played. After the lottery is created each user can buy unlimited number of tickets where he selects his own numbers. At the end specified number of numbers are randomly selected and players are paid prizes according to their selection and specified thresholds. Unspend tokens from the lottery pool are carried over to the next lottery.
+The Lottery contract implements a lottery. Lottery creator specifies how many numbers players will need to select, from what range (always starting from 1), thresholds with available prizes for a given number of properly selected numbers, and minimum number of players required for the lottery to be played. After the lottery is created each user can buy unlimited number of tickets where he selects his own numbers. At the end the specified number of numbers are randomly drawn, and players receive prizes based on their selection and predefined prize thresholds. Unspend tokens from the lottery pool are carried over to the next lottery.
 
 ## Features
 
@@ -71,11 +71,11 @@ In the above example there are 3 thresholds defined:
 
 Only players that have correctly selected 3, 4 or 5 numbers will have the prizes paid out.
 
-There might be a case when a total sum of prizes will be bigger than the current pool balance: for instance using the above example, if 4 players have properly selected 5 numbers each of them should receive 30% of the pool, which is in total 120%. That is not possible and in such cases thresholds will be recalculated so that the total amount of paid prizes is always smaller or as big as current lottery pool balance. Of course the proportions of the prizes will be kept.
+There could be cases where the total prize amount exceeds the current balance in the pool. For instance, using the previous example, if four players correctly select five numbers each, they would each be entitled to 30% of the pool, totaling 120%. This situation is not feasible, so in such cases, the prize thresholds will be adjusted to ensure that the total prize payout remains equal to or less than the current balance of the lottery pool. However, the proportions of the prizes will still be maintained.
 
 ### Creating a new lottery
 
-First lottery is always created during contract initalization. However, when it ends it is possible to create a new lottery with new specification using the method `create_lottery` which has the following arguments:
+First lottery is always created during contract initalization. However, when it ends it is possible to create a new one with new specification using the method `create_lottery` which has the following arguments:
 * `ticket_price` - unitary ticket price for the current lottery.
 * `number_of_numbers` - number of numbers possible to select by players
 * `max_range` - right boundary of the range players will select numbers from (1, max_range)
@@ -130,7 +130,7 @@ soroban contract invoke \
   play_lottery \
     --random_seed 1234
 ```
-After this method is called numbers are randomly drawn and players with most matches have the prizes paid out according to the defined thresholds. If anything has left in the lottery pool it is carried over to the next one. No more tickets can be bought for this lottery, however new lottery could be created by an admin.
+After this method is invoked, random numbers are drawn, and players with the highest number of correct matches receive prizes in accordance with the specified thresholds. Any remaining funds in the lottery pool are rolled over to the next lottery. It's important to note that no further tickets can be purchased for the current lottery at this point. However, an admin has the ability to create a new lottery for future participation.
 
 ### Checking lottery results
 
