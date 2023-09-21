@@ -101,7 +101,7 @@ Function also publishes an event with lottery specification: lottery number, num
 
 Each user that wants to take a part in the lottery need to buy a ticket first. To do this a `buy_ticket` method need to be invoked with the following arguments:
 * `by` - the address of the user that is buying the ticket,
-* `ticket` - the selected numbers by the player.
+* `ticket` - the selected numbers by the player - they all have to be within ranges specified during lottery creation and their count should also match.
 
 
 ```bash
@@ -112,7 +112,7 @@ soroban contract invoke \
     -- \
     buy_ticket \
       --by ${player_address} \
-      --ticket '[5, 10, 13, 22, 47, 2]'
+      --ticket '[5, 10, 13, 22, 47]'
 ```
 User can buy as much tickets as he wants.
 

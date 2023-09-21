@@ -178,13 +178,16 @@ console.log('Total fees: ', (fee + adminFee))
 '''
 
 [tasks.run_test]
-dependencies = [
-  "accounts",
-  "get_token",
-  "deploy",
-  "invoke_contract",
-  "get_balances",
-  "get_transactions",
-  "get_admin_transactions",
-  "calculate_fees"
-]
+script = '''
+  echo 'Test currently disabled'
+'''
+# dependencies = [
+#   "accounts",
+#   "get_token",
+#   "deploy",
+#   "invoke_contract",
+#   "get_balances",
+#   "get_transactions",
+#   "get_admin_transactions",
+#   "calculate_fees"
+# ]

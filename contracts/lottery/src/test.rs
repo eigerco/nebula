@@ -597,23 +597,35 @@ fn count_total_prizes_percentage_counts_correctly() {
     assert_eq!(105, total_prizes_percentage);
 }
 
-// TODO: more complex test of threshold recalc.
 #[test]
 fn thresholds_are_properly_recalculated() {
     let env = Env::default();
-    let (result, tickets, mut thresholds) = setup_addtional_test_data(
+    let (result, mut tickets, mut thresholds) = setup_addtional_test_data(
         &env,
         Address::random(&env),
         Address::random(&env),
         Address::random(&env),
     );
 
+    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 35, 44, 29]]);
+    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 1, 44, 29]]);
+    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 35, 1, 2]]);
+    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 3, 1, 2]]);
+
+    // there are:
+    // - 4 tickets with 5 hits
+    // - 2 ticket with 4
+    // - 1 ticket with 3
+    // that gives a total of 160% of pool balance in prizes
+
+
     let winners = get_winners(&env, &result, &tickets, &thresholds);
     let total_prizes_percentage = count_total_prizes_percentage(&winners, &thresholds);
     recalculate_new_thresholds(&winners, &mut thresholds, total_prizes_percentage);
-    assert_eq!(2, thresholds.len());
-    assert_eq!(14, thresholds.get(4).unwrap());
-    assert_eq!(28, thresholds.get(5).unwrap());
+    assert_eq!(3, thresholds.len());
+    assert_eq!(6, thresholds.get(3).unwrap());
+    assert_eq!(9, thresholds.get(4).unwrap());
+    assert_eq!(18, thresholds.get(5).unwrap());
 }
 
 #[test]
