@@ -37,6 +37,35 @@ fn admin_is_identified_on_init() {
 }
 
 #[test]
+fn lottery_is_properly_created() {
+    let test_scenario = setup_test_scenario();
+    let thresholds = map![&test_scenario.env, (5, 30), (4, 15)];
+
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &2,
+        &5,
+        &50,
+        &thresholds,
+        &10,
+    );
+
+    let last_event = test_scenario.env.events().all().slice(test_scenario.env.events().all().len() - 1..);
+    assert_eq!(
+        last_event,
+        vec![
+            &test_scenario.env,
+            (
+                test_scenario.contract_id.clone(),
+                (Symbol::new(&test_scenario.env, "new_lottery_created"), 1u32).into_val(&test_scenario.env),
+                (5u32, 50u32, thresholds, 2i128).into_val(&test_scenario.env)
+            )
+        ]
+    );
+}
+
+#[test]
 #[should_panic(expected = "Error(Contract, #1)")]
 fn lottery_cannot_be_initialized_twice() {
     let test_scenario = setup_test_scenario();
@@ -568,6 +597,7 @@ fn count_total_prizes_percentage_counts_correctly() {
     assert_eq!(105, total_prizes_percentage);
 }
 
+// TODO: more complex test of threshold recalc.
 #[test]
 fn thresholds_are_properly_recalculated() {
     let env = Env::default();

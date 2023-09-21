@@ -61,7 +61,7 @@ soroban contract invoke \
     buy_ticket \
       --by ${player_address}
 ```
-Ticket can only be bought once by a user.
+User can buy as much tickets as he wants.
 
 ### Playing the raffle
 

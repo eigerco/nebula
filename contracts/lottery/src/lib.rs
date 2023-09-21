@@ -217,6 +217,9 @@ impl LotteryContract {
         );
         storage.set(&DataKey::LotteryState, &LotteryState::Active);
         storage.set(&DataKey::LotteryNumber, &lottery_number);
+
+        let topic = (Symbol::new(&env, "new_lottery_created"), lottery_number);
+        env.events().publish(topic, (number_of_numbers, max_range, thresholds, ticket_price));
     }
 
     /// Allows any participant with enough funds to buy a ticket.
@@ -453,8 +456,8 @@ fn calculate_prizes(
     recalculate_new_thresholds(winners, thresholds, total_prizes_percentage);
 
     winners.iter().for_each(|(threshold_number, addresses)| {
-        let threshold_value = thresholds.get(threshold_number).unwrap() as f64 / 100.0;
-        let prize = (pool as f64 * threshold_value) as i128;
+        let pool_percentage = thresholds.get(threshold_number).unwrap();
+        let prize = (pool * pool_percentage as i128 / 100i128) as i128;
         addresses.iter().for_each(|address| {
             let current_player_prize = prizes.get(address.clone()).unwrap_or_default();
             prizes.set(address, current_player_prize + prize)
@@ -515,11 +518,11 @@ fn recalculate_new_thresholds(
     if total_prizes_percentage > 100 {
         for threshold_number in thresholds.keys() {
             if winners.contains_key(threshold_number) {
-                let winners_count = winners.get(threshold_number).unwrap().len() as f32;
-                let threshold_precentage = thresholds.get(threshold_number).unwrap() as f32;
+                let winners_count = winners.get(threshold_number).unwrap().len();
+                let threshold_precentage = thresholds.get(threshold_number).unwrap();
                 let val =
-                    winners_count * threshold_precentage * 100.0 / total_prizes_percentage as f32;
-                thresholds.set(threshold_number, (val / winners_count) as u32);
+                    winners_count * threshold_precentage * 100 / total_prizes_percentage;
+                thresholds.set(threshold_number, val / winners_count);
             } else {
                 thresholds.remove(threshold_number);
             }
