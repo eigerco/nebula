@@ -13,6 +13,10 @@
 //!
 //! Currently only admin of the contract can create proposals,
 //! and anyone can vote on them.
+//! 
+//! Theres is an "only admin" mode that can be activated upon 
+//! initialization and that will restrict all operations for not
+//! admin users.
 
 #![no_std]
 
@@ -173,6 +177,7 @@ impl ProposalVotingContract {
     ///
     /// - `env` - The environment for this contract.
     /// - `id` - The unique identifier of the proposal.
+    /// - `payload` - An ADT, representing the kind of the proposal plus its payload. See ['ProposalPayload'].
     /// - `voting_period_secs` - The number of seconds of proposals lifetime.
     /// - `target_approval_rate_bps` - The required approval rate in basic points. i.e for a 50%, 5000 should be passed.
     /// - `total_participation` - The max number of participation (can be votes, staked amounts ...). This will be taken into account for calculating the approval rate.
