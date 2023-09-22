@@ -120,7 +120,7 @@ fn participant_can_join() {
             (
                 sc.contract_id,
                 (Symbol::new(&sc.env, "participant_joined"), participant_addr).into_val(&sc.env),
-                ().into_val(&sc.env)
+                1u32.into_val(&sc.env)
             ),
         ]
     )
@@ -702,7 +702,6 @@ fn execute_a_curator_change_flow() {
     sc.contract_client.whitelist(&participant_1);
 
     let proposal_id = 1;
-
 
     sc.contract_client.new_proposal(
         &participant_1,

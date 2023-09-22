@@ -108,6 +108,10 @@ impl<'a> Repository<'a> {
             },
         )
     }
+
+    pub fn count(&self) -> u32 {
+        self.participants_storage.keys().len()
+    }
 }
 
 impl<'a> Drop for Repository<'a> {
@@ -148,5 +152,4 @@ mod test {
         p.increase_balance(1).unwrap();
         assert_eq!(Err(Error::InsufficientFunds), p.decrease_balance(2));
     }
-
 }

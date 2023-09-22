@@ -172,7 +172,7 @@ impl GovernanceContract {
 
         env.events().publish(
             (Symbol::new(&env, "participant_joined"), participant_addr),
-            (),
+            participant_repo.count(),
         );
         Ok(())
     }
