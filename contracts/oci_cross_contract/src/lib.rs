@@ -1,3 +1,5 @@
+#![no_std]
+
 mod contracts;
 
 use soroban_sdk::{contract, contractimpl, Address, Env};
