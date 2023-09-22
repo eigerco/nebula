@@ -1,3 +1,3 @@
 fn main() {
-    nebula_importer::import_all_contracts();
+    nebula::build::import_all_contracts();
 }
