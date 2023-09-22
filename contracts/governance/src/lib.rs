@@ -2,7 +2,36 @@
 //!
 //! This contract provides the implementation of
 //! a stake controlled DAO that allows participants
-//! vote on code upgrades.
+//! vote on:
+//!
+//! * Code upgrades.
+//! * Curator changes.
+//! * General proposals with arbitrary comments.
+//!
+//! This contract implements the following layers:
+//!
+//! * Voting layer. Delegated to the "voting" contract of this catalog,
+//! which is called via cross contract calls.
+//!
+//! * Staking layer. Implemented on this contract. It allows
+//! participants to stake and withdraw funds any time.
+//!
+//! * Governance layer. This contract itself. It manages the membership,
+//! like join or leave operations, which implies also funds management
+//! via the staking layer.
+//!
+//! The governance contract maintains an internal balance of all the participant
+//! staked funds. The staked balance represents the voting power of each participant
+//! at a given moment.
+//!
+//! Only when a proposal is finally executed by the proposer, the final results of participation
+//! are stored in the voting contract storage, as the voting power (staking) can change
+//! per each participant during voting as they stake,withdraw or leave the DAO.
+//!
+//! All participants needs to be "whitelisted" by the curator before they can create or vote proposals.
+//!
+//! The current voting mechanism requires a minimum participation configured at DAO initial setup
+//! in order to consider a proposal "approved". Voting a proposal can only mean a positive vote.
 
 #![no_std]
 
@@ -47,11 +76,18 @@ pub enum Error {
     InsufficientFunds = 2,
     // Certain amounts are not valid in some operations.(Like under and/or equal to zero)
     InvalidAmount = 3,
+    // Participant cannot be found in storage.
     ParticipantNotFound = 4,
+    // Participant needs to be whitelisted before doing certain operations.
     ParticipantNotWhitelisted = 5,
+    // This is only triggered due to a programming error, when an expected storage key
+    // is not available.
     ExpectedStorageKeyNotFound = 6,
+    // Only approved proposals can be executed.
     ProposalNeedsApproval = 7,
+    // Only the author can execute proposals.
     OnlyAuthorCanExecuteProposals = 8,
+    // Proposals can only be executed once.
     AlreadyExecuted = 9,
 }
 
@@ -60,6 +96,17 @@ pub struct GovernanceContract;
 
 #[contractimpl]
 impl GovernanceContract {
+    /// It initializes the contract with all the needed parameters.
+    /// It can only be executed once.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `curator` - The account address that can whitelist participants.
+    /// - `token` - The token that accomplishes the token interface and this DAO uses as base currency.
+    /// - `voting_period_secs` - The time a created proposal is open for voting.
+    /// - `target_approval_rate_bps` - The default max number of participation for new proposals.
+    /// - `salt` - A needed salt for generating addresses for the deployed contracts.
     pub fn init(
         env: Env,
         curator: Address,
@@ -105,6 +152,13 @@ impl GovernanceContract {
         storage.set(&DataKey::ExecutedProposals, &Map::<u64, ()>::new(&env));
     }
 
+    /// Participants can join the DAO by invoking this function.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant_addr` - The participant address.
+    /// - `amount` - The initial amount this user wants to participate with.
     pub fn join(env: Env, participant_addr: Address, amount: i128) -> Result<(), Error> {
         participant_addr.require_auth();
 
@@ -150,6 +204,13 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Participants can increase their staked amounts any time.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant_addr` - The participant address.
+    /// - `amount` - The initial amount this user wants to participate with.
     pub fn stake(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
         participant.require_auth();
 
@@ -166,6 +227,13 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Participants can leave anytime, withdrawing all amounts.
+    /// Once the leave, they need to be whitelisted again.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant_addr` - The participant address.
     pub fn leave(env: Env, participant: Address) -> Result<(), Error> {
         participant.require_auth();
 
@@ -207,6 +275,13 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Participants can withdraw their staked amounts any time.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant_addr` - The participant address.
+    /// - `amount` - The initial amount this user wants to participate with.
     pub fn withdraw(env: Env, participant: Address, amount: i128) -> Result<(), Error> {
         participant.require_auth();
 
@@ -222,6 +297,12 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Only curator can invoke this function for whitelisting a participant.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant_addr` - The participant address for whitelisting.
     pub fn whitelist(env: Env, participant: Address) -> Result<(), Error> {
         let storage = env.storage().persistent();
         let curator = storage.get::<_, Address>(&DataKey::Curator).unwrap();
@@ -241,6 +322,14 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Only curator can invoke this function for whitelisting a participant.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant` - The proposer who is creating this proposal.
+    /// - `id` -  The unique ID of the proposal. This can be taken from external systems.
+    /// - `payload` - The ['voting_contract::ProposalPayload'] , that represents a Proposal king + its respective payload
     pub fn new_proposal(
         env: Env,
         participant: Address,
@@ -269,6 +358,13 @@ impl GovernanceContract {
         Ok(())
     }
 
+    /// Any whitelisted participant can vote on a proposal.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant` - The proposer who is creating this proposal.
+    /// - `id` -  The unique ID of the proposal.
     pub fn vote(env: Env, participant: Address, id: u64) -> Result<(), Error> {
         participant.require_auth();
 
@@ -291,7 +387,15 @@ impl GovernanceContract {
 
         Ok(())
     }
-
+    
+    /// Only a whitelisted participant, who is the proposer, can execute the given
+    /// proposal.
+    ///
+    /// # Arguments
+    ///
+    /// - `env` - The environment for this contract.
+    /// - `participant` - The proposer who is executing this proposal.
+    /// - `id` -  The unique ID of the proposal.
     pub fn execute_proposal(env: Env, participant: Address, id: u64) -> Result<(), Error> {
         participant.require_auth();
 
