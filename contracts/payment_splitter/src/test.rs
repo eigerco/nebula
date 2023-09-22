@@ -71,19 +71,40 @@ fn splits_works() {
         (50i128,).into_val(&env),
     );
 
-    let _last_event = env.events().all().slice(env.events().all().len() - 1..);
-    // TODO: CHECK WHY THIS DOESN'T WORK
-    // assert_eq!(
-    //     last_event,
-    //     vec![
-    //         &env,
-    //         (
-    //             test_token_client.address.clone(),
-    //             (Symbol::new(&env, "transfer"), &token_admin, &recipient_2).into_val(&env),
-    //             25i128.into_val(&env)
-    //         )
-    //     ]
-    // )
+    let last_event = env.events().all().slice(env.events().all().len() - 1..);
+    let (client_address, _symbol, _value) = last_event.get(1).unwrap();
+    assert_eq!(client_address, test_token_client.address);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn splits_fails_if_not_enough_money() {
+    let (env, client) = setup_test();
+    let token_admin = Address::random(&env);
+    let test_token_client = create_token_contract(&env, &token_admin);
+
+    let recipient_1 = Address::random(&env);
+    let recipient_2 = Address::random(&env);
+
+    client.init(
+        &token_admin,
+        &test_token_client.address,
+        &Vec::from_slice(&env, &[recipient_1.clone(), recipient_2.clone()]),
+    );
+
+    // Transfer some funds to the admin
+    test_token_client.mint(&token_admin, &20);
+
+    client.split(&50);
+
+    assert_auth(
+        &env.auths(),
+        0,
+        token_admin.clone(),
+        client.address.clone(),
+        Symbol::new(&env, "split"),
+        (50i128,).into_val(&env),
+    );
 }
 
 fn assert_auth(
