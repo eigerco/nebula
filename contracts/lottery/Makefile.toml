@@ -94,6 +94,10 @@ script = '''
 
 [tasks.invoke_buy_ticket]
 script = '''
+  tickets=('[32,35,14,47,22]'
+            '[32,11,2,47,22]'
+            '[1,3,10,47,22]')
+
   for PLAYER in 1 2 3
   do
     soroban contract invoke \
@@ -101,9 +105,19 @@ script = '''
     --source player_$PLAYER \
     --network ${network} \
     -- \
+    register \
+    --by $(soroban config identity address player_$PLAYER)
+
+    player_ticket=${tickets[$PLAYER-1]}
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
     buy_ticket \
     --by $(soroban config identity address player_$PLAYER) \
-    --ticket '[5, 10, 13, 22, 47]'
+    --ticket $player_ticket
   done
 '''
 
@@ -115,14 +129,42 @@ script = '''
   --network ${network} \
   -- \
   play_lottery \
-  --random_seed 1234  2>/tmp/lottery_play_lottery_events.txt
+  --random_seed 1234 2>/tmp/lottery_play_lottery_events.txt
+'''
+
+[tasks.invoke_get_pool_balance]
+script = '''
+  balance=$(soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  get_pool_balance)
+
+  if [[ "$balance" != '"9003"' ]]; then
+    echo "Balance should be "9003" but is $balance"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_check_results]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  check_lottery_results \
+  --lottery_number 1
 '''
 
 [tasks.invoke_contract]
 dependencies = [
   "invoke_init",
   "invoke_buy_ticket",
-  "invoke_play_lottery"
+  "invoke_play_lottery",
+  "invoke_check_results",
+  "invoke_get_pool_balance"
 ]
 
 # currently this only displays balance of each player, without checking who has the most
@@ -141,12 +183,55 @@ for PLAYER in 1 2 3
 
 [tasks.get_transactions]
 script = '''
-curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
+curl "${server}accounts/$(soroban config identity address player_1)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
+'''
+
+[tasks.store_transaction_result_meta]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+const transactions = fs.readFileSync('/tmp/admin_transactions.txt', 'utf8')
+
+const obj = JSON.parse(transactions)
+const recordsSize = obj['_embedded']['records'].length
+const transaction = obj['_embedded']['records'][recordsSize-3]
+fs.writeFileSync('/tmp/result_meta_xdr.txt', transaction['result_meta_xdr']);
+'''
+
+[tasks.decode_xdr]
+script = '''
+soroban lab xdr dec --type TransactionMeta --output json --xdr "$(cat /tmp/result_meta_xdr.txt)" > /tmp/result_decoded.txt
+'''
+
+[tasks.check_results]
+script_runner = "node"
+script_extension = "js"
+script = '''
+var fs = require('fs');
+
+fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
+    if (err) throw err;
+
+    var obj = JSON.parse(data);
+    var firstPrize = obj['v3']['soroban_meta']['events'][0]['body']['v0']['data']['i128']["lo"]
+    var secondPrize = obj['v3']['soroban_meta']['events'][1]['body']['v0']['data']['i128']["lo"]
+
+    if (firstPrize !== 1500) {
+      throw new Error(`First prize is ${firstPrize} but should be 1500`)
+    }
+    if (secondPrize !== 4500) {
+      throw new Error(`Second prize is ${secondPrize} but should be 4500`)
+    }
+    console.log(firstPrize);
+    console.log(secondPrize);
+});
 '''
 
 [tasks.calculate_fees]
@@ -178,16 +263,19 @@ console.log('Total fees: ', (fee + adminFee))
 '''
 
 [tasks.run_test]
-script = '''
-  echo 'Test currently disabled'
-'''
-# dependencies = [
-#   "accounts",
-#   "get_token",
-#   "deploy",
-#   "invoke_contract",
-#   "get_balances",
-#   "get_transactions",
-#   "get_admin_transactions",
-#   "calculate_fees"
-# ]
+# script = '''
+#   echo 'Test currently disabled'
+# '''
+dependencies = [
+  "accounts",
+  "get_token",
+  "deploy",
+  "invoke_contract",
+  "get_balances",
+  "get_transactions",
+  "get_admin_transactions",
+  "store_transaction_result_meta",
+  "decode_xdr",
+  "check_results",
+  "calculate_fees"
+]

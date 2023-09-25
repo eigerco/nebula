@@ -238,6 +238,17 @@ impl LotteryContract {
         env.events().publish(topic, (number_of_numbers, max_range, thresholds, ticket_price));
     }
 
+    /// A 'dummy' method that needs to be called by user before buying the ticket.
+    /// This a workaround to this issue https://github.com/eigerco/nebula/issues/41
+    /// 
+    /// # Arguments
+    ///
+    /// - `_` - The environment for this contract - not used here
+    /// - `by` - The address that is registering.
+    pub fn register(_: Env, by: Address) {
+        by.require_auth();
+    }
+
     /// Allows any participant with enough funds to buy a ticket.
     ///
     /// # Arguments
@@ -314,7 +325,7 @@ impl LotteryContract {
     /// # Arguments
     ///
     /// - `lottery_number` - Number of the lottery
-    pub fn check_lottery_results(env: Env, lottery_number: u32) -> Result<LotteryResult, Error> {
+    pub fn check_lottery_results(env: Env, lottery_number: u32) -> Result<Vec<u32>, Error> {
         let storage = env.storage().persistent();
         let lottery_results_opt = storage
             .get::<_, Map<u32, LotteryResult>>(&DataKey::LotteryResults);
