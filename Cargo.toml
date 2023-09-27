@@ -9,6 +9,7 @@ members = [
     "contracts/simple_voting",
     "contracts/raffle",
     "contracts/oci_cross_contract",
+    "contracts/marketplace",
     "crates/nebula-importer",
     "crates/nebula-publish",
 ]
