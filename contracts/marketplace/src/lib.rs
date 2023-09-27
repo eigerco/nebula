@@ -19,7 +19,7 @@ enum DataKey {
 #[repr(u32)]
 pub enum Error {
     AlreadyInitialized = 1,
-    TooMuchPercentage = 2,
+    InvalidPercentage = 2,
     InvalidAssetPrice = 3,
     BalanceTooLow = 4,
     AssetNotListed = 5,
@@ -43,17 +43,32 @@ impl MarketplaceContract {
         admin.require_auth();
         let storage = env.storage().persistent();
 
-        if percentage >= 100 {
-            panic_with_error!(&env, Error::TooMuchPercentage);
+        if storage
+            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .is_some()
+        {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+
+        if percentage >= 100 || percentage < 0 {
+            panic_with_error!(&env, Error::InvalidPercentage);
         }
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::Percentage, &percentage);
         storage.set(&DataKey::AlreadyInitialized, &true);
+        let assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
+        storage.set(&DataKey::Assets, &assets);
+    }
+
+    pub fn get_listing(env: Env, asset: Address) -> Option<Asset> {
+        let storage = env.storage().persistent();
+        let assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
+        assets.get(asset)
     }
 
     /// Allow sellers to list assets by specifying the seller's address, the asset's address, and the asset's price.
-    pub fn list_asset(env: Env, seller: Seller, asset: Asset, price: i128) {
+    pub fn create_listing(env: Env, seller: Seller, asset: Address, price: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -61,12 +76,19 @@ impl MarketplaceContract {
         // TODO: Check if asset is owned by seller
         let storage = env.storage().persistent();
         let mut assets = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
-        assets.set(asset, (seller, price));
+        assets.set(
+            asset,
+            Asset {
+                owner: seller,
+                price,
+                listed: true,
+            },
+        );
         storage.set(&DataKey::Assets, &assets);
     }
 
     /// Enable buyers to purchase assets by providing the buyer's address, the asset's address, and the agreed-upon price.
-    pub fn buy_asset(env: Env, buyer: Address, asset: Address, price: i128) {
+    pub fn buy_listing(env: Env, buyer: Address, asset: Address, price: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -138,9 +160,38 @@ impl MarketplaceContract {
         storage.set(&DataKey::Assets, &assets);
     }
 
-    /// Allow sellers to remove a listing by specifying their address, the asset's address,
+    /// Allow sellers to pause a listing by specifying their address, the asset's address,
     /// and the price at which it was listed.
-    pub fn cancel_listing(env: Env, seller: Address, asset: Address, price: i128) {
+    pub fn pause_listing(env: Env, seller: Address, asset: Address, price: i128) {
+        if price <= 0 {
+            panic_with_error!(&env, Error::InvalidAssetPrice);
+        }
+        seller.require_auth();
+        let storage = env.storage().persistent();
+        let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let Asset {
+            owner: set_seller,
+            price: set_price,
+            ..
+        } = assets.get(asset.clone()).unwrap();
+        assert_eq!(set_seller, seller);
+        if price != set_price {
+            panic_with_error!(&env, Error::InvalidAssetPrice);
+        }
+        assets.set(
+            asset,
+            Asset {
+                owner: seller,
+                price,
+                listed: false,
+            },
+        );
+        storage.set(&DataKey::Assets, &assets);
+    }
+
+    /// Allow sellers to completely remove a listing by specifying their address, the asset's address,
+    /// and the price at which it was listed.
+    pub fn remove_listing(env: Env, seller: Address, asset: Address, price: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -160,3 +211,6 @@ impl MarketplaceContract {
         storage.set(&DataKey::Assets, &assets);
     }
 }
+
+#[cfg(test)]
+mod test;
