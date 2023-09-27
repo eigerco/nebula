@@ -51,7 +51,7 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
 
-        if percentage >= 100 || percentage < 0 {
+        if !(0..100).contains(&percentage){
             panic_with_error!(&env, Error::InvalidPercentage);
         }
         storage.set(&DataKey::Admin, &admin);
@@ -102,7 +102,7 @@ impl MarketplaceContract {
             price: set_price,
             listed,
         } = assets.get(asset.clone()).unwrap();
-        if listed == false {
+        if !listed {
             panic_with_error!(&env, Error::AssetNotListed);
         }
         if price != set_price {
