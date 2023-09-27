@@ -38,8 +38,8 @@ fn cannot_initialize_twice() {
     );
 }
 
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::AdminClient<'a> {
-    token::AdminClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
+fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::StellarAssetClient<'a>{
+    token::StellarAssetClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn splits_works() {
     );
 
     let last_event = env.events().all().slice(env.events().all().len() - 1..);
-    let (client_address, _symbol, _value) = last_event.get(1).unwrap();
+    let (client_address, _symbol, _value) = last_event.get(0).unwrap();
     assert_eq!(client_address, test_token_client.address);
 }
 
