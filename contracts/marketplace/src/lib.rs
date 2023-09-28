@@ -3,8 +3,6 @@ use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env, Map,
 };
 
-type Seller = Address;
-
 #[derive(Clone, Copy)]
 #[contracttype]
 enum DataKey {
@@ -69,7 +67,7 @@ impl MarketplaceContract {
     }
 
     /// Allow sellers to list assets by specifying the seller's address, the asset's address, and the asset's price.
-    pub fn create_listing(env: Env, seller: Seller, asset: Address, price: i128) {
+    pub fn create_listing(env: Env, seller: Address, asset: Address, price: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
