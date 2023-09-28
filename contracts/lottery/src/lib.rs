@@ -31,7 +31,7 @@ use rand::{Rng, SeedableRng};
 use soroban_sdk::storage::Persistent;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, map, panic_with_error, token, vec,
-    Address, Env, Map, Symbol, Vec,
+    Address, Env, Map, Symbol, Vec
 };
 
 /// State of the lottery
@@ -443,16 +443,19 @@ fn get_winners(
 ) -> Map<u32, Vec<Address>> {
     let mut winners = Map::<u32, Vec<Address>>::new(&env);
 
-    tickets.iter().for_each(|(ticket_address, tickets)| {
-        tickets.iter().for_each(|ticket| {
-            let count = count_matches(&drawn_numbers, &ticket);
-            if thresholds.contains_key(count) {
-                let mut addresses = winners.get(count).unwrap_or(Vec::<Address>::new(&env));
-                addresses.push_back(ticket_address.clone());
-                winners.set(count, addresses);
-            }
-        });
-    });
+    tickets
+        .iter()
+        .for_each(|(ticket_address, tickets)|
+            tickets
+                .iter()
+                .map(|ticket| count_matches(drawn_numbers, &ticket))
+                .filter(|count, | thresholds.contains_key(*count))
+                .for_each(|count| {
+                    let mut addresses = winners.get(count).unwrap_or(Vec::<Address>::new(&env));
+                    addresses.push_back(ticket_address.clone());
+                    winners.set(count, addresses);
+                })
+        );
     winners
 }
 
@@ -482,6 +485,7 @@ fn calculate_prizes(
     let total_prizes_percentage = count_total_prizes_percentage(&winners, &thresholds);
     recalculate_new_thresholds(&winners, thresholds, total_prizes_percentage);
 
+    //that would be nicer and probably faster if FromIter trait was implemented for Map & Vec...
     winners.iter().for_each(|(threshold_number, addresses)| {
         let pool_percentage = thresholds.get(threshold_number).unwrap();
         let prize = (pool * pool_percentage as i128 / 100i128) as i128;
