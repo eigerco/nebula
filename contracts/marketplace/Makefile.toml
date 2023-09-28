@@ -84,9 +84,20 @@ script = '''
     --network ${network} \
     -- \
     create_listing \
-    --seller $(soroban config identity address trader_1)
+    --seller $(soroban config identity address trader_1) \
     --asset $(cat /tmp/asset_id.txt) \
     --price 100 \
+'''
+
+[tasks.invoke_get_listing]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source trader_2 \
+  --network ${network} \
+  -- \
+  get_listing \
+  --asset $(cat /tmp/asset_id.txt) \
 '''
 
 [tasks.invoke_buy_listing]
@@ -97,7 +108,7 @@ script = '''
   --network ${network} \
   -- \
   buy_listing \
-  --buyer $(soroban config identity address trader_2)
+  --buyer $(soroban config identity address trader_2) \
   --asset $(cat /tmp/asset_id.txt) \
   --price 100 \
 '''
@@ -110,34 +121,50 @@ script = '''
   --network ${network} \
   -- \
   update_listing \
-  --random_seed 1234
+  --seller $(soroban config identity address trader_2) \
+  --asset $(cat /tmp/asset_id.txt) \
+  --old_price 100 \
+  --new_price 150 \
+  --listed true \
 '''
 
 [tasks.invoke_pause_listing]
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
-  --source admin \
+  --source trader_2 \
   --network ${network} \
   -- \
-  play_raffle \
-  --random_seed 1234
+  pause_listing \
+  --seller $(soroban config identity address trader_2) \
+  --asset $(cat /tmp/asset_id.txt) \
+  --price 150
 '''
 
 [tasks.invoke_remove_listing]
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
-  --source admin \
+  --source trader_2 \
   --network ${network} \
   -- \
-  play_raffle \
-  --random_seed 1234
+  remove_listing \
+  --seller $(soroban config identity address trader_2) \
+  --asset $(cat /tmp/asset_id.txt) \
+  --price 150
 '''
 
 
 [tasks.invoke_contract]
-dependencies = ["invoke_init", "invoke_create_listing"]
+dependencies = [
+  "invoke_init",
+  "invoke_create_listing",
+  "invoke_get_listing",
+  "invoke_buy_listing",
+  "invoke_update_listing",
+  "invoke_pause_listing",
+  "invoke_remove_listing",
+]
 
 # currently this only displays balance of each player, without checking who has the most
 [tasks.get_balances]
