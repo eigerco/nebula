@@ -327,13 +327,10 @@ impl LotteryContract {
     /// - `lottery_number` - Number of the lottery
     pub fn check_lottery_results(env: Env, lottery_number: u32) -> Result<Vec<u32>, Error> {
         let storage = env.storage().persistent();
-        let lottery_results_opt = storage
-            .get::<_, Map<u32, LotteryResult>>(&DataKey::LotteryResults);
-
-        if lottery_results_opt.is_none() {
-            return Err(Error::NoLotteryResultsAvailable);
-        }
-        let lottery_results = lottery_results_opt.unwrap();
+        
+        let lottery_results = storage
+            .get::<_, Map<u32, LotteryResult>>(&DataKey::LotteryResults)
+            .ok_or(Error::NoLotteryResultsAvailable)?;
 
         if !lottery_results.contains_key(lottery_number) {
             return Err(Error::WrongLotteryNumber);
