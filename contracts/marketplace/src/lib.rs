@@ -1,6 +1,8 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address, Env, Map,
+    contract, contracterror, contractimpl, contracttype, panic_with_error,
+    token::{self, StellarAssetClient},
+    Address, Env, Map,
 };
 
 #[derive(Clone, Copy)]
@@ -22,6 +24,7 @@ pub enum Error {
     InvalidAssetPrice = 3,
     BalanceTooLow = 4,
     AssetNotListed = 5,
+    InvalidAuth = 6,
 }
 
 #[contracttype]
@@ -49,7 +52,7 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
 
-        if !(0..100).contains(&percentage){
+        if !(0..100).contains(&percentage) {
             panic_with_error!(&env, Error::InvalidPercentage);
         }
         storage.set(&DataKey::Admin, &admin);
@@ -72,7 +75,10 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
         seller.require_auth();
-        // TODO: Check if asset is owned by seller
+        // let ownership = StellarAssetClient::new(&env, &asset);
+        // if ownership.admin() != seller {
+        //     panic_with_error!(&env, Error::InvalidAuth);
+        // }
         let storage = env.storage().persistent();
         let mut assets = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
         assets.set(
@@ -124,13 +130,12 @@ impl MarketplaceContract {
 
     /// Permit sellers to update the price of a listed asset,
     /// ensuring they provide the correct seller and asset addresses, as well as the old and new prices.
-    pub fn update_listing(
+    pub fn update_price(
         env: Env,
         seller: Address,
         asset: Address,
         old_price: i128,
         new_price: i128,
-        listed: bool,
     ) {
         if new_price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
@@ -141,9 +146,11 @@ impl MarketplaceContract {
         let Asset {
             owner: set_seller,
             price: set_price,
-            ..
+            listed,
         } = assets.get(asset.clone()).unwrap();
-        assert_eq!(set_seller, seller);
+        if set_seller != seller {
+            panic_with_error!(&env, Error::InvalidAuth);
+        }
 
         if old_price != set_price {
             panic_with_error!(&env, Error::InvalidAssetPrice);
@@ -173,7 +180,9 @@ impl MarketplaceContract {
             price: set_price,
             ..
         } = assets.get(asset.clone()).unwrap();
-        assert_eq!(set_seller, seller);
+        if set_seller != seller {
+            panic_with_error!(&env, Error::InvalidAuth);
+        }
         if price != set_price {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -188,6 +197,42 @@ impl MarketplaceContract {
         storage.set(&DataKey::Assets, &assets);
     }
 
+    /// Allow sellers to un-pause a listing by specifying their address, the asset's address,
+    /// and the price at which it is listed.
+    pub fn unpause_listing(
+        env: Env,
+        seller: Address,
+        asset: Address,
+        old_price: i128,
+        new_price: i128,
+    ) {
+        if old_price <= 0 || new_price <= 0 {
+            panic_with_error!(&env, Error::InvalidAssetPrice);
+        }
+        seller.require_auth();
+        let storage = env.storage().persistent();
+        let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let Asset {
+            owner: set_seller,
+            price: set_price,
+            ..
+        } = assets.get(asset.clone()).unwrap();
+        if set_seller != seller {
+            panic_with_error!(&env, Error::InvalidAuth);
+        }
+        if old_price != set_price {
+            panic_with_error!(&env, Error::InvalidAssetPrice);
+        }
+        assets.set(
+            asset,
+            Asset {
+                owner: seller,
+                price: new_price,
+                listed: true,
+            },
+        );
+        storage.set(&DataKey::Assets, &assets);
+    }
     /// Allow sellers to completely remove a listing by specifying their address, the asset's address,
     /// and the price at which it was listed.
     pub fn remove_listing(env: Env, seller: Address, asset: Address, price: i128) {

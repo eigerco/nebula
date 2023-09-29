@@ -3,7 +3,11 @@
 extern crate std;
 
 use crate::{MarketplaceContract, MarketplaceContractClient};
-use soroban_sdk::{testutils::Address as _, token, Address, Env};
+use soroban_sdk::{
+    testutils::Address as _,
+    token::{self},
+    Address, Env,
+};
 
 fn setup_test<'a>() -> (Env, MarketplaceContractClient<'a>) {
     let env = Env::default();
@@ -132,21 +136,26 @@ fn can_update_a_listing() {
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &100);
 
-    client.update_listing(&seller, &asset, &100, &200, &false);
+    client.update_price(&seller, &asset, &100, &200);
 
     let listing = client.get_listing(&asset).unwrap();
+    assert_eq!(&listing.listed, &true);
+    assert_eq!(&listing.owner, &seller);
+    assert_eq!(&listing.price, &200);
 
+    client.pause_listing(&seller, &asset, &200);
+
+    let listing = client.get_listing(&asset).unwrap();
     assert_eq!(&listing.listed, &false);
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &200);
 
-    client.update_listing(&seller, &asset, &200, &200, &true);
+    client.unpause_listing(&seller, &asset, &200, &190);
 
     let listing = client.get_listing(&asset).unwrap();
-
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
-    assert_eq!(&listing.price, &200);
+    assert_eq!(&listing.price, &190);
 }
 
 #[test]
@@ -164,7 +173,7 @@ fn cannot_sell_when_unlisted() {
     let asset = Address::random(&env);
     client.create_listing(&seller, &asset, &100);
 
-    client.update_listing(&seller, &asset, &100, &100, &false);
+    client.pause_listing(&seller, &asset, &100);
 
     token.mint(&buyer, &400);
     client.buy_listing(&buyer, &asset, &100);
