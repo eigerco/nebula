@@ -15,7 +15,8 @@ pub enum Error {
     AlreadyInitialized = 1,
     Conversion = 2,
     KeyExpected = 3,
-    Overflow = 4,
+    InvalidAmount = 4,
+    NoStakeholders = 5
 }
 
 impl From<ConversionError> for Error {
@@ -53,7 +54,7 @@ impl PaymentSplitterContract {
     ) -> Result<(), Error> {
         admin.require_auth();
         if stakeholders.is_empty() {
-            panic_with_error!(&env, Error::Overflow);
+            panic_with_error!(&env, Error::NoStakeholders);
         }
         let storage = env.storage().persistent();
         if storage
@@ -72,7 +73,7 @@ impl PaymentSplitterContract {
     /// Split an amount between the saved stakeholders
     pub fn split(env: Env, amount: i128) -> Result<(), Error> {
         if amount == 0 {
-            panic_with_error!(&env, Error::Overflow);
+            panic_with_error!(&env, Error::InvalidAmount);
         }
         let storage = env.storage().persistent();
         let admin: Address = storage.get(&DataKey::Admin).ok_or(Error::KeyExpected)?;
@@ -84,9 +85,9 @@ impl PaymentSplitterContract {
             .ok_or(Error::KeyExpected)?;
         let balance = token.balance(&admin);
         if amount > balance {
-            panic_with_error!(&env, Error::Overflow);
+            panic_with_error!(&env, Error::InvalidAmount);
         }
-        let payout = amount / i128::from(split.stakeholders.len());
+        let payout = amount.checked_div(i128::from(split.stakeholders.len())).unwrap();
 
         for stakeholder in split.stakeholders {
             token.transfer(&admin, &stakeholder, &payout);
