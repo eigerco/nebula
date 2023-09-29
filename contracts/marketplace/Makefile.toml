@@ -113,19 +113,18 @@ script = '''
   --price 100 \
 '''
 
-[tasks.invoke_update_listing]
+[tasks.invoke_update_price]
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
   --source trader_2 \
   --network ${network} \
   -- \
-  update_listing \
+  update_price \
   --seller $(soroban config identity address trader_2) \
   --asset $(cat /tmp/asset_id.txt) \
   --old_price 100 \
   --new_price 150 \
-  --listed true \
 '''
 
 [tasks.invoke_pause_listing]
@@ -161,7 +160,7 @@ dependencies = [
   "invoke_create_listing",
   "invoke_get_listing",
   "invoke_buy_listing",
-  "invoke_update_listing",
+  "invoke_update_price",
   "invoke_pause_listing",
   "invoke_remove_listing",
 ]
@@ -210,7 +209,7 @@ function calculateFees(file) {
 }
 
 let fee = calculateFees('/tmp/transactions.txt')
-console.log('Player fees: ', fee)
+console.log('Traders fees: ', fee)
 
 let adminFee = calculateFees('/tmp/admin_transactions.txt')
 console.log('Admin fees: ', adminFee)

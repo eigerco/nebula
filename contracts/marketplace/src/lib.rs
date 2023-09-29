@@ -1,8 +1,8 @@
 #![no_std]
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error,
-    token::{self, StellarAssetClient},
-    Address, Env, Map,
+    token::{self},
+    Address, Env, Map, Symbol,
 };
 
 #[derive(Clone, Copy)]
@@ -82,14 +82,16 @@ impl MarketplaceContract {
         let storage = env.storage().persistent();
         let mut assets = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
         assets.set(
-            asset,
+            asset.clone(),
             Asset {
-                owner: seller,
+                owner: seller.clone(),
                 price,
                 listed: true,
             },
         );
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "create_listing"), (seller));
+        env.events().publish(topics, asset);
     }
 
     /// Enable buyers to purchase assets by providing the buyer's address, the asset's address, and the agreed-upon price.
@@ -118,14 +120,16 @@ impl MarketplaceContract {
         }
         token.transfer(&buyer, &seller, &price);
         assets.set(
-            asset,
+            asset.clone(),
             Asset {
-                owner: buyer,
+                owner: buyer.clone(),
                 price,
                 listed: false,
             },
         );
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "buy_listing"), (buyer));
+        env.events().publish(topics, asset);
     }
 
     /// Permit sellers to update the price of a listed asset,
@@ -156,14 +160,16 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
         assets.set(
-            asset,
+            asset.clone(),
             Asset {
-                owner: seller,
+                owner: seller.clone(),
                 price: new_price,
                 listed,
             },
         );
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "update_price"), (seller));
+        env.events().publish(topics, asset);
     }
 
     /// Allow sellers to pause a listing by specifying their address, the asset's address,
@@ -187,14 +193,16 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
         assets.set(
-            asset,
+            asset.clone(),
             Asset {
-                owner: seller,
+                owner: seller.clone(),
                 price,
                 listed: false,
             },
         );
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "pause_listing"), (seller));
+        env.events().publish(topics, asset);
     }
 
     /// Allow sellers to un-pause a listing by specifying their address, the asset's address,
@@ -224,14 +232,16 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
         assets.set(
-            asset,
+            asset.clone(),
             Asset {
-                owner: seller,
+                owner: seller.clone(),
                 price: new_price,
                 listed: true,
             },
         );
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "unpause_listing"), (seller));
+        env.events().publish(topics, asset);
     }
     /// Allow sellers to completely remove a listing by specifying their address, the asset's address,
     /// and the price at which it was listed.
@@ -247,12 +257,16 @@ impl MarketplaceContract {
             price: set_price,
             ..
         } = assets.get(asset.clone()).unwrap();
-        assert_eq!(set_seller, seller);
+        if set_seller != seller {
+            panic_with_error!(&env, Error::InvalidAuth);
+        }
         if price != set_price {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
-        assets.remove(asset).unwrap();
+        assets.remove(asset.clone()).unwrap();
         storage.set(&DataKey::Assets, &assets);
+        let topics = (Symbol::new(&env, "remove_listing"), (seller));
+        env.events().publish(topics, asset);
     }
 }
 
