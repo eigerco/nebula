@@ -1,4 +1,19 @@
+[package]
+name = "nebula"
+version = "0.1.0"
+description = "Nebula is a tool for easing development of Soroban smart contracts"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+edition = "2021"
 
+[dependencies]
+nebula-importer = { path = "crates/nebula-importer", optional = true}
+nebula-publish = { path = "crates/nebula-publish", optional = true }
+
+[features]
+default = ["build"]
+build = ["nebula-importer"]
+publish = ["nebula-publish"]
 
 [workspace]
 # We want to use v2 of the cargo dependency resolver.
@@ -8,10 +23,10 @@ members = [
     "contracts/voting",
     "contracts/simple_voting",
     "contracts/raffle",
-    "contracts/oci_cross_contract",
     "contracts/marketplace",
     "crates/nebula-importer",
     "crates/nebula-publish",
+    "examples/oci_cross_contract",
 ]
 
 [profile.release]
