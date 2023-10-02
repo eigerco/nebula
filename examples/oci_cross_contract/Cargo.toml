@@ -14,7 +14,7 @@ soroban-sdk = { workspace = true, features = ["testutils"] }
 rstest = "0.17.0"
 
 [build-dependencies]
-nebula-importer = { path = "../../crates/nebula-importer" }
+nebula = { path = "../../" }
 
 [package.metadata.nebula.imports]
 voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
