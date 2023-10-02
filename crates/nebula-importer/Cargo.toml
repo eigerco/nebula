@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-figment = { version = "0.10", features = ["toml"] }
+figment = { version = "0.10", features = ["toml", "test"] }
 serde = { version = "1", features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 directories = "5.0" 
