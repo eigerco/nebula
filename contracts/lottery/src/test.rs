@@ -161,6 +161,22 @@ fn lottery_should_have_at_least_2_numbers_to_select() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #15)")]
+fn ticket_price_should_be_above_0() {
+    let test_scenario = setup_test_scenario();
+    
+    test_scenario.client.init(
+        &test_scenario.client.address,
+        &test_scenario.test_token_client.address,
+        &0,
+        &5,
+        &50,
+        &map![&test_scenario.env, (5, 70), (4, 40)],
+        &10,
+    );
+}
+
+#[test]
 #[should_panic(expected = "Error(Contract, #7)")]
 fn lottery_should_have_at_least_1_threshold_defined() {
     let test_scenario = setup_test_scenario();
@@ -650,7 +666,7 @@ fn get_winners_return_correct_winners() {
 #[test]
 fn count_total_prizes_percentage_counts_correctly() {
     let env = Env::default();
-    let (result, tickets, thresholds) = setup_addtional_test_data(
+    let (result, tickets, thresholds) = setup_additional_test_data(
         &env,
         Address::random(&env),
         Address::random(&env),
@@ -665,7 +681,7 @@ fn count_total_prizes_percentage_counts_correctly() {
 #[test]
 fn thresholds_are_properly_recalculated() {
     let env = Env::default();
-    let (result, mut tickets, mut thresholds) = setup_addtional_test_data(
+    let (result, mut tickets, mut thresholds) = setup_additional_test_data(
         &env,
         Address::random(&env),
         Address::random(&env),
@@ -700,7 +716,7 @@ fn prizes_are_properly_calculated_and_assigned() {
     let p2 = Address::random(&env);
     let p3 = Address::random(&env);
 
-    let (result, tickets, mut thresholds) = setup_addtional_test_data(&env, p1.clone(), p2.clone(), p3.clone());
+    let (result, tickets, mut thresholds) = setup_additional_test_data(&env, p1.clone(), p2.clone(), p3.clone());
     let winners = get_winners(&env, &result, &tickets, &thresholds);
 
     let pool = 400;
@@ -756,7 +772,7 @@ fn setup_test_scenario<'a>() -> TestScenario<'a> {
     }
 }
 
-fn setup_addtional_test_data(
+fn setup_additional_test_data(
     env: &Env,
     add1: Address,
     add2: Address,
@@ -766,7 +782,7 @@ fn setup_addtional_test_data(
     Map<Address, Vec<LotteryTicket>>,
     Map<u32, u32>,
 ) {
-    let result = draw_numbers(&env, 50, 5, 666);
+    let result = draw_test_numbers(&env, 50, 5, 666);
     let thresholds = map![&env, (5, 30), (4, 15), (3, 10)];
 
     let tickets = map![
@@ -783,4 +799,21 @@ fn setup_addtional_test_data(
         )
     ];
     (result, tickets, thresholds)
+}
+
+fn draw_test_numbers(env: &Env, max_range: u32, number_of_numbers: u32, random_seed: u64) -> Vec<u32> {
+    let mut numbers = Vec::new(&env);
+    for n in 0..number_of_numbers {
+        let new_seed = random_seed + n as u64;
+        let mut rand = SmallRng::seed_from_u64(new_seed);
+        loop {
+            // draw a number so many times until a new unique number is found
+            let drawn_number = rand.gen_range(1..max_range);
+            if !numbers.contains(drawn_number) {
+                numbers.push_back(drawn_number);
+                break;
+            }
+        }
+    }
+    numbers
 }

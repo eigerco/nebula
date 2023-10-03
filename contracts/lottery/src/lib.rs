@@ -93,7 +93,9 @@ pub enum Error {
     // There is no active lottery at the moment
     NotActive = 13,
     // Sum of thresholds percentages must be below 100
-    InvalidThresholds = 14
+    InvalidThresholds = 14,
+    // Ticket price must be above 0
+    InvalidTicketPrice = 15
 }
 
 /// Helper types for lottery tickets and results
@@ -173,7 +175,7 @@ impl LotteryContract {
         max_range: u32,
         thresholds: Map<u32, u32>,
         min_players_count: u32,
-    ) {
+    ) -> u32 {
         let storage = env.storage().persistent();
         if storage
             .get::<_, LotteryState>(&DataKey::LotteryState)
@@ -201,6 +203,10 @@ impl LotteryContract {
 
         if thresholds.len() < 1 {
             panic_with_error!(&env, Error::NumberOfThresholdsTooLow);
+        }
+
+        if ticket_price <= 0 {
+            panic_with_error!(&env, Error::InvalidTicketPrice);
         }
 
         let sum_of_percentages = thresholds.values()
@@ -236,6 +242,8 @@ impl LotteryContract {
 
         let topic = (Symbol::new(&env, "new_lottery_created"), lottery_number);
         env.events().publish(topic, (number_of_numbers, max_range, thresholds, ticket_price));
+
+        lottery_number
     }
 
     /// A 'dummy' method that needs to be called by user before buying the ticket.
@@ -304,7 +312,7 @@ impl LotteryContract {
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
-    pub fn get_pool_balance(env: Env) -> Result<i128, Error> {
+    pub fn pool_balance(env: Env) -> Result<i128, Error> {
         let storage = env.storage().persistent();
         let admin = storage.get::<_, Address>(&DataKey::Admin).unwrap();
         admin.require_auth();
@@ -500,7 +508,7 @@ fn calculate_prizes(
 /// 
 /// - `env` - The environment for this contract.
 /// - `token_client` - A token client used for token transfers,
-/// - `prizes` - A map containing winning adresses and their prizes
+/// - `prizes` - A map containing winning addresses and their prizes
 fn payout_prizes(env: &Env, token_client: &token::Client, prizes: &Map<Address, i128>) {
     prizes.iter().for_each(|(address, prize)| {
         token_client.transfer(&env.current_contract_address(), &address, &prize);
@@ -547,9 +555,9 @@ fn recalculate_new_thresholds(
         for threshold_number in thresholds.keys() {
             if winners.contains_key(threshold_number) {
                 let winners_count = winners.get(threshold_number).unwrap().len();
-                let threshold_precentage = thresholds.get(threshold_number).unwrap();
+                let threshold_percentage = thresholds.get(threshold_number).unwrap();
                 let val =
-                    winners_count * threshold_precentage * 100 / total_prizes_percentage;
+                    winners_count * threshold_percentage * 100 / total_prizes_percentage;
                 thresholds.set(threshold_number, val / winners_count);
             } else {
                 thresholds.remove(threshold_number);

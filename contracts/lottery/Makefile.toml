@@ -13,6 +13,12 @@ friendbot = "http://localhost:8000/friendbot"
 network = "standalone"
 server = "http://localhost:8000"
 
+[env.testnet]
+friendbot = "https://horizon-testnet.stellar.org/friendbot"
+network = "testnet"
+server = "https://horizon-testnet.stellar.org"
+
+
 [tasks.run_standalone_server]
 script = '''
   docker run --rm -it \
@@ -139,7 +145,7 @@ script = '''
   --source admin \
   --network ${network} \
   -- \
-  get_pool_balance)
+  pool_balance)
 
   if [[ "$balance" != '"9003"' ]]; then
     echo "Balance should be "9003" but is $balance"
