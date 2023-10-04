@@ -196,3 +196,34 @@ fn can_remove_a_listing() {
     let listing = client.get_listing(&asset);
     assert!(listing.is_none())
 }
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn cannot_create_negative_listing() {
+    let (env, client) = setup_test();
+    let admin = Address::random(&env);
+    let seller = Address::random(&env);
+    let token = Address::random(&env);
+
+    let token = create_token_asset(&env, &token);
+    client.init(&token.address, &admin, &5);
+
+    let asset = Address::random(&env);
+    client.create_listing(&seller, &asset, &-100);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn cannot_do_negative_update() {
+    let (env, client) = setup_test();
+    let admin = Address::random(&env);
+    let seller = Address::random(&env);
+    let token = Address::random(&env);
+
+    let token = create_token_asset(&env, &token);
+    client.init(&token.address, &admin, &5);
+
+    let asset = Address::random(&env);
+    client.create_listing(&seller, &asset, &100);
+    client.update_price(&seller, &asset, &100, &-100)
+}

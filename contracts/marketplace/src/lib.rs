@@ -25,6 +25,7 @@ pub enum Error {
     BalanceTooLow = 4,
     AssetNotListed = 5,
     InvalidAuth = 6,
+    NotInitialized = 7,
 }
 
 #[contracttype]
@@ -45,10 +46,7 @@ impl MarketplaceContract {
         admin.require_auth();
         let storage = env.storage().persistent();
 
-        if storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized)
-            .is_some()
-        {
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_some() {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
 
@@ -58,7 +56,7 @@ impl MarketplaceContract {
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::Percentage, &percentage);
-        storage.set(&DataKey::AlreadyInitialized, &true);
+        storage.set(&DataKey::AlreadyInitialized, &());
         let assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
         storage.set(&DataKey::Assets, &assets);
     }
@@ -80,7 +78,10 @@ impl MarketplaceContract {
         //     panic_with_error!(&env, Error::InvalidAuth);
         // }
         let storage = env.storage().persistent();
-        let mut assets = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
+        let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         assets.set(
             asset.clone(),
             Asset {
@@ -101,6 +102,9 @@ impl MarketplaceContract {
         }
         buyer.require_auth();
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let token = storage.get(&DataKey::Token).unwrap();
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         let Asset {
@@ -118,7 +122,11 @@ impl MarketplaceContract {
         if token.balance(&buyer) < price {
             panic_with_error!(&env, Error::BalanceTooLow);
         }
-        token.transfer(&buyer, &seller, &price);
+        let admin_percentage: i128 = storage.get(&DataKey::Percentage).unwrap();
+        let contract = env.current_contract_address();
+        // Move tokens to current contract
+        token.transfer(&buyer, &contract, &price);
+        token.transfer(&contract, &seller, &(price * (100 - (admin_percentage / 100))));
         assets.set(
             asset.clone(),
             Asset {
@@ -146,6 +154,9 @@ impl MarketplaceContract {
         }
         seller.require_auth();
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             owner: set_seller,
@@ -180,6 +191,9 @@ impl MarketplaceContract {
         }
         seller.require_auth();
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             owner: set_seller,
@@ -219,6 +233,9 @@ impl MarketplaceContract {
         }
         seller.require_auth();
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             owner: set_seller,
@@ -251,6 +268,9 @@ impl MarketplaceContract {
         }
         seller.require_auth();
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             owner: set_seller,
