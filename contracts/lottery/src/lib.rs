@@ -25,13 +25,10 @@
 
 use core::ops::Add;
 
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
-
 use soroban_sdk::storage::Persistent;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, map, panic_with_error, token, vec,
-    Address, Env, Map, Symbol, Vec
+    Address, Env, Map, Symbol, Vec, Bytes
 };
 
 /// State of the lottery
@@ -160,6 +157,10 @@ impl LotteryContract {
     /// pool balance is carried over from the previous one.
     /// All previously stored tickets are cleared
     ///
+    /// # Returns
+    /// 
+    /// - Lottery number
+    /// 
     /// # Arguments
     ///
     /// - `env` - The environment for this contract.
@@ -380,7 +381,7 @@ impl LotteryContract {
             .get::<_, Map<u32, u32>>(&DataKey::Thresholds)
             .unwrap();
 
-        let drawn_numbers = draw_numbers(&env, max_range, number_of_elements, random_seed);
+        let drawn_numbers = draw_numbers::<RandomNumberGenerator>(&env, max_range, number_of_elements, random_seed);
         let winners = get_winners(&env, &drawn_numbers, &tickets, &thresholds);
         let prizes = calculate_prizes(&env, &winners, &mut thresholds, pool);
         payout_prizes(&env, &token_client, &prizes);
@@ -583,6 +584,32 @@ fn count_matches(drawn_numbers: &Vec<u32>, player_ticket: &LotteryTicket) -> u32
         .count() as u32
 }
 
+
+struct RandomNumberGenerator;
+
+trait RandomNumberGeneratorTrait {
+    fn new(env: &Env, seed: u64) -> Self;
+    fn number(&mut self, env: &Env, max_range: u32) -> u32;
+}
+
+impl RandomNumberGeneratorTrait for RandomNumberGenerator {
+    fn new(env: &Env, seed: u64) -> Self {
+        let mut arr = [0u8; 32];
+        let seed_bytes = seed.to_be_bytes();
+
+        //there is no concat() for wasm build...
+        for i in 24..32 {
+            arr[i] = seed_bytes[i-24];
+        }
+        env.prng().seed(Bytes::from_slice(&env, &arr.as_slice()));
+        RandomNumberGenerator{}
+    }
+
+    fn number(&mut self, env: &Env, max_range: u32) -> u32 {
+        env.prng().u64_in_range(1..=max_range as u64) as u32
+    }
+}
+
 /// Randomly draw numbers within a given range (1, max_range).
 /// Ensures that there are no duplicates
 ///
@@ -596,14 +623,14 @@ fn count_matches(drawn_numbers: &Vec<u32>, player_ticket: &LotteryTicket) -> u32
 /// - `max_range` - Right boundary of the range players will select numbers from (1, max_range)
 /// - `number_of_numbers` - Number of numbers possible to select by players
 /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements
-fn draw_numbers(env: &Env, max_range: u32, number_of_numbers: u32, random_seed: u64) -> Vec<u32> {
+fn draw_numbers<T: RandomNumberGeneratorTrait>(env: &Env, max_range: u32, number_of_numbers: u32, random_seed: u64) -> Vec<u32> {
     let mut numbers = Vec::new(&env);
     for n in 0..number_of_numbers {
         let new_seed = random_seed + n as u64;
-        let mut rand = SmallRng::seed_from_u64(new_seed);
+        let mut random_generator = T::new(env, new_seed);
         loop {
             // draw a number so many times until a new unique number is found
-            let drawn_number = rand.gen_range(1..max_range);
+            let drawn_number = random_generator.number(env, max_range);
             if !numbers.contains(drawn_number) {
                 numbers.push_back(drawn_number);
                 break;

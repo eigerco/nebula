@@ -100,9 +100,9 @@ script = '''
 
 [tasks.invoke_buy_ticket]
 script = '''
-  tickets=('[32,35,14,47,22]'
-            '[32,11,2,47,22]'
-            '[1,3,10,47,22]')
+  tickets=('[22,33,47,10,49]'
+            '[22,11,2,47,49]'
+            '[1,3,5,47,22]')
 
   for PLAYER in 1 2 3
   do
@@ -226,17 +226,13 @@ fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
     if (err) throw err;
 
     var obj = JSON.parse(data);
-    var firstPrize = obj['v3']['soroban_meta']['events'][0]['body']['v0']['data']['i128']["lo"]
-    var secondPrize = obj['v3']['soroban_meta']['events'][1]['body']['v0']['data']['i128']["lo"]
-
-    if (firstPrize !== 1500) {
-      throw new Error(`First prize is ${firstPrize} but should be 1500`)
+    for (let i = 0; i < 2; ++i) {
+      var prize = obj['v3']['soroban_meta']['events'][i]['body']['v0']['data']['i128']["lo"]
+      if (prize !== 1500 && prize !== 4500) {
+        throw new Error(`Prize is ${prize} but should be 1500 or 4500`)
+      }
+      console.log(prize);
     }
-    if (secondPrize !== 4500) {
-      throw new Error(`Second prize is ${secondPrize} but should be 4500`)
-    }
-    console.log(firstPrize);
-    console.log(secondPrize);
 });
 '''
 

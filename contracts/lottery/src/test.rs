@@ -4,11 +4,26 @@ extern crate std;
 
 use super::*;
 
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
+
 use soroban_sdk::{
     map,
     testutils::{Address as _, AuthorizedInvocation, Events, AuthorizedFunction},
     token, vec, Address, Env, IntoVal, Map, Symbol, Vec, Val,
 };
+
+struct TestRandomNumberGenerator(SmallRng);
+
+impl RandomNumberGeneratorTrait for TestRandomNumberGenerator {
+    fn new(_: &Env, seed: u64) -> Self {
+        TestRandomNumberGenerator(SmallRng::seed_from_u64(seed))
+    }
+
+    fn number(&mut self, _: &Env, max_range: u32) -> u32 {
+        self.0.gen_range(1..max_range)
+    }
+}
 
 #[test]
 fn admin_is_identified_on_init() {
@@ -400,8 +415,8 @@ fn play_lottery_works_as_expected() {
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
     test_scenario.test_token_client.mint(&ticket_buyer2, &101);
 
-    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 3, 5, 14, 22, 35]);
-    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 22, 14, 35, 44, 29]);
+    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 3, 5, 45, 2, 24]);
+    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 44, 4, 45, 2, 24]);
 
     assert_eq!(2, tickets);
 
@@ -488,8 +503,8 @@ fn play_lottery_with_many_prizes_works_as_expected() {
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
     test_scenario.test_token_client.mint(&ticket_buyer2, &101);
 
-    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 22, 14, 35, 44, 29]);
-    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 22, 14, 35, 44, 29]);
+    test_scenario.client.buy_ticket(&ticket_buyer1, &vec![&test_scenario.env, 44, 4, 45, 2, 24]);
+    let tickets = test_scenario.client.buy_ticket(&ticket_buyer2, &vec![&test_scenario.env, 44, 4, 45, 2, 24]);
 
     assert_eq!(2, tickets);
 
@@ -565,11 +580,11 @@ fn correct_lottery_results_are_returned() {
 
     let results = test_scenario.client.check_lottery_results(&1);
     assert_eq!(5, results.len());
-    assert!(results.contains(22));
-    assert!(results.contains(14));
-    assert!(results.contains(35));
     assert!(results.contains(44));
-    assert!(results.contains(29));
+    assert!(results.contains(4));
+    assert!(results.contains(45));
+    assert!(results.contains(2));
+    assert!(results.contains(24));
 }
 
 #[test]
@@ -624,14 +639,14 @@ fn should_not_return_results_for_not_played_lottery() {
 #[test]
 fn draw_numbers_works_seed_is_deterministic() {
     let env = Env::default();
-    let result = draw_numbers(&env, 50, 5, 666);
+    let result = draw_numbers::<TestRandomNumberGenerator>(&env, 50, 5, 666);
     assert_eq!(vec![&env, 22, 14, 35, 44, 29], result);
 }
 
 #[test]
 fn count_matches_counts_correctly() {
     let env = Env::default();
-    let result = draw_numbers(&env, 50, 5, 666);
+    let result = draw_numbers::<TestRandomNumberGenerator>(&env, 50, 5, 666);
     let mut matches = count_matches(&result, &vec![&env, 22, 14, 35, 44, 29]);
     assert_eq!(5, matches);
     matches = count_matches(&result, &vec![&env, 22, 14, 1, 2, 3]);
@@ -643,7 +658,7 @@ fn count_matches_counts_correctly() {
 #[test]
 fn get_winners_return_correct_winners() {
     let env = Env::default();
-    let result = draw_numbers(&env, 50, 5, 666);
+    let result = draw_numbers::<TestRandomNumberGenerator>(&env, 50, 5, 666);
     let thresholds = map![&env, (5, 30), (4, 15), (3, 10)];
     let player1 = Address::random(&env);
     let player2 = Address::random(&env);
