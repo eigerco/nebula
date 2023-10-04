@@ -1,0 +1,283 @@
+[env]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.futurenet]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.standalone]
+friendbot = "http://localhost:8000/friendbot"
+network = "standalone"
+server = "http://localhost:8000"
+
+[env.testnet]
+friendbot = "https://horizon-testnet.stellar.org/friendbot"
+network = "testnet"
+server = "https://horizon-testnet.stellar.org"
+
+
+[tasks.run_standalone_server]
+script = '''
+  docker run --rm -it \
+    -p 8000:8000 \
+    --name stellar \
+    stellar/quickstart:soroban-dev@sha256:1c98f895f8b69cc843eeaa5230d67044dbeb390a5529d51dd7762d8ff685c3f8 \
+    --standalone \
+    --enable-soroban-rpc
+'''
+
+[tasks.create_account_admin]
+script = '''
+  soroban config identity generate admin 2>/tmp/lottery_error
+  ERR=`cat /tmp/lottery_error`
+  if [ ! -z "$ERR" ]; then
+    echo "error=$ERR"
+    exit 1
+  fi
+  
+  curl "${friendbot}?addr=$(soroban config identity address admin)"
+'''
+
+[tasks.create_account_players]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    soroban config identity generate player_$PLAYER 2>/tmp/lottery_error
+    ERR=`cat /tmp/lottery_error`
+    if [ ! -z "$ERR" ]; then
+      echo "$ERR"
+      exit 1
+    fi
+    
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
+  done
+'''
+
+[tasks.accounts]
+dependencies = [
+  "create_account_admin",
+  "create_account_players"
+]
+
+[tasks.get_token]
+script = '''
+soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
+'''
+
+[tasks.deploy]
+script = '''
+  soroban contract deploy \
+  --source admin \
+  --wasm ../../target/wasm32-unknown-unknown/release/lottery.wasm \
+  --network ${network} > /tmp/contract_id.txt
+
+  ERR=`cat /tmp/lottery_error`
+  if [ ! -z "$ERR" ]; then
+    echo "$ERR"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_init]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  init \
+    --admin $(soroban config identity address admin) \
+    --token $(cat /tmp/token_id.txt) \
+    --ticket_price 5001 \
+    --number_of_numbers 5 \
+    --max_range 50 \
+    --thresholds '{"5": 30, "4": 15, "3": 10}' \
+    --min_players_count 3 2>/tmp/lottery_init_events.txt
+'''
+
+[tasks.invoke_buy_ticket]
+script = '''
+  tickets=('[22,33,47,10,49]'
+            '[22,11,2,47,49]'
+            '[1,3,5,47,22]')
+
+  for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    register \
+    --by $(soroban config identity address player_$PLAYER)
+
+    player_ticket=${tickets[$PLAYER-1]}
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    buy_ticket \
+    --by $(soroban config identity address player_$PLAYER) \
+    --ticket $player_ticket
+  done
+'''
+
+[tasks.invoke_play_lottery]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  play_lottery \
+  --random_seed 1234 2>/tmp/lottery_play_lottery_events.txt
+'''
+
+[tasks.invoke_get_pool_balance]
+script = '''
+  balance=$(soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  pool_balance)
+
+  if [[ "$balance" != '"9003"' ]]; then
+    echo "Balance should be "9003" but is $balance"
+    exit 1
+  fi
+'''
+
+[tasks.invoke_check_results]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  check_lottery_results \
+  --lottery_number 1
+'''
+
+[tasks.invoke_contract]
+dependencies = [
+  "invoke_init",
+  "invoke_buy_ticket",
+  "invoke_play_lottery",
+  "invoke_check_results",
+  "invoke_get_pool_balance"
+]
+
+# currently this only displays balance of each player, without checking who has the most
+[tasks.get_balances]
+script = '''
+for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/token_id.txt) \
+    --network ${network} \
+    -- \
+    balance \
+    --id $(soroban config identity address player_$PLAYER)
+  done
+'''
+
+[tasks.get_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address player_1)/transactions" > /tmp/transactions.txt
+'''
+
+[tasks.get_admin_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
+'''
+
+[tasks.store_transaction_result_meta]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+const transactions = fs.readFileSync('/tmp/admin_transactions.txt', 'utf8')
+
+const obj = JSON.parse(transactions)
+const recordsSize = obj['_embedded']['records'].length
+const transaction = obj['_embedded']['records'][recordsSize-3]
+fs.writeFileSync('/tmp/result_meta_xdr.txt', transaction['result_meta_xdr']);
+'''
+
+[tasks.decode_xdr]
+script = '''
+soroban lab xdr dec --type TransactionMeta --output json --xdr "$(cat /tmp/result_meta_xdr.txt)" > /tmp/result_decoded.txt
+'''
+
+[tasks.check_results]
+script_runner = "node"
+script_extension = "js"
+script = '''
+var fs = require('fs');
+
+fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
+    if (err) throw err;
+
+    var obj = JSON.parse(data);
+    for (let i = 0; i < 2; ++i) {
+      var prize = obj['v3']['soroban_meta']['events'][i]['body']['v0']['data']['i128']["lo"]
+      if (prize !== 1500 && prize !== 4500) {
+        throw new Error(`Prize is ${prize} but should be 1500 or 4500`)
+      }
+      console.log(prize);
+    }
+});
+'''
+
+[tasks.calculate_fees]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+function calculateFees(file) {
+  let fee = 0
+  const transactions = fs.readFileSync(file, 'utf8')
+
+  const obj = JSON.parse(transactions)
+  const recordsSize = obj['_embedded']['records'].length
+  for (let i = 1; i < recordsSize; ++i) {
+    const tx = obj['_embedded']['records'][i]
+    fee += parseInt(tx.fee_charged)
+  }
+  return fee
+}
+
+let fee = calculateFees('/tmp/transactions.txt')
+console.log('Player fees: ', fee)
+
+let adminFee = calculateFees('/tmp/admin_transactions.txt')
+console.log('Admin fees: ', adminFee)
+
+console.log('Total fees: ', (fee + adminFee))
+'''
+
+[tasks.run_test]
+# script = '''
+#   echo 'Test currently disabled'
+# '''
+dependencies = [
+  "accounts",
+  "get_token",
+  "deploy",
+  "invoke_contract",
+  "get_balances",
+  "get_transactions",
+  "get_admin_transactions",
+  "store_transaction_result_meta",
+  "decode_xdr",
+  "check_results",
+  "calculate_fees"
+]

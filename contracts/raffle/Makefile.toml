@@ -24,7 +24,6 @@ script = '''
 '''
 
 [tasks.create_account_admin]
-script_runner = "@shell"
 script = '''
   soroban config identity generate admin
   curl "${friendbot}?addr=$(soroban config identity address admin)"
