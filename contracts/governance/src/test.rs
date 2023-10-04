@@ -8,7 +8,7 @@ use super::{GovernanceContract, GovernanceContractClient};
 
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Events},
-    token::{self, AdminClient, Client},
+    token::{self, Client, StellarAssetClient},
     vec, Address, Bytes, BytesN, Env, IntoVal, Symbol, Val, Vec,
 };
 
@@ -36,7 +36,7 @@ fn setup_scenario<'a>() -> Scenario<'a> {
 
     let token_admin = Address::random(&env);
     let token_addr = env.register_stellar_asset_contract(token_admin.clone());
-    let token_admin_client = token::AdminClient::new(&env, &token_addr);
+    let token_admin_client = token::StellarAssetClient::new(&env, &token_addr);
     let token_client = token::Client::new(&env, &token_addr);
 
     let curator = Address::random(&env);
@@ -69,7 +69,7 @@ struct Scenario<'a> {
     token_admin: Address,
     token_addr: Address,
     token_client: Client<'a>,
-    token_admin_client: AdminClient<'a>,
+    token_admin_client: StellarAssetClient<'a>,
     curator: Address,
 }
 
