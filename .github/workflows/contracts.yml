@@ -86,19 +86,14 @@ jobs:
           crate: soroban-cli
           version: "^20.0.0-rc2"
       
-      - uses: actions/download-artifact@v3
-        with:
-          name: wasm-files-${{ matrix.contract }}
-          path: target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm
-
-      - name: Test
-        run: cargo test -p ${{ matrix.contract }}
-
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
           name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
+
+      - name: Test
+        run: cargo test -p ${{ matrix.contract }}
 
       - name: Integration test
         working-directory: contracts/${{ matrix.contract }}
