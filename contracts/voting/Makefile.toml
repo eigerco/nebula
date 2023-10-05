@@ -39,10 +39,7 @@ script = '''
 '''
 
 [tasks.accounts]
-dependencies = [
-  "create_account_admin",
-  "create_account_players"
-]
+dependencies = ["create_account_admin", "create_account_players"]
 
 [tasks.deploy]
 script = '''
@@ -63,7 +60,8 @@ script = '''
   --admin $(soroban config identity address admin) \
   --voting_period_secs 3600 \
   --target_approval_rate_bps 50000 \
-  --total_voters 3
+  --participation 3 \
+  --admin_mode false
 '''
 
 [tasks.invoke_create_proposal]
@@ -74,7 +72,9 @@ script = '''
   --network ${network} \
   -- \
   create_proposal \
-  --id 1
+  --proposer $(soroban config identity address admin) \
+  --id 1 \
+  --payload '{"NewCurator": "GDIY6AQQ75WMD4W46EYB7O6UYMHOCGQHLAQGQTKHDX4J2DYQCHVCR4W4"}'
 '''
 
 [tasks.invoke_vote]
@@ -93,11 +93,7 @@ script = '''
 '''
 
 [tasks.invoke_contract]
-dependencies = [
-  "invoke_init",
-  "invoke_create_proposal",
-  "invoke_vote"
-]
+dependencies = ["invoke_init", "invoke_create_proposal", "invoke_vote"]
 
 [tasks.get_transactions]
 script = '''
@@ -188,7 +184,7 @@ dependencies = [
   "get_admin_transactions",
   "parse_transactions",
   "decode_xdr",
-  "check_result"
+  "check_result",
 ]
 
 [tasks.run_test]
@@ -197,5 +193,5 @@ dependencies = [
   "deploy",
   "invoke_contract",
   "check_results",
-  "calculate_fees"
+  "calculate_fees",
 ]
