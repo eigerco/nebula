@@ -41,8 +41,6 @@ use soroban_sdk::{
     token, Address, BytesN, Env, Map, Symbol,
 };
 
-use voting_contract::ProposalPayload;
-
 #[allow(clippy::too_many_arguments)]
 mod voting_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/voting.wasm");
@@ -334,7 +332,7 @@ impl GovernanceContract {
         env: Env,
         participant: Address,
         id: u64,
-        payload: ProposalPayload,
+        payload: voting_contract::ProposalPayload,
     ) -> Result<(), Error> {
         participant.require_auth();
 
@@ -387,7 +385,7 @@ impl GovernanceContract {
 
         Ok(())
     }
-    
+
     /// Only a whitelisted participant, who is the proposer, can execute the given
     /// proposal.
     ///
@@ -431,11 +429,11 @@ impl GovernanceContract {
         }
 
         match proposal.payload {
-            ProposalPayload::Comment(_) => {}
-            ProposalPayload::CodeUpgrade(wasm_hash) => {
+            voting_contract::ProposalPayload::Comment(_) => {}
+            voting_contract::ProposalPayload::CodeUpgrade(wasm_hash) => {
                 env.deployer().update_current_contract_wasm(wasm_hash)
             }
-            ProposalPayload::NewCurator(address) => {
+            voting_contract::ProposalPayload::NewCurator(address) => {
                 storage.set(&DataKey::Curator, &address);
             }
         }
