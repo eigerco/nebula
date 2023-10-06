@@ -423,7 +423,7 @@ impl GovernanceContract {
             .get::<_, Address>(&DataKey::VotingContractAddress)
             .unwrap();
 
-        let whitelisted_balance: Map<Address, i128> = participant_repo.whitelisted_balance(&env);
+        let whitelisted_balance = participant_repo.whitelisted_balance(&env);
 
         let proposal: Proposal = env.invoke_contract(
             &voting_address,
