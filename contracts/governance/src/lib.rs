@@ -133,7 +133,7 @@ impl GovernanceContract {
                 env.current_contract_address().into_val(&env),
                 voting_period_secs.into_val(&env),
                 target_approval_rate_bps.into_val(&env),
-                (u128::MAX as u128).into_val(&env),
+                u128::MAX.into_val(&env),
                 true.into_val(&env),
             ],
         );
