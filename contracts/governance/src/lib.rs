@@ -320,7 +320,7 @@ impl GovernanceContract {
         Ok(())
     }
 
-    /// Only curator can invoke this function for whitelisting a participant.
+    /// Allows any whitelisted participant to create a new proposal.
     ///
     /// # Arguments
     ///
