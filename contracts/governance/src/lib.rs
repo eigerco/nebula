@@ -36,9 +36,10 @@
 #![no_std]
 
 use participant::{Participant, Repository};
+use shared::voting::{Proposal, ProposalPayload};
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, storage::Persistent,
-    token, Address, BytesN, Env, Map, Symbol,
+    token, vec, Address, BytesN, Env, IntoVal, Map, Symbol, Val,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -123,15 +124,18 @@ impl GovernanceContract {
         let voting_contract_hash = env.deployer().upload_contract_wasm(voting_contract::WASM);
         let deployer = env.deployer().with_current_contract(salt);
         let voting_contract_address = deployer.deploy(voting_contract_hash);
-        let voting_client = voting_contract::Client::new(&env, &voting_contract_address);
 
-        // Init the voting contract.
-        voting_client.init(
-            &env.current_contract_address(),
-            &voting_period_secs,
-            &target_approval_rate_bps,
-            &u128::MAX, // This is a dummy value as participation state will be managed by this contract due to data locality.  It needs to be positive.
-            &true,      // Only this contract can do operation on behalf of the participants.
+        let _res: Val = env.invoke_contract(
+            &voting_contract_address,
+            &Symbol::new(&env, "init"),
+            vec![
+                &env,
+                env.current_contract_address().into_val(&env),
+                voting_period_secs.into_val(&env),
+                target_approval_rate_bps.into_val(&env),
+                (u128::MAX as u128).into_val(&env),
+                true.into_val(&env),
+            ],
         );
 
         env.events().publish(
@@ -332,7 +336,7 @@ impl GovernanceContract {
         env: Env,
         participant: Address,
         id: u64,
-        payload: voting_contract::ProposalPayload,
+        payload: ProposalPayload,
     ) -> Result<(), Error> {
         participant.require_auth();
 
@@ -349,9 +353,16 @@ impl GovernanceContract {
             .get::<_, Address>(&DataKey::VotingContractAddress)
             .unwrap();
 
-        let voting_client = voting_contract::Client::new(&env, &voting_address);
-
-        voting_client.create_proposal(&participant, &id, &payload);
+        let _res: Val = env.invoke_contract(
+            &voting_address,
+            &Symbol::new(&env, "create_proposal"),
+            vec![
+                &env,
+                participant.into_val(&env),
+                id.into_val(&env),
+                payload.into_val(&env),
+            ],
+        );
 
         Ok(())
     }
@@ -379,9 +390,11 @@ impl GovernanceContract {
             .get::<_, Address>(&DataKey::VotingContractAddress)
             .unwrap();
 
-        let voting_client = voting_contract::Client::new(&env, &voting_address);
-
-        voting_client.vote(&participant, &id);
+        let _res: Val = env.invoke_contract(
+            &voting_address,
+            &Symbol::new(&env, "vote"),
+            vec![&env, participant.into_val(&env), id.into_val(&env)],
+        );
 
         Ok(())
     }
@@ -410,11 +423,13 @@ impl GovernanceContract {
             .get::<_, Address>(&DataKey::VotingContractAddress)
             .unwrap();
 
-        let voting_client = voting_contract::Client::new(&env, &voting_address);
+        let whitelisted_balance: Map<Address, i128> = participant_repo.whitelisted_balance(&env);
 
-        let whitelisted_balance = participant_repo.whitelisted_balance(&env);
-
-        let proposal = voting_client.find_proposal(&id);
+        let proposal: Proposal = env.invoke_contract(
+            &voting_address,
+            &Symbol::new(&env, "find_proposal"),
+            vec![&env, id.into_val(&env)],
+        );
 
         if proposal.proposer != participant {
             return Err(Error::OnlyAuthorCanExecuteProposals);
@@ -424,23 +439,37 @@ impl GovernanceContract {
             return Err(Error::AlreadyExecuted);
         }
 
-        if !voting_client.is_proposal_approved_for_balance(&proposal.id, &whitelisted_balance) {
+        let is_approved_for_balance: bool = env.invoke_contract(
+            &voting_address,
+            &Symbol::new(&env, "is_proposal_approved_for_balance"),
+            vec![
+                &env,
+                proposal.id.into_val(&env),
+                whitelisted_balance.into_val(&env),
+            ],
+        );
+
+        if !is_approved_for_balance {
             return Err(Error::ProposalNeedsApproval);
         }
 
         match proposal.payload {
-            voting_contract::ProposalPayload::Comment(_) => {}
-            voting_contract::ProposalPayload::CodeUpgrade(wasm_hash) => {
+            ProposalPayload::Comment(_) => {}
+            ProposalPayload::CodeUpgrade(wasm_hash) => {
                 env.deployer().update_current_contract_wasm(wasm_hash)
             }
-            voting_contract::ProposalPayload::NewCurator(address) => {
+            ProposalPayload::NewCurator(address) => {
                 storage.set(&DataKey::Curator, &address);
             }
         }
 
         Self::mark_proposal_as_executed(&storage, id);
 
-        voting_client.update_proposal_with_balance(&id, &whitelisted_balance);
+        let _res: Val = env.invoke_contract(
+            &voting_address,
+            &Symbol::new(&env, "update_proposal_with_balance"),
+            vec![&env, id.into_val(&env), whitelisted_balance.into_val(&env)],
+        );
 
         env.events().publish(
             (Symbol::new(&env, "proposal_executed"), &participant, id),

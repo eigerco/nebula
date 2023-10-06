@@ -2,10 +2,9 @@
 
 extern crate std;
 
-use crate::voting_contract::ProposalPayload;
-
 use super::{GovernanceContract, GovernanceContractClient};
 
+use shared::voting::ProposalPayload;
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, BytesN as _, Events},
     token::{self, Client, StellarAssetClient},
