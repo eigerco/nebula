@@ -154,6 +154,11 @@ impl GovernanceContract {
         storage.set(&DataKey::ExecutedProposals, &Map::<u64, ()>::new(&env));
     }
 
+    /// This is a workaround for an under investigation bug. See https://github.com/eigerco/nebula/issues/41.
+    pub fn register(_: Env, participant: Address) {
+        participant.require_auth();
+    }
+
     /// Participants can join the DAO by invoking this function.
     ///
     /// # Arguments
