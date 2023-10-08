@@ -1,0 +1,309 @@
+[env]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.futurenet]
+friendbot = "https://friendbot-futurenet.stellar.org/"
+network = "futurenet"
+server = "https://horizon-futurenet.stellar.org/"
+
+[env.standalone]
+friendbot = "http://localhost:8000/friendbot"
+network = "standalone"
+server = "http://localhost:8000"
+
+[tasks.run_standalone_server]
+script = '''
+  docker run --rm -it \
+    -p 8000:8000 \
+    --name stellar \
+    stellar/quickstart:soroban-dev@sha256:a6b03cf6b0433c99f2f799b719f0faadbb79684b1b763e7674ba749fb0f648ee \
+    --standalone \
+    --enable-soroban-rpc
+'''
+
+[tasks.create_account_admin]
+script = '''
+  soroban config identity generate admin
+  curl "${friendbot}?addr=$(soroban config identity address admin)"
+'''
+
+[tasks.create_account_players]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    soroban config identity generate player_$PLAYER 
+    curl "${friendbot}?addr=$(soroban config identity address player_$PLAYER)"
+  done
+'''
+
+[tasks.accounts]
+dependencies = ["create_account_admin", "create_account_players"]
+
+[tasks.deploy]
+script = '''
+  soroban contract deploy \
+  --source admin \
+  --wasm ../../target/wasm32-unknown-unknown/release/governance.wasm \
+  --network ${network} > /tmp/contract_id.txt
+'''
+
+[tasks.invoke_init]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source admin \
+  --network ${network} \
+  -- \
+  init \
+  --curator $(soroban config identity address admin) \
+  --token CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT \
+  --voting_period_secs 3600 \
+  --target_approval_rate_bps 5000 \
+  --salt ef
+'''
+[tasks.invoke_register]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Registering player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    register \
+    --participant $(soroban config identity address player_$PLAYER)
+  done
+'''
+
+[tasks.invoke_join]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Joining player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    join \
+    --participant_addr $(soroban config identity address player_$PLAYER) \
+    --amount 1000
+  done
+'''
+
+[tasks.invoke_whitelist]
+script = '''
+for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source admin \
+    --network ${network} \
+    -- \
+    whitelist \
+    --participant $(soroban config identity address player_$PLAYER)
+done
+'''
+
+[tasks.invoke_stake]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  stake \
+  --participant $(soroban config identity address player_1) \
+  --amount 100
+'''
+
+[tasks.invoke_withdraw]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  withdraw \
+  --participant $(soroban config identity address player_1) \
+  --amount 100
+'''
+
+[tasks.invoke_new_proposal]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  new_proposal \
+  --participant $(soroban config identity address player_1) \
+  --id 1 \
+  --payload '{"Comment": "efe"}'
+'''
+
+[tasks.invoke_vote]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Vote from player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    vote \
+    --participant $(soroban config identity address player_$PLAYER) \
+    --id 1
+  done
+'''
+
+[tasks.invoke_execute_proposal]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  execute_proposal \
+  --participant $(soroban config identity address player_1) \
+  --id 1
+'''
+
+[tasks.invoke_leave]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Vote from player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    leave \
+    --participant $(soroban config identity address player_$PLAYER)
+  done
+'''
+
+[tasks.invoke_contract]
+dependencies = [
+  "invoke_init",
+  "invoke_register",
+  "invoke_join",
+  "invoke_whitelist",
+  "invoke_stake",
+  "invoke_withdraw",
+  "invoke_new_proposal",
+  "invoke_vote",
+  "invoke_execute_proposal",
+  "invoke_leave",
+]
+
+[tasks.get_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
+'''
+
+[tasks.get_admin_transactions]
+script = '''
+curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
+'''
+
+[tasks.parse_transactions]
+script_runner = "node"
+script_extension = "js"
+script = '''
+var fs = require('fs');
+
+fs.readFile('/tmp/transactions.txt', 'utf-8', function (err, data) {
+    if (err) throw err;
+
+    var obj = JSON.parse(data);
+    var recordsSize = obj['_embedded']['records'].length
+    var res = obj['_embedded']['records'][recordsSize-1]['result_meta_xdr']
+
+    try {
+      fs.writeFileSync('/tmp/result_meta_xdr.txt', res)
+    } catch (err) {
+      console.error(err)
+    }
+});
+'''
+
+[tasks.decode_xdr]
+script = '''
+soroban lab xdr dec --type TransactionMeta --output json --xdr "$(cat /tmp/result_meta_xdr.txt)" > /tmp/result_decoded.txt
+'''
+
+[tasks.check_result]
+script_runner = "node"
+script_extension = "js"
+script = '''
+var fs = require('fs');
+
+fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
+    if (err) throw err;
+
+    var obj = JSON.parse(data);
+
+    var res = obj['v3']['soroban_meta']['events'][2]['body']['v0']['topics']['0']['symbol']
+
+    if (res !== "participant_left") {
+      throw new Error(`Result is ${res} but should be participant_left`)
+    }
+    console.log(res)
+});
+'''
+
+[tasks.calculate_fees]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+function calculateFees(file) {
+  let fee = 0
+  const transactions = fs.readFileSync(file, 'utf8')
+
+  const obj = JSON.parse(transactions)
+  const recordsSize = obj['_embedded']['records'].length
+  for (let i = 1; i < recordsSize; ++i) {
+    const tx = obj['_embedded']['records'][i]
+    fee += parseInt(tx.fee_charged)
+  }
+  return fee
+}
+
+let fee = calculateFees('/tmp/transactions.txt')
+console.log('Player fees: ', fee)
+
+let adminFee = calculateFees('/tmp/admin_transactions.txt')
+console.log('Admin fees: ', adminFee)
+
+console.log('Total fees: ', (fee + adminFee))
+'''
+
+[tasks.check_results]
+dependencies = [
+  "get_transactions",
+  "get_admin_transactions",
+  "parse_transactions",
+  "decode_xdr",
+  "check_result",
+]
+
+[tasks.run_test]
+dependencies = [
+  "accounts",
+  "deploy",
+  "invoke_contract",
+  "check_results",
+  "calculate_fees",
+]
