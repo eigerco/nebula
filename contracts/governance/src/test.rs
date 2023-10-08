@@ -549,7 +549,6 @@ fn only_author_can_execute_proposals() {
         &proposal_id,
         &ProposalPayload::Comment(BytesN::random(&sc.env)),
     );
-    sc.env.budget().reset_unlimited(); // Todo review this limits.
 
     sc.contract_client.vote(&participant_1, &proposal_id);
     sc.contract_client.vote(&participant_2, &proposal_id);
@@ -584,8 +583,6 @@ fn whitelisted_participant_can_execute_standard_proposal() {
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);
-
-    sc.env.budget().reset_unlimited(); // Todo review this limits.
 
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
@@ -640,8 +637,6 @@ fn proposals_can_only_be_executed_once() {
 
     sc.contract_client.vote(&participant_1, &proposal_id);
 
-    sc.env.budget().reset_unlimited(); // Todo review this limits.
-
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
 
@@ -681,8 +676,6 @@ fn execute_a_code_upgrade_proposal_flow() {
 
     sc.contract_client.vote(&participant_1, &proposal_id);
 
-    sc.env.budget().reset_unlimited(); // Todo review this limits.
-
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
 }
@@ -709,8 +702,6 @@ fn execute_a_curator_change_flow() {
     );
 
     sc.contract_client.vote(&participant_1, &proposal_id);
-
-    sc.env.budget().reset_unlimited(); // Todo review this limits.
 
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
