@@ -425,7 +425,7 @@ impl GovernanceContract {
 
         let whitelisted_balance = participant_repo.whitelisted_balance(&env);
 
-        let proposal: Proposal = env.invoke_contract(
+        let mut proposal: Proposal = env.invoke_contract(
             &voting_address,
             &Symbol::new(&env, "find_proposal"),
             vec![&env, id.into_val(&env)],
@@ -439,36 +439,29 @@ impl GovernanceContract {
             return Err(Error::AlreadyExecuted);
         }
 
-        let is_approved_for_balance: bool = env.invoke_contract(
-            &voting_address,
-            &Symbol::new(&env, "is_proposal_approved_for_balance"),
-            vec![
-                &env,
-                proposal.id.into_val(&env),
-                whitelisted_balance.into_val(&env),
-            ],
-        );
+        proposal
+            .set_participation_from_balance(&whitelisted_balance)
+            .unwrap();
 
-        if !is_approved_for_balance {
+        if !proposal.is_approved() {
             return Err(Error::ProposalNeedsApproval);
         }
 
-        match proposal.payload {
+        match &proposal.payload {
             ProposalPayload::Comment(_) => {}
-            ProposalPayload::CodeUpgrade(wasm_hash) => {
-                env.deployer().update_current_contract_wasm(wasm_hash)
-            }
+            ProposalPayload::CodeUpgrade(wasm_hash) => env
+                .deployer()
+                .update_current_contract_wasm(wasm_hash.clone()),
             ProposalPayload::NewCurator(address) => {
-                storage.set(&DataKey::Curator, &address);
+                storage.set(&DataKey::Curator, address);
             }
         }
 
         Self::mark_proposal_as_executed(&storage, id);
-
         let _res: Val = env.invoke_contract(
             &voting_address,
-            &Symbol::new(&env, "update_proposal_with_balance"),
-            vec![&env, id.into_val(&env), whitelisted_balance.into_val(&env)],
+            &Symbol::new(&env, "update_proposal"),
+            vec![&env, proposal.into_val(&env)],
         );
 
         env.events().publish(

@@ -423,21 +423,23 @@ fn proposals_can_be_updated_only_by_admin() {
     client.vote(&voter_1, &1);
     client.vote(&voter_2, &1);
 
-    let proposal = client.find_proposal(&1);
+    let mut proposal = client.find_proposal(&1);
 
     let mut balance = Map::<Address, i128>::new(&env);
     balance.set(voter_1, 1000);
     balance.set(voter_2, 1000);
 
-    client.update_proposal_with_balance(&proposal.id, &balance);
+    proposal.set_participation_from_balance(&balance).unwrap();
+
+    client.update_proposal(&proposal);
 
     assert_auth(
         &env.auths(),
         0,
         admin,
         client.address.clone(),
-        Symbol::new(&env, "update_proposal_with_balance"),
-        (proposal.id, balance).into_val(&env),
+        Symbol::new(&env, "update_proposal"),
+        (proposal,).into_val(&env),
     );
 
     // If we retrieve the proposal again, is updated.
@@ -451,34 +453,17 @@ fn proposals_can_be_updated_only_by_admin() {
 fn proposals_can_be_updated_only_if_they_exist_first() {
     let (env, client, _) = setup_test();
     env.mock_all_auths();
-    let balance = Map::<Address, i128>::new(&env);
-    client.update_proposal_with_balance(&1, &balance);
-}
-
-#[test]
-fn is_proposal_approved_for_balance() {
-    let (env, client, _) = setup_test();
-    env.mock_all_auths();
-
-    client.create_proposal(
-        &client.address,
-        &1,
-        &ProposalPayload::Comment(BytesN::random(&env)),
-    );
-
-    let voter_1 = Address::random(&env);
-    let voter_2 = Address::random(&env);
-
-    client.vote(&voter_1, &1);
-    client.vote(&voter_2, &1);
-
-    let proposal = client.find_proposal(&1);
-
-    let mut balance = Map::<Address, i128>::new(&env);
-    balance.set(voter_1, 1000);
-    balance.set(voter_2, 1000);
-
-    assert!(client.is_proposal_approved_for_balance(&proposal.id, &balance))
+    let proposal = Proposal {
+        id: 112,
+        payload: ProposalPayload::Comment(BytesN::random(&env)),
+        proposer: Address::random(&env),
+        voting_end_time: 123123,
+        target_approval_rate_bps: 5000,
+        participation: 0,
+        total_participation: 0,
+        voters: Map::<Address, bool>::new(&env),
+    };
+    client.update_proposal(&proposal);
 }
 
 #[test]

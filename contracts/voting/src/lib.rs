@@ -239,24 +239,11 @@ impl ProposalVotingContract {
             .ok_or(Error::KeyExpected)?;
 
         proposal_storage.get(id).ok_or(Error::NotFound)
-    }
+    }   
 
-    pub fn is_proposal_approved_for_balance(
+    pub fn update_proposal(
         env: Env,
-        id: u64,
-        balance: Map<Address, i128>,
-    ) -> Result<bool, Error> {
-        Self::check_admin_mode(&env.storage().persistent());
-
-        let mut proposal = Self::find_proposal(env, id)?;
-        proposal.set_participation_from_balance(&balance)?;
-        Ok(proposal.is_approved())
-    }
-
-    pub fn update_proposal_with_balance(
-        env: Env,
-        id: u64,
-        balance: Map<Address, i128>,
+        new_proposal: Proposal,
     ) -> Result<(), Error> {
         let storage = env.storage().persistent();
 
@@ -269,11 +256,9 @@ impl ProposalVotingContract {
             .get::<_, Map<u64, Proposal>>(&DataKey::Proposals)
             .ok_or(Error::KeyExpected)?;
 
-        let mut proposal = proposal_storage.get(id).ok_or(Error::NotFound)?;
+        let old_proposal = proposal_storage.get(new_proposal.id).ok_or(Error::NotFound)?;
 
-        proposal.set_participation_from_balance(&balance)?;
-
-        proposal_storage.set(id, proposal);
+        proposal_storage.set(old_proposal.id, new_proposal);
 
         storage.set(&DataKey::Proposals, &proposal_storage);
         Ok(())
