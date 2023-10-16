@@ -12,14 +12,14 @@ The importer hooks to the build process of rustc.
 
 ```toml
 [build-dependencies]
-nebula-importer = { git = "https://github.com/eigerco/nebula" }
+nebula = { git = "https://github.com/eigerco/nebula" }
 ```
 
 ### Create a `build.rs`
 
 ```rust
 fn main() {
-    nebula_importer::sync_all_contracts();
+    nebula::build::sync_all_contracts();
 }
 ```
 
