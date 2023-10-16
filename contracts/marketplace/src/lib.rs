@@ -1,3 +1,7 @@
+//! # Marketplace Contract
+//! 
+//! The marketplace contract enables the creation and management of listings for various assets.
+//! Users can buy, update, pause, and remove listings. This contract also supports a fee or commission for transactions.
 #![no_std]
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error,
