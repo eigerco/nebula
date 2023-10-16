@@ -4,7 +4,7 @@ extern crate std;
 
 use crate::*;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events},
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
     Address, Env, IntoVal, Symbol, Val, Vec,
 };
 
@@ -38,7 +38,7 @@ fn cannot_initialize_twice() {
     );
 }
 
-fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::StellarAssetClient<'a>{
+fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::StellarAssetClient<'a> {
     token::StellarAssetClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
@@ -71,9 +71,9 @@ fn splits_works() {
         (50i128,).into_val(&env),
     );
 
-    let last_event = env.events().all().slice(env.events().all().len() - 1..);
-    let (client_address, _symbol, _value) = last_event.get(0).unwrap();
-    assert_eq!(client_address, test_token_client.address);
+    let token_client = token::Client::new(&env, &test_token_client.address);
+    let balance = token_client.balance(&token_admin);
+    assert_eq!(balance, 50);
 }
 
 #[test]

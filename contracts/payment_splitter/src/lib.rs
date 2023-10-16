@@ -1,11 +1,14 @@
 //! Payment splitter contract
 //!
+//! The payment splitter contract allows you to deploy a contract that sets a group of recipients.
+//! The admin can invoke the payment splitting multiple times and split tokens between recipients
+//!
 
 #![no_std]
 
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, token, Address,
-    ConversionError, Env, Vec,
+    ConversionError, Env, Symbol, Vec,
 };
 
 #[contracterror]
@@ -16,7 +19,8 @@ pub enum Error {
     Conversion = 2,
     KeyExpected = 3,
     InvalidAmount = 4,
-    NoStakeholders = 5
+    NoStakeholders = 5,
+    NotInitialized = 6,
 }
 
 impl From<ConversionError> for Error {
@@ -57,13 +61,10 @@ impl PaymentSplitterContract {
             panic_with_error!(&env, Error::NoStakeholders);
         }
         let storage = env.storage().persistent();
-        if storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized)
-            .is_some()
-        {
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_some() {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
-        storage.set(&DataKey::AlreadyInitialized, &true);
+        storage.set(&DataKey::AlreadyInitialized, &());
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::PaymentSplit, &PaymentSplit { stakeholders });
@@ -72,10 +73,13 @@ impl PaymentSplitterContract {
 
     /// Split an amount between the saved stakeholders
     pub fn split(env: Env, amount: i128) -> Result<(), Error> {
-        if amount == 0 {
+        if amount <= 0 {
             panic_with_error!(&env, Error::InvalidAmount);
         }
         let storage = env.storage().persistent();
+        if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
         let admin: Address = storage.get(&DataKey::Admin).ok_or(Error::KeyExpected)?;
         let token: Address = storage.get(&DataKey::Token).ok_or(Error::KeyExpected)?;
         admin.require_auth();
@@ -87,11 +91,15 @@ impl PaymentSplitterContract {
         if amount > balance {
             panic_with_error!(&env, Error::InvalidAmount);
         }
-        let payout = amount.checked_div(i128::from(split.stakeholders.len())).unwrap();
+        let payout = amount
+            .checked_div(i128::from(split.stakeholders.len()))
+            .unwrap();
 
         for stakeholder in split.stakeholders {
             token.transfer(&admin, &stakeholder, &payout);
         }
+        let topics = (Symbol::new(&env, "split"), &admin);
+        env.events().publish(topics, payout);
         Ok(())
     }
 }
