@@ -88,6 +88,8 @@ pub enum Error {
     OnlyAuthorCanExecuteProposals = 8,
     // Proposals can only be executed once.
     AlreadyExecuted = 9,
+    // Not initialized
+    NotInitialized = 10,
 }
 
 #[contract]
@@ -170,6 +172,9 @@ impl GovernanceContract {
         participant_addr.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
         let mut participant = Participant::new(participant_addr.clone());
 
@@ -182,6 +187,12 @@ impl GovernanceContract {
             participant_repo.count(),
         );
         Ok(())
+    }
+
+    fn must_be_initialized(storage: &Persistent) -> Result<(), Error> {
+        storage
+            .get::<_, ()>(&DataKey::Initialized)
+            .ok_or(Error::NotInitialized)
     }
 
     fn stake_funds(env: &Env, participant: &mut Participant, amount: i128) -> Result<(), Error> {
@@ -223,6 +234,8 @@ impl GovernanceContract {
 
         let storage = env.storage().persistent();
 
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
 
         let mut stored_participant = participant_repo.find(participant.clone())?;
@@ -245,6 +258,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
 
         let mut stored_participant = participant_repo.find(participant.clone())?;
@@ -293,6 +309,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
 
         let mut stored_participant = participant_repo.find(participant.clone())?;
@@ -312,6 +331,9 @@ impl GovernanceContract {
     /// - `participant_addr` - The participant address for whitelisting.
     pub fn whitelist(env: Env, participant: Address) -> Result<(), Error> {
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let curator = storage.get::<_, Address>(&DataKey::Curator).unwrap();
         curator.require_auth();
 
@@ -346,6 +368,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
 
         let stored_participant = participant_repo.find(participant.clone())?;
@@ -383,6 +408,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = participant::Repository::new(&storage)?;
 
         let stored_participant = participant_repo.find(participant.clone())?;
@@ -416,6 +444,9 @@ impl GovernanceContract {
         participant.require_auth();
 
         let storage = env.storage().persistent();
+
+        Self::must_be_initialized(&storage)?;
+
         let mut participant_repo = Repository::new(&storage)?;
 
         let stored_participant = participant_repo.find(participant.clone())?;

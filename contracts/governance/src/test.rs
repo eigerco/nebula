@@ -706,3 +706,95 @@ fn execute_a_curator_change_flow() {
     sc.contract_client
         .execute_proposal(&participant_1, &proposal_id);
 }
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn join_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.join(&Address::random(&env), &200);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn stake_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.stake(&Address::random(&env), &200);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn leave_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.leave(&Address::random(&env));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn withdraw_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.withdraw(&Address::random(&env), &100);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn whitelist_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.whitelist(&Address::random(&env));
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn new_proposal_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.new_proposal(
+        &Address::random(&env),
+        &1,
+        &shared::voting::ProposalPayload::Comment(BytesN::random(&env)),
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn vote_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.vote(&Address::random(&env), &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn execute_proposal_can_only_be_called_when_initiliazed() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_client = GovernanceContractClient::new(&env, &contract_id);
+    contract_client.execute_proposal(&Address::random(&env), &1);
+}
