@@ -72,13 +72,13 @@ impl ProposalVotingContract {
         let storage = env.storage().persistent();
 
         if storage
-            .get::<_, bool>(&DataKey::AlreadyInitialized)
+            .get::<_, ()>(&DataKey::AlreadyInitialized)
             .is_some()
         {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
 
-        storage.set(&DataKey::AlreadyInitialized, &true);
+        storage.set(&DataKey::AlreadyInitialized, &());
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
         // Todo, to better study if this parameters would be better as hardcoded values, due to fees. See https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-fee .
