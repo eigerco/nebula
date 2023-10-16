@@ -33,26 +33,6 @@ fn cannot_initialize_marketplace_twice() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #2)")]
-fn cannot_initialize_with_excess_percentage() {
-    let (env, client) = setup_test();
-    let admin = Address::random(&env);
-    let asset = Address::random(&env);
-    let token = create_token_asset(&env, &asset);
-    client.init(&token.address, &admin);
-}
-
-#[test]
-#[should_panic(expected = "Error(Contract, #2)")]
-fn cannot_initialize_with_negative_percentage() {
-    let (env, client) = setup_test();
-    let admin = Address::random(&env);
-    let asset = Address::random(&env);
-    let token = create_token_asset(&env, &asset);
-    client.init(&token.address, &admin);
-}
-
-#[test]
 fn can_create_listing() {
     let (env, client) = setup_test();
     let admin = Address::random(&env);
@@ -159,7 +139,7 @@ fn can_update_a_listing() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #5)")]
+#[should_panic(expected = "Error(Contract, #4)")]
 fn cannot_sell_when_unlisted() {
     let (env, client) = setup_test();
     let admin = Address::random(&env);
