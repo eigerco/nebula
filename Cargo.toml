@@ -24,6 +24,7 @@ members = [
     "contracts/simple_voting",
     "contracts/raffle",
     "contracts/marketplace",
+    "contracts/lottery",
     "crates/nebula-importer",
     "crates/nebula-publish",
     "examples/oci_cross_contract",
