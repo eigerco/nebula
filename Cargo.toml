@@ -20,6 +20,8 @@ publish = ["nebula-publish"]
 resolver = "2"
 # Our workspace members include the packages in the contracts directory.
 members = [
+    "contracts/governance",
+    "contracts/shared",
     "contracts/voting",
     "contracts/simple_voting",
     "contracts/raffle",
