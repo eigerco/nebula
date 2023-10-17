@@ -133,7 +133,7 @@ for RECIPIENT in 1 2 3
     --network ${network} \
     -- \
     balance \
-    --id $(soroban config identity address player_$RECIPIENT) 2>/tmp/payment_splitter_error
+    --id $(soroban config identity address recipient_$RECIPIENT) 2>/tmp/payment_splitter_error
 
     ERR=`cat /tmp/payment_splitter_error`
     if [ ! -z "$ERR" ]; then
