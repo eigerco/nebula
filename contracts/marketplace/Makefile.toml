@@ -71,8 +71,7 @@ script = '''
   -- \
   init \
   --token $(cat /tmp/token_id.txt) \
-  --admin $(soroban config identity address admin) \
-  --percentage 1 \
+  --admin $(soroban config identity address admin)
 '''
 
 
