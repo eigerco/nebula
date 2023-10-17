@@ -35,6 +35,7 @@ export function Toolbox({
           <option>Raffle</option>
           <option>Voting</option>
           <option>Lottery</option>
+          <option>Governance</option>
           <option disabled>Auction</option>
           <option disabled>MarketPlace</option>
           <option disabled>FundMe</option>
