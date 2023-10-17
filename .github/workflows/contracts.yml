@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting]
+        contract: [raffle, voting, governance]
 
     steps:
       - name: Checkout repository
@@ -29,18 +29,22 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            lib/target
+            target
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
 
       - name: Prepare target
         run: rustup target add wasm32-unknown-unknown
 
+      - name: Build specific contracts dependencies
+        run: cargo build -p voting --release --target wasm32-unknown-unknown --verbose
+
       - name: Build
         run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
         run: cargo clippy -p ${{ matrix.contract }} --all-targets --all-features
+
       - name: Upload compiled contracts
         uses: actions/upload-artifact@v3
         with:
@@ -52,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting]
+        contract: [raffle, voting, governance]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -66,7 +70,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            contracts/target
+            target
           key: 1-${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-build
 
@@ -81,15 +85,15 @@ jobs:
         with:
           crate: soroban-cli
           version: "^20.0.0-rc2"
-
-      - name: Test
-        run: cargo test -p ${{ matrix.contract }}
-
+      
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
           name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
+
+      - name: Test
+        run: cargo test -p ${{ matrix.contract }}
 
       - name: Integration test
         working-directory: contracts/${{ matrix.contract }}
