@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting, payment_splitter, governance]
+        contract: [raffle, voting, governance, payment_splitter]
 
     steps:
       - name: Checkout repository
@@ -39,8 +39,8 @@ jobs:
       - name: Build specific contracts dependencies
         run: cargo build -p voting --release --target wasm32-unknown-unknown --verbose
 
-      - name: Build
-        run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
+      - name: Build Voting dep
+        run: cargo build -p voting --release --target wasm32-unknown-unknown --verbose
 
       - name: Lint
         run: cargo clippy -p ${{ matrix.contract }} --all-targets --all-features
