@@ -86,7 +86,7 @@ script = '''
   init \
   --admin $(soroban config identity address admin) \
   --token $(cat /tmp/token_id.txt) \
-  --stakeholders $(soroban config identity address recipient_1),$(soroban config identity address recipient_2),$(soroban config identity address recipient_3)  \
+  --stakeholders '[ "'$(soroban config identity address recipient_1)'","'$(soroban config identity address recipient_2)'","'$(soroban config identity address recipient_3)'" ]' \
   2>/tmp/payment_splitter_error
 
   ERR=`cat /tmp/payment_splitter_error`
