@@ -37,7 +37,7 @@ jobs:
         run: rustup target add wasm32-unknown-unknown
 
       - name: Build specific contracts dependencies
-        run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
+        run: cargo build -p voting --release --target wasm32-unknown-unknown --verbose
 
       - name: Build
         run: cargo build -p ${{ matrix.contract }} --release --target wasm32-unknown-unknown --verbose
