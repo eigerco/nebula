@@ -1,15 +1,16 @@
 [package]
-name = "voting"
+name = "governance"
 version = "0.1.0"
 edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-shared = { path = "../shared" }
+shared = { path= "../shared"}
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-rstest = "0.17.0"

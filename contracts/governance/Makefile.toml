@@ -45,7 +45,7 @@ dependencies = ["create_account_admin", "create_account_players"]
 script = '''
   soroban contract deploy \
   --source admin \
-  --wasm ../../target/wasm32-unknown-unknown/release/voting.wasm \
+  --wasm ../../target/wasm32-unknown-unknown/release/governance.wasm \
   --network ${network} > /tmp/contract_id.txt
 '''
 
@@ -57,43 +57,154 @@ script = '''
   --network ${network} \
   -- \
   init \
-  --admin $(soroban config identity address admin) \
+  --curator $(soroban config identity address admin) \
+  --token CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT \
   --voting_period_secs 3600 \
-  --target_approval_rate_bps 50000 \
-  --participation 3 \
-  --admin_mode false
+  --target_approval_rate_bps 5000 \
+  --salt ef
+'''
+[tasks.invoke_register]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Registering player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    register \
+    --participant $(soroban config identity address player_$PLAYER)
+  done
 '''
 
-[tasks.invoke_create_proposal]
+[tasks.invoke_join]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Joining player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    join \
+    --participant_addr $(soroban config identity address player_$PLAYER) \
+    --amount 1000
+  done
+'''
+
+[tasks.invoke_whitelist]
+script = '''
+for PLAYER in 1 2 3
+  do
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source admin \
+    --network ${network} \
+    -- \
+    whitelist \
+    --participant $(soroban config identity address player_$PLAYER)
+done
+'''
+
+[tasks.invoke_stake]
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
-  --source admin \
+  --source player_1 \
   --network ${network} \
   -- \
-  create_proposal \
-  --proposer $(soroban config identity address admin) \
+  stake \
+  --participant $(soroban config identity address player_1) \
+  --amount 100
+'''
+
+[tasks.invoke_withdraw]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  withdraw \
+  --participant $(soroban config identity address player_1) \
+  --amount 100
+'''
+
+[tasks.invoke_new_proposal]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  new_proposal \
+  --participant $(soroban config identity address player_1) \
   --id 1 \
-  --payload '{"NewCurator": "GDIY6AQQ75WMD4W46EYB7O6UYMHOCGQHLAQGQTKHDX4J2DYQCHVCR4W4"}'
+  --payload '{"Comment": "efe"}'
 '''
 
 [tasks.invoke_vote]
 script = '''
   for PLAYER in 1 2 3
   do
+    echo "Vote from player $PLAYER ..."
+
     soroban contract invoke \
     --id $(cat /tmp/contract_id.txt) \
     --source player_$PLAYER \
     --network ${network} \
     -- \
     vote \
-    --voter $(soroban config identity address player_$PLAYER) \
+    --participant $(soroban config identity address player_$PLAYER) \
     --id 1
   done
 '''
 
+[tasks.invoke_execute_proposal]
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source player_1 \
+  --network ${network} \
+  -- \
+  execute_proposal \
+  --participant $(soroban config identity address player_1) \
+  --id 1
+'''
+
+[tasks.invoke_leave]
+script = '''
+  for PLAYER in 1 2 3
+  do
+    echo "Vote from player $PLAYER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source player_$PLAYER \
+    --network ${network} \
+    -- \
+    leave \
+    --participant $(soroban config identity address player_$PLAYER)
+  done
+'''
+
 [tasks.invoke_contract]
-dependencies = ["invoke_init", "invoke_create_proposal", "invoke_vote"]
+dependencies = [
+  "invoke_init",
+  "invoke_register",
+  "invoke_join",
+  "invoke_whitelist",
+  "invoke_stake",
+  "invoke_withdraw",
+  "invoke_new_proposal",
+  "invoke_vote",
+  "invoke_execute_proposal",
+  "invoke_leave",
+]
 
 [tasks.get_transactions]
 script = '''
@@ -141,10 +252,11 @@ fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
     if (err) throw err;
 
     var obj = JSON.parse(data);
-    var res = obj['v3']['soroban_meta']['events'][0]['body']['v0']['data']['u32']
 
-    if (res !== 6666) {
-      throw new Error(`Result is ${res} but should be 6666`)
+    var res = obj['v3']['soroban_meta']['events'][2]['body']['v0']['topics']['0']['symbol']
+
+    if (res !== "participant_left") {
+      throw new Error(`Result is ${res} but should be participant_left`)
     }
     console.log(res)
 });
