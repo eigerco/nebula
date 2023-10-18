@@ -1,3 +1,5 @@
+extend = "../Makefile.toml"
+
 [env]
 friendbot = "https://friendbot-futurenet.stellar.org/"
 network = "futurenet"
@@ -42,6 +44,7 @@ script = '''
 dependencies = ["create_account_admin", "create_account_players"]
 
 [tasks.deploy]
+plugin = "retry_script"
 script = '''
   soroban contract deploy \
   --source admin \
@@ -50,6 +53,7 @@ script = '''
 '''
 
 [tasks.invoke_init]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -65,6 +69,7 @@ script = '''
 '''
 
 [tasks.invoke_create_proposal]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -78,6 +83,7 @@ script = '''
 '''
 
 [tasks.invoke_vote]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -96,11 +102,13 @@ script = '''
 dependencies = ["invoke_init", "invoke_create_proposal", "invoke_vote"]
 
 [tasks.get_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''

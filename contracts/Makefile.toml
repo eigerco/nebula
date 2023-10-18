@@ -1,0 +1,37 @@
+[plugins.impl.retry_script]
+script = '''
+
+assert ${task.has_script}
+
+taskjson = json_parse ${task.as_json}
+script = set ${taskjson.script}
+
+
+fn retry_script
+  max_retries = set ${1}
+  current_retries = set ${2}
+  script = set ${3}
+  
+  out = exec bash -c ${script}
+  if not eq ${out.code} 0 
+
+    if not eq ${current_retries} ${max_retries}
+      new_current_retries = calc ${current_retries} + 1
+      sleep_time_millis = calc ${new_current_retries} * ${new_current_retries} * 1000
+      println "Retrying .. waiting ${sleep_time_millis} ms before trying again ..."
+      sleep ${sleep_time_millis}
+      println Trying task ${task.name} - try number ${new_current_retries}
+      retry_script ${max_retries} ${new_current_retries} ${script}
+    else
+      println "Max retries reached !"
+      println "Stderr:  ${out.stderr}"
+      println "Stdout:  ${out.stdout}"
+      println "Script:  ${out.code}"
+      exit 1
+    end
+  else
+  end
+end
+
+retry_script 3 0 ${script}
+'''

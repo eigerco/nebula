@@ -8,6 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
+  SOROBAN_FEE: 50000
 
 jobs:
   build:
@@ -85,7 +86,7 @@ jobs:
         with:
           crate: soroban-cli
           version: "^20.0.0-rc2"
-      
+
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:

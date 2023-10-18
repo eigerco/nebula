@@ -1,3 +1,5 @@
+extend = "../Makefile.toml"
+
 [env]
 friendbot = "https://friendbot-futurenet.stellar.org/"
 network = "futurenet"
@@ -24,12 +26,14 @@ script = '''
 '''
 
 [tasks.create_account_admin]
+plugin = "retry_script"
 script = '''
   soroban config identity generate admin
   curl "${friendbot}?addr=$(soroban config identity address admin)"
 '''
 
 [tasks.create_account_players]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -42,6 +46,7 @@ script = '''
 dependencies = ["create_account_admin", "create_account_players"]
 
 [tasks.deploy]
+plugin = "retry_script"
 script = '''
   soroban contract deploy \
   --source admin \
@@ -50,6 +55,7 @@ script = '''
 '''
 
 [tasks.invoke_init]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -64,6 +70,7 @@ script = '''
   --salt ef
 '''
 [tasks.invoke_register]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -80,6 +87,7 @@ script = '''
 '''
 
 [tasks.invoke_join]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -97,6 +105,7 @@ script = '''
 '''
 
 [tasks.invoke_whitelist]
+plugin = "retry_script"
 script = '''
 for PLAYER in 1 2 3
   do
@@ -111,6 +120,7 @@ done
 '''
 
 [tasks.invoke_stake]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -123,6 +133,7 @@ script = '''
 '''
 
 [tasks.invoke_withdraw]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -135,6 +146,7 @@ script = '''
 '''
 
 [tasks.invoke_new_proposal]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -148,6 +160,7 @@ script = '''
 '''
 
 [tasks.invoke_vote]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -165,6 +178,7 @@ script = '''
 '''
 
 [tasks.invoke_execute_proposal]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -177,6 +191,7 @@ script = '''
 '''
 
 [tasks.invoke_leave]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
@@ -207,11 +222,13 @@ dependencies = [
 ]
 
 [tasks.get_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''
