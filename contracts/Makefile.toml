@@ -24,6 +24,9 @@ fn retry_script
       retry_script ${max_retries} ${new_current_retries} ${script}
     else
       println "Max retries reached !"
+      println "Stderr:  ${out.stderr}"
+      println "Stdout:  ${out.stdout}"
+      println "Script:  ${out.code}"
       exit 1
     end
   else
