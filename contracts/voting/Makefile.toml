@@ -102,11 +102,13 @@ script = '''
 dependencies = ["invoke_init", "invoke_create_proposal", "invoke_vote"]
 
 [tasks.get_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address player_2)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''
