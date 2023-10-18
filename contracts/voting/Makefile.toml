@@ -1,3 +1,38 @@
+[plugins.impl.retry_script]
+script = '''
+
+assert ${task.has_script}
+
+taskjson = json_parse ${task.as_json}
+script = set ${taskjson.script}
+
+
+fn retry_script
+  max_retries = set ${1}
+  current_retries = set ${2}
+  script = set ${3}
+  
+  out = exec bash -c ${script}
+  if not eq ${out.code} 0 
+
+    if not eq ${current_retries} ${max_retries}
+      new_current_retries = calc ${current_retries} + 1
+      sleep_time_millis = calc ${new_current_retries} * ${new_current_retries} * 1000
+      println "Retrying .. waiting ${sleep_time_millis} ms before trying again ..."
+      sleep ${sleep_time_millis}
+      println Trying task ${task.name} - try number ${new_current_retries}
+      retry_script ${max_retries} ${new_current_retries} ${script}
+    else
+      println "Max retries reached !"
+      exit 1
+    end
+  else
+  end
+end
+
+retry_script 3 0 ${script}
+'''
+
 [env]
 friendbot = "https://friendbot-futurenet.stellar.org/"
 network = "futurenet"
@@ -42,6 +77,7 @@ script = '''
 dependencies = ["create_account_admin", "create_account_players"]
 
 [tasks.deploy]
+plugin = "retry_script"
 script = '''
   soroban contract deploy \
   --source admin \
@@ -50,6 +86,7 @@ script = '''
 '''
 
 [tasks.invoke_init]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -65,6 +102,7 @@ script = '''
 '''
 
 [tasks.invoke_create_proposal]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -78,6 +116,7 @@ script = '''
 '''
 
 [tasks.invoke_vote]
+plugin = "retry_script"
 script = '''
   for PLAYER in 1 2 3
   do
