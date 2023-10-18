@@ -17,10 +17,12 @@ use soroban_sdk::{
 pub enum Error {
     AlreadyInitialized = 1,
     Conversion = 2,
-    KeyExpected = 3,
+    AdminKeyExpected = 3,
     InvalidAmount = 4,
     NoStakeholders = 5,
     NotInitialized = 6,
+    TokenKeyExpected = 7,
+    PaymentSplitExpected = 8
 }
 
 impl From<ConversionError> for Error {
@@ -80,13 +82,13 @@ impl PaymentSplitterContract {
         if storage.get::<_, ()>(&DataKey::AlreadyInitialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
-        let admin: Address = storage.get(&DataKey::Admin).ok_or(Error::KeyExpected)?;
-        let token: Address = storage.get(&DataKey::Token).ok_or(Error::KeyExpected)?;
+        let admin: Address = storage.get(&DataKey::Admin).ok_or(Error::AdminKeyExpected)?;
+        let token: Address = storage.get(&DataKey::Token).ok_or(Error::TokenKeyExpected)?;
         admin.require_auth();
         let token = token::Client::new(&env, &token);
         let split = storage
             .get::<_, PaymentSplit>(&DataKey::PaymentSplit)
-            .ok_or(Error::KeyExpected)?;
+            .ok_or(Error::PaymentSplitExpected)?;
         let balance = token.balance(&admin);
         if amount > balance {
             panic_with_error!(&env, Error::InvalidAmount);
