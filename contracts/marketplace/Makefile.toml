@@ -1,3 +1,5 @@
+extend = "../Makefile.toml"
+
 [env]
 friendbot = "https://friendbot-futurenet.stellar.org/"
 network = "futurenet"
@@ -24,6 +26,7 @@ script = '''
 '''
 
 [tasks.create_account_admin]
+plugin = "retry_script"
 script_runner = "@shell"
 script = '''
   soroban config identity generate admin
@@ -33,6 +36,7 @@ script = '''
 # trader_1 is the seller
 # trader_2 and trader_3 are buyers
 [tasks.create_traders]
+plugin = "retry_script"
 script = '''
   for TRADER in 1 2 3
   do
@@ -45,16 +49,19 @@ script = '''
 dependencies = ["create_account_admin", "create_traders"]
 
 [tasks.get_token]
+plugin = "retry_script"
 script = '''
 soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
 '''
 
 [tasks.get_asset]
+plugin = "retry_script"
 script = '''
 soroban lab token id --asset native --network ${network} > /tmp/asset_id.txt
 '''
 
 [tasks.deploy]
+plugin = "retry_script"
 script = '''
   soroban contract deploy \
   --source admin \
@@ -63,6 +70,7 @@ script = '''
 '''
 
 [tasks.invoke_init]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -76,6 +84,7 @@ script = '''
 
 
 [tasks.invoke_create_listing]
+plugin = "retry_script"
 script = '''
     soroban contract invoke \
     --id $(cat /tmp/contract_id.txt) \
@@ -89,6 +98,7 @@ script = '''
 '''
 
 [tasks.invoke_get_listing]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -100,6 +110,7 @@ script = '''
 '''
 
 [tasks.invoke_buy_listing]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -113,6 +124,7 @@ script = '''
 '''
 
 [tasks.invoke_update_price]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -127,6 +139,7 @@ script = '''
 '''
 
 [tasks.invoke_pause_listing]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -140,6 +153,7 @@ script = '''
 '''
 
 [tasks.invoke_remove_listing]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -166,6 +180,7 @@ dependencies = [
 
 # currently this only displays balance of each player, without checking who has the most
 [tasks.get_balances]
+plugin = "retry_script"
 script = '''
 for TRADER in 1 2 3
   do
@@ -179,11 +194,13 @@ for TRADER in 1 2 3
 '''
 
 [tasks.get_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address trader_2)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''
