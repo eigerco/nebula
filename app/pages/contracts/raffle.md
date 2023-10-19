@@ -20,6 +20,7 @@ raffle = "ghcr.io/eigerco/nebula/contracts/raffle:latest"
 ## Contract methods
 
 * `init` - contract initialization,
+* `register` - each user must register before buying the ticket,
 * `buy_ticket` - users can call this method to buy tickets for the raffle,
 * `play_raffle` - launches the raffle.
 
@@ -46,6 +47,21 @@ soroban contract invoke \
     --ticket_price 5001
 ```
 Contract can only be initialized once.
+
+### User registration
+
+Each user must register to the raffle first before he can buy the tickets. The `register` method takes one argument:
+* `by` - address of a player
+
+```bash
+soroban contract invoke \
+    --id ${contract_id} \
+    --source ${player_private_key} \
+    --network ${network} \
+    -- \
+    register \
+      --by ${player_address}
+```
 
 ### Buying tickets
 
