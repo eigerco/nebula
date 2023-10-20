@@ -28,8 +28,10 @@ use core::ops::Add;
 use soroban_sdk::storage::Persistent;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, map, panic_with_error, token, vec,
-    Address, Env, Map, Symbol, Vec, Bytes
+    Address, Env, Map, Symbol, Vec
 };
+
+use shared::rand::*;
 
 /// State of the lottery
 #[contracttype]
@@ -584,31 +586,6 @@ fn count_matches(drawn_numbers: &Vec<u32>, player_ticket: &LotteryTicket) -> u32
         .count() as u32
 }
 
-
-struct RandomNumberGenerator;
-
-trait RandomNumberGeneratorTrait {
-    fn new(env: &Env, seed: u64) -> Self;
-    fn number(&mut self, env: &Env, max_range: u32) -> u32;
-}
-
-impl RandomNumberGeneratorTrait for RandomNumberGenerator {
-    fn new(env: &Env, seed: u64) -> Self {
-        let mut arr = [0u8; 32];
-        let seed_bytes = seed.to_be_bytes();
-
-        //there is no concat() for wasm build...
-        for i in 24..32 {
-            arr[i] = seed_bytes[i-24];
-        }
-        env.prng().seed(Bytes::from_slice(&env, &arr.as_slice()));
-        RandomNumberGenerator{}
-    }
-
-    fn number(&mut self, env: &Env, max_range: u32) -> u32 {
-        env.prng().u64_in_range(1..=max_range as u64) as u32
-    }
-}
 
 /// Randomly draw numbers within a given range (1, max_range).
 /// Ensures that there are no duplicates

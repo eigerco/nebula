@@ -1,0 +1,1 @@
+#![no_std]\nuse soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Symbol, Vec};\n\n#[contract]\npub struct HelloContract;\n\n#[contractimpl]\nimpl HelloContract {\npub fn hello(env: Env, to: Symbol) -> Vec<Symbol> {\nvec![&env, symbol_short!(\"Hello\"), to]\n}\n}

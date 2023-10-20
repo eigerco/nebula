@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
+shared = { path = "../shared" }
 
 [dev-dependencies]
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
