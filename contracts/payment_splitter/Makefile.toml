@@ -1,3 +1,5 @@
+extend = "../Makefile.toml"
+
 [env]
 friendbot = "https://friendbot-futurenet.stellar.org/"
 network = "futurenet"
@@ -24,6 +26,7 @@ script = '''
 '''
 
 [tasks.create_account_admin]
+plugin = "retry_script"
 script_runner = "@shell"
 script = '''
   soroban config identity generate admin 2>/tmp/payment_splitter_error
@@ -37,6 +40,7 @@ script = '''
 '''
 
 [tasks.create_recipients]
+plugin = "retry_script"
 script = '''
   for RECIPIENT in 1 2 3
   do
@@ -63,6 +67,7 @@ soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
 '''
 
 [tasks.deploy]
+plugin = "retry_script"
 script = ''' 
   soroban contract deploy \
   --source admin \
@@ -77,6 +82,7 @@ script = '''
 '''
 
 [tasks.invoke_init]
+plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
@@ -97,6 +103,7 @@ script = '''
 '''
 
 [tasks.invoke_split]
+plugin = "retry_script"
 script = '''
   for RECIPIENT in 1 2 3
   do
@@ -125,6 +132,7 @@ dependencies = [
 
 # currently this only displays balance of each player, without checking who has the most
 [tasks.get_balances]
+plugin = "retry_script"
 script = '''
 for RECIPIENT in 1 2 3
   do
@@ -144,11 +152,13 @@ for RECIPIENT in 1 2 3
 '''
 
 [tasks.get_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address recipient_2)/transactions" > /tmp/transactions.txt
 '''
 
 [tasks.get_admin_transactions]
+plugin = "retry_script"
 script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''
