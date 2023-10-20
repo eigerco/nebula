@@ -83,6 +83,14 @@ script = '''
   for PLAYER in 1 2 3
   do
     soroban contract invoke \
+      --id $(cat /tmp/contract_id.txt) \
+      --source player_$PLAYER \
+      --network ${network} \
+      -- \
+      register \
+      --by $(soroban config identity address player_$PLAYER)
+
+    soroban contract invoke \
     --id $(cat /tmp/contract_id.txt) \
     --source player_$PLAYER \
     --network ${network} \
@@ -138,6 +146,44 @@ script = '''
 curl "${server}accounts/$(soroban config identity address admin)/transactions" > /tmp/admin_transactions.txt
 '''
 
+[tasks.store_transaction_result_meta]
+script_runner = "node"
+script_extension = "js"
+script = '''
+let fs = require('fs')
+
+const transactions = fs.readFileSync('/tmp/admin_transactions.txt', 'utf8')
+
+const obj = JSON.parse(transactions)
+const recordsSize = obj['_embedded']['records'].length
+const transaction = obj['_embedded']['records'][recordsSize-1]
+fs.writeFileSync('/tmp/result_meta_xdr.txt', transaction['result_meta_xdr']);
+'''
+
+[tasks.decode_xdr]
+script = '''
+soroban lab xdr dec --type TransactionMeta --output json --xdr "$(cat /tmp/result_meta_xdr.txt)" > /tmp/result_decoded.txt
+'''
+
+[tasks.check_results]
+script_runner = "node"
+script_extension = "js"
+script = '''
+var fs = require('fs');
+
+fs.readFile('/tmp/result_decoded.txt', 'utf-8', function (err, data) {
+    if (err) throw err;
+
+    var obj = JSON.parse(data);
+    var prize = obj['v3']['soroban_meta']['events'][0]['body']['v0']['data']['i128']["lo"]
+    
+    if (prize !== 15003) {
+      throw new Error(`Prize is ${prize} but should be 15003`)
+    }
+    console.log('Prize: ', prize);
+});
+'''
+
 [tasks.calculate_fees]
 script_runner = "node"
 script_extension = "js"
@@ -167,16 +213,16 @@ console.log('Total fees: ', (fee + adminFee))
 '''
 
 [tasks.run_test]
-script = '''
-  echo 'Test currently disabled'
-'''
-# dependencies = [
-#   "accounts",
-#   "get_token",
-#   "deploy",
-#   "invoke_contract",
-#   "get_balances",
-#   "get_transactions",
-#   "get_admin_transactions",
-#   "calculate_fees"
-# ]
+dependencies = [
+  "accounts",
+  "get_token",
+  "deploy",
+  "invoke_contract",
+  "get_balances",
+  "get_transactions",
+  "get_admin_transactions",
+  "store_transaction_result_meta",
+  "decode_xdr",
+  "check_results",
+  "calculate_fees"
+]

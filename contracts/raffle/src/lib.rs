@@ -112,6 +112,19 @@ impl RaffleContract {
         storage.set(&DataKey::AlreadyInitialized, &true);
     }
 
+
+    /// A 'dummy' method that needs to be called by user before buying the ticket.
+    /// This a workaround to this issue https://github.com/eigerco/nebula/issues/41
+    /// 
+    /// # Arguments
+    ///
+    /// - `_` - The environment for this contract - not used here
+    /// - `by` - The address that is registering.
+    pub fn register(_: Env, by: Address) {
+        by.require_auth();
+    }
+
+
     /// Allows any participant with enough funds to buy a ticket.
     ///
     /// # Arguments
