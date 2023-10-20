@@ -94,7 +94,6 @@ jobs:
           path: target/wasm32-unknown-unknown/release/
 
       - name: Test
-        working-directory: contracts/${{ matrix.contract }}
         run: cargo test -p ${{ matrix.contract }}
 
       - name: Integration test
