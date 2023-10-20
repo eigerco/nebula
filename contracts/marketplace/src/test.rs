@@ -17,8 +17,8 @@ fn setup_test<'a>() -> (Env, MarketplaceContractClient<'a>) {
     (env, client)
 }
 
-fn create_token_asset<'a>(e: &Env, asset: &Address) -> token::StellarAssetClient<'a> {
-    token::StellarAssetClient::new(e, &e.register_stellar_asset_contract(asset.clone()))
+fn create_token_asset<'a>(e: &Env, admin: &Address) -> token::StellarAssetClient<'a> {
+    token::StellarAssetClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
 #[test]
