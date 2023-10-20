@@ -40,12 +40,14 @@ fn can_create_listing() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
-    let listing = client.get_listing(&asset).unwrap();
+    let asset_client = create_token_asset(&env, &seller);
+
+    client.create_listing(&seller, &asset_client.address, &100);
+    let listing = client.get_listing(&asset_client.address).unwrap();
 
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
+    assert_eq!(&asset_client.admin(), &seller); // The seller continues being the admin of the asset (still not sold out).
     assert_eq!(&listing.price, &100)
 }
 
@@ -59,15 +61,16 @@ fn can_create_listing_and_pause() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
+    let asset_client = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
 
-    client.pause_listing(&seller, &asset, &100);
+    client.pause_listing(&seller, &asset_client.address, &100);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
 
     assert_eq!(&listing.listed, &false);
     assert_eq!(&listing.owner, &seller);
+    assert_eq!(&asset_client.admin(), &seller); // The seller continues being the admin of the asset (still not sold out).
     assert_eq!(&listing.price, &100)
 }
 
