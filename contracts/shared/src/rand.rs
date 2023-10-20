@@ -16,7 +16,8 @@ impl RandomNumberGeneratorTrait for RandomNumberGenerator {
         for i in 24..32 {
             arr[i] = seed_bytes[i-24];
         }
-        env.prng().seed(Bytes::from_slice(&env, &arr.as_slice()));
+        arr[24..32].copy_from_slice(&seed_bytes[0..8]);
+        env.prng().seed(Bytes::from_slice(env, arr.as_slice()));
         RandomNumberGenerator{}
     }
 
