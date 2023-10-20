@@ -121,6 +121,7 @@ impl LotteryContract {
     /// - `max_range` - Right boundary of the range players will select numbers from (1, max_range)
     /// - `thresholds` - Thresholds with prizes for correctly selected numbers (specified as percentage of the pool balance)
     /// - `min_players_count` - Minimum number of players needed to play the lottery
+    #[allow(clippy::too_many_arguments)]
     pub fn init(
         env: Env,
         admin: Address,
@@ -204,7 +205,7 @@ impl LotteryContract {
             panic_with_error!(&env, Error::NumberOfNumbersTooLow);
         }
 
-        if thresholds.len() < 1 {
+        if thresholds.is_empty() {
             panic_with_error!(&env, Error::NumberOfThresholdsTooLow);
         }
 
@@ -216,7 +217,7 @@ impl LotteryContract {
             .iter()
             .fold(0u32, |acc, percentage| acc.add(percentage));
 
-        if sum_of_percentages < 1 || sum_of_percentages > 100 {
+        if !(1..=100).contains(&sum_of_percentages) {
             panic_with_error!(&env, Error::InvalidThresholds);
         }
 
@@ -283,7 +284,7 @@ impl LotteryContract {
 
         //each number must be within (1, max_range) range
         for number in ticket.iter() {
-            if number <= 0 || number > max_range {
+            if number == 0 || number > max_range {
                 return Err(Error::InvalidNumbers);
             }
         }
@@ -449,7 +450,7 @@ fn get_winners(
     tickets: &Map<Address, Vec<LotteryTicket>>,
     thresholds: &Map<u32, u32>,
 ) -> Map<u32, Vec<Address>> {
-    let mut winners = Map::<u32, Vec<Address>>::new(&env);
+    let mut winners = Map::<u32, Vec<Address>>::new(env);
 
     tickets
         .iter()
@@ -459,7 +460,7 @@ fn get_winners(
                 .map(|ticket| count_matches(drawn_numbers, &ticket))
                 .filter(|count, | thresholds.contains_key(*count))
                 .for_each(|count| {
-                    let mut addresses = winners.get(count).unwrap_or(Vec::<Address>::new(&env));
+                    let mut addresses = winners.get(count).unwrap_or(Vec::<Address>::new(env));
                     addresses.push_back(ticket_address.clone());
                     winners.set(count, addresses);
                 })
@@ -487,16 +488,16 @@ fn calculate_prizes(
     thresholds: &mut Map<u32, u32>,
     pool: i128,
 ) -> Map<Address, i128> {
-    let mut prizes = Map::<Address, i128>::new(&env);
+    let mut prizes = Map::<Address, i128>::new(env);
 
     // sum total percentage of prizes won - if it's bigger than 100%, recalculate new thresholds to be equal to 100%
-    let total_prizes_percentage = count_total_prizes_percentage(&winners, &thresholds);
-    recalculate_new_thresholds(&winners, thresholds, total_prizes_percentage);
+    let total_prizes_percentage = count_total_prizes_percentage(winners, thresholds);
+    recalculate_new_thresholds(winners, thresholds, total_prizes_percentage);
 
     //that would be nicer and probably faster if FromIter trait was implemented for Map & Vec...
     winners.iter().for_each(|(threshold_number, addresses)| {
         let pool_percentage = thresholds.get(threshold_number).unwrap();
-        let prize = (pool * pool_percentage as i128 / 100i128) as i128;
+        let prize = pool * pool_percentage as i128 / 100i128;
         addresses.iter().for_each(|address| {
             let current_player_prize = prizes.get(address.clone()).unwrap_or_default();
             prizes.set(address, current_player_prize + prize)
@@ -601,7 +602,7 @@ fn count_matches(drawn_numbers: &Vec<u32>, player_ticket: &LotteryTicket) -> u32
 /// - `number_of_numbers` - Number of numbers possible to select by players
 /// - `random_seed` - A seed provided by the admin, that will be combined with other environment elements
 fn draw_numbers<T: RandomNumberGeneratorTrait>(env: &Env, max_range: u32, number_of_numbers: u32, random_seed: u64) -> Vec<u32> {
-    let mut numbers = Vec::new(&env);
+    let mut numbers = Vec::new(env);
     for n in 0..number_of_numbers {
         let new_seed = random_seed + n as u64;
         let mut random_generator = T::new(env, new_seed);

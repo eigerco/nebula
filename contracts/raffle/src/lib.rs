@@ -244,7 +244,7 @@ fn calculate_winners<T: RandomNumberGeneratorTrait>(
     random_seed: u64,
 ) -> Vec<u32> {
     let mut winners = Map::new(env);
-    let new_seed = random_seed as u64;
+    let new_seed = random_seed;
     let mut random_generator = T::new(env, new_seed);
 
     for _ in 0..max_winners_count {
