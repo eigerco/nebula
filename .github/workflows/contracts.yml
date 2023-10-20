@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wasm-files-${{ matrix.contract }}
-          path: target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm
+          path: target/wasm32-unknown-unknown/release/*.wasm
 
   test:
     needs: build
@@ -90,11 +90,8 @@ jobs:
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
-          name: wasm-files-*
+          name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
-
-      - name: Display wasm files
-        run: ls -la target/wasm32-unknown-unknown/release/
 
       - name: Test
         working-directory: contracts/${{ matrix.contract }}
