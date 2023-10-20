@@ -12,10 +12,6 @@ impl RandomNumberGeneratorTrait for RandomNumberGenerator {
         let mut arr = [0u8; 32];
         let seed_bytes = seed.to_be_bytes();
 
-        //there is no concat() for wasm build...
-        for i in 24..32 {
-            arr[i] = seed_bytes[i-24];
-        }
         arr[24..32].copy_from_slice(&seed_bytes[0..8]);
         env.prng().seed(Bytes::from_slice(env, arr.as_slice()));
         RandomNumberGenerator{}
