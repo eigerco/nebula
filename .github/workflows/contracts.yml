@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting, governance, marketplace]
+        contract: [raffle, voting, governance, marketplace, lottery]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
