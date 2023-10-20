@@ -190,6 +190,63 @@ fn voter_cannot_vote_a_proposal_twice() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #10)")]
+fn voting_period_must_not_be_zero() {
+    let (env, client, _) = setup_test();
+    env.mock_all_auths();
+    let prd_id = 12;
+
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(
+        &prd_id,
+        &ProposalPayload::Comment(comment),
+        &client.address,
+        &0,
+        &50_00,
+        &2,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #11)")]
+fn target_approval_rate_must_not_be_zero() {
+    let (env, client, _) = setup_test();
+    env.mock_all_auths();
+    let prd_id = 12;
+
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(
+        &prd_id,
+        &ProposalPayload::Comment(comment),
+        &client.address,
+        &3600,
+        &0,
+        &2,
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #12)")]
+fn total_participants_must_be_greater_than_zero() {
+    let (env, client, _) = setup_test();
+    env.mock_all_auths();
+    let prd_id = 12;
+
+    let comment = BytesN::random(&env);
+
+    client.create_custom_proposal(
+        &prd_id,
+        &ProposalPayload::Comment(comment),
+        &client.address,
+        &3600,
+        &50_00,
+        &0,
+    );
+}
+
+#[test]
 fn cannot_vote_if_voting_time_exceeded() {
     let (mut env, _, _) = setup_test();
 

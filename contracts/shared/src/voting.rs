@@ -142,6 +142,9 @@ pub enum Error {
     Overflow = 7,
     VotingClosed = 8,
     NotValidID = 9,
+    InvalidVotingPeriod = 10,
+    InvalidTargetApprovalRate = 11,
+    NotEnoughParticipants = 12
 }
 
 impl From<ConversionError> for Error {

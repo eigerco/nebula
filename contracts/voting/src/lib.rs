@@ -78,6 +78,18 @@ impl ProposalVotingContract {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
 
+        if voting_period_secs == 0 {
+            panic_with_error!(&env, Error::InvalidVotingPeriod);
+        }
+
+        if target_approval_rate_bps == 0 {
+            panic_with_error!(&env, Error::InvalidTargetApprovalRate);
+        }
+
+        if participation == 0 {
+            panic_with_error!(&env, Error::NotEnoughParticipants);
+        }
+
         storage.set(&DataKey::AlreadyInitialized, &());
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Proposals, &Map::<u64, Proposal>::new(&env));
@@ -160,6 +172,18 @@ impl ProposalVotingContract {
 
         if id == 0 {
             return Err(Error::NotValidID);
+        }
+
+        if voting_period_secs == 0 {
+            return Err(Error::InvalidVotingPeriod);
+        }
+
+        if target_approval_rate_bps == 0 {
+            return Err(Error::InvalidTargetApprovalRate);
+        }
+
+        if total_participation == 0 {
+            return Err(Error::NotEnoughParticipants);
         }
 
         let mut proposal_storage = storage
