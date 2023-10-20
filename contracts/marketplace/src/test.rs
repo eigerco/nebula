@@ -25,11 +25,9 @@ fn create_token_asset<'a>(e: &Env, asset: &Address) -> token::StellarAssetClient
 #[should_panic(expected = "Error(Contract, #1)")]
 fn cannot_initialize_marketplace_twice() {
     let (env, client) = setup_test();
-    let admin = Address::random(&env);
-    let asset = Address::random(&env);
-    let token = create_token_asset(&env, &asset);
-    client.init(&token.address, &admin);
-    client.init(&token.address, &admin);
+    let address = Address::random(&env); // Address just for satisfying interfaces.
+    client.init(&address, &address);
+    client.init(&address, &address);
 }
 
 #[test]
