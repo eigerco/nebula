@@ -93,7 +93,11 @@ jobs:
           name: wasm-files-${{ matrix.contract }}
           path: target/wasm32-unknown-unknown/release/
 
+      - name: Display wasm files
+        run: ls -la target/wasm32-unknown-unknown/release/
+
       - name: Test
+        working-directory: contracts/${{ matrix.contract }}
         run: cargo test -p ${{ matrix.contract }}
 
       - name: Integration test
