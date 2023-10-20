@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting, governance, marketplace, payment_splitter]
+        contract: [raffle, voting, governance, marketplace, payment_splitter, lottery]
 
     steps:
       - name: Checkout repository
@@ -50,14 +50,14 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: wasm-files-${{ matrix.contract }}
-          path: target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm
+          path: target/wasm32-unknown-unknown/release/*.wasm
 
   test:
     needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting, governance, marketplace]
+        contract: [raffle, voting, governance, marketplace, payment_splitter, lottery]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

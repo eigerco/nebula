@@ -2,13 +2,12 @@
 
 extern crate std;
 
-use crate::calculate_winners;
-
 use super::{RaffleContract, RaffleContractClient};
 
+use rand::{rngs::SmallRng, SeedableRng, Rng};
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events},
-    token, vec, Address, Env, IntoVal, Symbol, Val, Vec,
+    token, vec, Address, Env, IntoVal, Symbol, Val, Vec, Map,
 };
 
 #[test]
@@ -203,14 +202,14 @@ fn buy_ticket_panics_if_invoked_after_raffle_is_played() {
 #[test]
 fn calculate_winners_works_seed_is_deterministic() {
     let env = Env::default();
-    let result = calculate_winners(&env, 2, 12, 666);
+    let result = calculate_test_winners(&env, 2, 12, 666);
     assert_eq!(vec![&env, 5, 7], result);
 }
 
 #[test]
 fn calculate_winners_can_only_win_once() {
     let env = Env::default();
-    let result = calculate_winners(&env, 100, 2, 666);
+    let result = calculate_test_winners(&env, 100, 2, 666);
     assert_eq!(vec![&env, 0, 1], result);
 }
 
@@ -302,4 +301,23 @@ fn raffle_cannot_be_played_if_not_enough_participants() {
     client.init(&client.address, &test_token_client.address, &1, &100);
 
     client.play_raffle(&666);
+}
+
+fn calculate_test_winners(
+    env: &Env,
+    max_winners_count: u32,
+    candidates_len: u32,
+    random_seed: u64,
+) -> Vec<u32> {
+    let mut winners = Map::new(env);
+    let mut rand = SmallRng::seed_from_u64(random_seed);
+
+    for _ in 0..max_winners_count {
+        let winner = rand.gen_range(0..candidates_len);
+        if winners.contains_key(winner) {
+            continue;
+        }
+        winners.set(winner, true);
+    }
+    winners.keys()
 }

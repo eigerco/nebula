@@ -797,7 +797,7 @@ fn setup_additional_test_data(
     Map<Address, Vec<LotteryTicket>>,
     Map<u32, u32>,
 ) {
-    let result = draw_test_numbers(&env, 50, 5, 666);
+    let result = draw_test_numbers(env, 50, 5, 666);
     let thresholds = map![&env, (5, 30), (4, 15), (3, 10)];
 
     let tickets = map![
@@ -817,7 +817,7 @@ fn setup_additional_test_data(
 }
 
 fn draw_test_numbers(env: &Env, max_range: u32, number_of_numbers: u32, random_seed: u64) -> Vec<u32> {
-    let mut numbers = Vec::new(&env);
+    let mut numbers = Vec::new(env);
     for n in 0..number_of_numbers {
         let new_seed = random_seed + n as u64;
         let mut rand = SmallRng::seed_from_u64(new_seed);

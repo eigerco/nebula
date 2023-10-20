@@ -15,8 +15,7 @@
 
 #![no_std]
 
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use shared::rand::*;
 
 use soroban_sdk::storage::Persistent;
 use soroban_sdk::{
@@ -187,7 +186,7 @@ impl RaffleContract {
         let players = candidates.len();
 
         // Calculate the winners
-        let winners_idx = calculate_winners(
+        let winners_idx = calculate_winners::<RandomNumberGenerator>(
             &env,
             max_winners_count,
             players,
@@ -238,17 +237,18 @@ fn must_be_initialized_and_not_already_played(storage: &Persistent) -> Result<()
 /// so this should be read as "the max number of" but not the "exact number of".
 /// - `candidates_len` - The number of participants on this raffle.
 /// - `random_seed` - The random seed for the number generator. Currently it determines the output of the generator across calls.
-fn calculate_winners(
+fn calculate_winners<T: RandomNumberGeneratorTrait>(
     env: &Env,
     max_winners_count: u32,
     candidates_len: u32,
     random_seed: u64,
 ) -> Vec<u32> {
     let mut winners = Map::new(env);
-    let mut rand = SmallRng::seed_from_u64(random_seed);
+    let new_seed = random_seed;
+    let mut random_generator = T::new(env, new_seed);
 
     for _ in 0..max_winners_count {
-        let winner = rand.gen_range(0..candidates_len);
+        let winner = random_generator.number(env, candidates_len) - 1;
         if winners.contains_key(winner) {
             continue;
         }
