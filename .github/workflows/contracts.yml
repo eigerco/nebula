@@ -90,7 +90,7 @@ jobs:
       - name: Download wasm-files
         uses: actions/download-artifact@v3
         with:
-          name: wasm-files
+          name: wasm-files-*
           path: target/wasm32-unknown-unknown/release/
 
       - name: Display wasm files
