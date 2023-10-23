@@ -26,8 +26,11 @@ export class ContractsRepoReader {
         Accept: 'application/json',
       },
     })
-    const result = await response.json()
-    const content = atob(result.content)
-    return content
+    if (response.ok) {
+      const result = await response.json()
+      const content = atob(result.content)
+      return content
+    }
+    return undefined
   }
 }

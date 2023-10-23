@@ -15,7 +15,9 @@ export class ContractService {
     const content = await this.contractsRepoReader.readContractFile(
       `${path}/src/lib.rs`
     )
-    this.contractCodes.set(name, content)
+    if (content !== undefined) {
+      this.contractCodes.set(name, content)
+    }
   }
 
   public getContractCode(contractName: string): string | undefined {
