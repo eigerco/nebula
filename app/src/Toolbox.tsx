@@ -39,7 +39,6 @@ export function Toolbox({
           <option disabled>Auction</option>
           <option>MarketPlace</option>
           <option disabled>FundMe</option>
-          <option disabled>Math</option>
           <option>PaymentSplitter</option>
           {/* <option disabled>NFT</option> */}
         </Form.Select>

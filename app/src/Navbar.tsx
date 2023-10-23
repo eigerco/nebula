@@ -25,6 +25,12 @@ function CustomNavbar() {
               <NavDropdown.Item as={Link} href="/contracts/voting">
                 Voting
               </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/marketplace">
+                Marketplace
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/payment-splitter">
+                Payment splitter
+              </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item href="https://github.com/eigerco/nebula">
                 View in Github
