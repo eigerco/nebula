@@ -47,7 +47,7 @@ fn can_create_listing() {
 
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
-    assert_eq!(&asset_client.admin(), &seller); // The seller continues being the admin of the asset (still not sold out).
+    assert_eq!(&asset_client.admin(), &client.address); // Now the contract has the ownership of the asset.
     assert_eq!(&listing.price, &100)
 }
 
@@ -61,7 +61,7 @@ fn can_create_listing_and_pause() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset_client = create_token_asset(&env, &seller);
+    let asset_client: token::StellarAssetClient<'_> = create_token_asset(&env, &seller);
     client.create_listing(&seller, &asset_client.address, &100);
 
     client.pause_listing(&seller, &asset_client.address, &100);
@@ -70,7 +70,7 @@ fn can_create_listing_and_pause() {
 
     assert_eq!(&listing.listed, &false);
     assert_eq!(&listing.owner, &seller);
-    assert_eq!(&asset_client.admin(), &seller); // The seller continues being the admin of the asset (still not sold out).
+    assert_eq!(&asset_client.admin(), &client.address); // The contract continues being the admin of the asset (still not sold out).
     assert_eq!(&listing.price, &100)
 }
 
@@ -85,17 +85,22 @@ fn can_create_listing_and_sell() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
+    let asset_client: token::StellarAssetClient<'_> = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
 
     token.mint(&buyer, &400);
-    client.buy_listing(&buyer, &asset, &100);
+    client.buy_listing(&buyer, &asset_client.address, &100);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
 
     assert_eq!(&listing.listed, &false);
     assert_eq!(&listing.owner, &buyer);
-    assert_eq!(&listing.price, &100)
+    assert_eq!(&asset_client.admin(), &buyer); // The admin of the stellar asset changed to the new owner/admin).
+    assert_eq!(&listing.price, &100);
+    assert_eq!(
+        &token::Client::new(&env, &token.address).balance(&seller),
+        &100
+    );
 }
 
 #[test]
@@ -108,32 +113,32 @@ fn can_update_a_listing() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
+    let asset_client = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
 
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &100);
 
-    client.update_price(&seller, &asset, &100, &200);
+    client.update_price(&seller, &asset_client.address, &100, &200);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &200);
 
-    client.pause_listing(&seller, &asset, &200);
+    client.pause_listing(&seller, &asset_client.address, &200);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
     assert_eq!(&listing.listed, &false);
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &200);
 
-    client.unpause_listing(&seller, &asset, &200, &190);
+    client.unpause_listing(&seller, &asset_client.address, &200, &190);
 
-    let listing = client.get_listing(&asset).unwrap();
+    let listing = client.get_listing(&asset_client.address).unwrap();
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
     assert_eq!(&listing.price, &190);
@@ -151,13 +156,13 @@ fn cannot_sell_when_unlisted() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
+    let asset_client = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
 
-    client.pause_listing(&seller, &asset, &100);
+    client.pause_listing(&seller, &asset_client.address, &100);
 
     token.mint(&buyer, &400);
-    client.buy_listing(&buyer, &asset, &100);
+    client.buy_listing(&buyer, &asset_client.address, &100);
 }
 
 #[test]
@@ -170,12 +175,13 @@ fn can_remove_a_listing() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
-    client.remove_listing(&seller, &asset, &100);
+    let asset_client = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
+    client.remove_listing(&seller, &asset_client.address, &100);
 
-    let listing = client.get_listing(&asset);
-    assert!(listing.is_none())
+    let listing = client.get_listing(&asset_client.address);
+    assert!(listing.is_none());
+    assert_eq!(&seller, &asset_client.admin())
 }
 
 #[test]
@@ -189,8 +195,9 @@ fn cannot_create_negative_listing() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &-100);
+    let asset_client = create_token_asset(&env, &seller);
+
+    client.create_listing(&seller, &asset_client.address, &-100);
 }
 
 #[test]
@@ -204,7 +211,7 @@ fn cannot_do_negative_update() {
     let token = create_token_asset(&env, &token);
     client.init(&token.address, &admin);
 
-    let asset = Address::random(&env);
-    client.create_listing(&seller, &asset, &100);
-    client.update_price(&seller, &asset, &100, &-100)
+    let asset_client = create_token_asset(&env, &seller);
+    client.create_listing(&seller, &asset_client.address, &100);
+    client.update_price(&seller, &asset_client.address, &100, &-100)
 }

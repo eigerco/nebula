@@ -5,7 +5,7 @@
 #![no_std]
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error,
-    token::{self},
+    token::{self, StellarAssetClient},
     Address, Env, Map, Symbol,
 };
 
@@ -85,6 +85,10 @@ impl MarketplaceContract {
             },
         );
         storage.set(&DataKey::Assets, &assets);
+
+        let asset_client = StellarAssetClient::new(&env, &asset);
+        asset_client.set_admin(&env.current_contract_address());
+ 
         let topics = (Symbol::new(&env, "create_listing"), (seller));
         env.events().publish(topics, asset);
     }
@@ -126,6 +130,10 @@ impl MarketplaceContract {
             },
         );
         storage.set(&DataKey::Assets, &assets);
+
+        let asset_client = StellarAssetClient::new(&env, &asset);
+        asset_client.set_admin(&buyer);
+
         let topics = (Symbol::new(&env, "buy_listing"), (buyer));
         env.events().publish(topics, asset);
     }
@@ -275,6 +283,10 @@ impl MarketplaceContract {
         }
         assets.remove(asset.clone()).unwrap();
         storage.set(&DataKey::Assets, &assets);
+
+        let asset_client = StellarAssetClient::new(&env, &asset);
+        asset_client.set_admin(&seller);
+
         let topics = (Symbol::new(&env, "remove_listing"), (seller));
         env.events().publish(topics, asset);
     }
