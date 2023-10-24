@@ -13,7 +13,12 @@ server = "https://horizon-futurenet.stellar.org/"
 [env.standalone]
 friendbot = "http://localhost:8000/friendbot"
 network = "standalone"
-server = "http://localhost:8000"
+server = "http://localhost:8000/"
+
+[env.testnet]
+friendbot = "https://horizon-testnet.stellar.org/friendbot"
+network = "testnet"
+server = "https://horizon-testnet.stellar.org"
 
 [tasks.run_standalone_server]
 script = '''
