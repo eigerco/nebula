@@ -1,14 +1,9 @@
 extend = "../Makefile.toml"
 
 [env]
-friendbot = "https://friendbot-futurenet.stellar.org/"
-network = "futurenet"
-server = "https://horizon-futurenet.stellar.org/"
-
-[env.futurenet]
-friendbot = "https://friendbot-futurenet.stellar.org/"
-network = "futurenet"
-server = "https://horizon-futurenet.stellar.org/"
+friendbot = "https://friendbot.stellar.org/"
+network = "testnet"
+server = "https://horizon-testnet.stellar.org/"
 
 [env.standalone]
 friendbot = "http://localhost:8000/friendbot"
