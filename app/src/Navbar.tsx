@@ -18,12 +18,23 @@ function CustomNavbar() {
             <Nav.Link as={Link} href="/">Home</Nav.Link>
             <Nav.Link as={Link} href="/wizard">Wizard</Nav.Link>
             <NavDropdown title="Contracts" id="basic-nav-dropdown">
-            <NavDropdown.Item as={Link} href="/contracts/lottery">
-                Lottery
+              <NavDropdown.Item as={Link} href="/contracts/raffle">
+                Raffle
               </NavDropdown.Item>
-              <NavDropdown.Item as={Link} href="/contracts/raffle">Raffle</NavDropdown.Item>
               <NavDropdown.Item as={Link} href="/contracts/voting">
                 Voting
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/lottery">
+                Lottery
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/governance">
+                Governance
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/marketplace">
+                Marketplace
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} href="/contracts/payment-splitter">
+                Payment splitter
               </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item href="https://github.com/eigerco/nebula">

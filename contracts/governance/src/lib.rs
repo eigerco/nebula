@@ -358,7 +358,7 @@ impl GovernanceContract {
     /// - `env` - The environment for this contract.
     /// - `participant` - The proposer who is creating this proposal.
     /// - `id` -  The unique ID of the proposal. This can be taken from external systems.
-    /// - `payload` - The ['voting_contract::ProposalPayload'] , that represents a Proposal king + its respective payload
+    /// - `payload` - The ['voting_contract::ProposalPayload'] , that represents a Proposal kind + its respective payload
     pub fn new_proposal(
         env: Env,
         participant: Address,

@@ -22,6 +22,7 @@ lottery = "ghcr.io/eigerco/nebula/contracts/lottery:latest"
 ## Contract methods
 
 * `init` - contract initialization,
+* `register` - each user must register before buying the ticket,
 * `create_lottery` - creates new lottery, can be called each time previous lottery is finished,
 * `buy_ticket` - users can call this method to buy tickets for the lottery,
 * `play_lottery` - launches the lottery,
@@ -32,7 +33,7 @@ lottery = "ghcr.io/eigerco/nebula/contracts/lottery:latest"
 
 ### Contract initialization
 
-To initialize the contract the `init` method needs to be called with 4 arguments:
+To initialize the contract the `init` method needs to be called with following arguments:
 * `admin` - admin account address.
 * `token` - the asset contract address we are using for this lottery. See [token interface](https://soroban.stellar.org/docs/reference/interfaces/token-interface).
 * `ticket_price` - unitary ticket price for the current lottery.
@@ -96,6 +97,21 @@ soroban contract invoke \
     --min_players_count 10
 ```
 Function also publishes an event with lottery specification: lottery number, number of numbers to select, max range, thresholds and ticket prize.
+
+### User registration
+
+Each user must register to the lottery first before he can buy the tickets. The `register` method takes one argument:
+* `by` - address of a player
+
+```bash
+soroban contract invoke \
+    --id ${contract_id} \
+    --source ${player_private_key} \
+    --network ${network} \
+    -- \
+    register \
+      --by ${player_address}
+```
 
 ### Buying tickets
 

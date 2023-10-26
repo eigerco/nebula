@@ -19,7 +19,6 @@ Common interfaces
 
 Nebula aims to provide interfaces for commonly used contacts. This is not an exhaustive list.
 
-*   Math
 *   Voting
 *   Raffle
 *   Lottery
