@@ -44,6 +44,8 @@ pub struct Asset {
     listed: bool,
 }
 
+type AssetStorage = Map<u64, Asset>;
+
 #[contract]
 pub struct MarketplaceContract;
 
@@ -61,14 +63,14 @@ impl MarketplaceContract {
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::Initialized, &());
-        let assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
+        let assets: AssetStorage = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
         storage.set(&DataKey::Assets, &assets);
         storage.set(&DataKey::LastID, &1u64);
     }
 
     pub fn get_listing(env: Env, id: u64) -> Option<Asset> {
         let storage = env.storage().persistent();
-        let assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         assets.get(id)
     }
 
@@ -89,7 +91,7 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::NotInitialized);
         }
 
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let id = Self::current_id(&storage);
         assets.set(
             id,
@@ -127,7 +129,7 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::NotInitialized);
         }
         let token = storage.get(&DataKey::Token).unwrap();
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             id,
             asset_address,
@@ -177,7 +179,7 @@ impl MarketplaceContract {
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             id,
             asset_address,
@@ -214,7 +216,7 @@ impl MarketplaceContract {
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address,
             owner: set_seller,
@@ -250,7 +252,7 @@ impl MarketplaceContract {
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             id,
             asset_address,
@@ -286,7 +288,7 @@ impl MarketplaceContract {
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
-        let mut assets: Map<u64, Asset> = storage.get(&DataKey::Assets).unwrap();
+        let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address,
             owner: set_seller,
