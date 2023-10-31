@@ -63,8 +63,7 @@ impl MarketplaceContract {
         storage.set(&DataKey::Admin, &admin);
         storage.set(&DataKey::Token, &token);
         storage.set(&DataKey::Initialized, &());
-        let assets: AssetStorage = storage.get(&DataKey::Assets).unwrap_or(Map::new(&env));
-        storage.set(&DataKey::Assets, &assets);
+        storage.set(&DataKey::Assets, &Map::<u64, Asset>::new(&env));
         storage.set(&DataKey::LastID, &1u64);
     }
 
