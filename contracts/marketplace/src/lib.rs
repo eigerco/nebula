@@ -3,9 +3,10 @@
 //! The marketplace contract enables the creation and management of listings for various assets.
 //! Users can buy, update, pause, and remove listings. This contract also supports a fee or commission for transactions.
 #![no_std]
+
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error,
-    token::{self, StellarAssetClient},
+    token::{self, Client, StellarAssetClient},
     Address, Env, Map, Symbol,
 };
 
@@ -35,6 +36,7 @@ pub enum Error {
 pub struct Asset {
     owner: Address,
     price: i128,
+    quantity: i128,
     listed: bool,
 }
 
@@ -66,7 +68,7 @@ impl MarketplaceContract {
     }
 
     /// Allow sellers to list assets by specifying the seller's address, the asset's address, and the asset's price.
-    pub fn create_listing(env: Env, seller: Address, asset: Address, price: i128) {
+    pub fn create_listing(env: Env, seller: Address, asset: Address, price: i128, quantity: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -75,26 +77,28 @@ impl MarketplaceContract {
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);
         }
+
         let mut assets: Map<Address, Asset> = storage.get(&DataKey::Assets).unwrap();
         assets.set(
             asset.clone(),
             Asset {
                 owner: seller.clone(),
                 price,
+                quantity,
                 listed: true,
             },
         );
         storage.set(&DataKey::Assets, &assets);
 
-        let asset_client = StellarAssetClient::new(&env, &asset);
-        asset_client.set_admin(&env.current_contract_address());
- 
+        let asset_client = Client::new(&env, &asset);
+        asset_client.transfer(&seller, &env.current_contract_address(), &quantity);
+
         let topics = (Symbol::new(&env, "create_listing"), (seller));
         env.events().publish(topics, asset);
     }
 
     /// Enable buyers to purchase assets by providing the buyer's address, the asset's address, and the agreed-upon price.
-    pub fn buy_listing(env: Env, buyer: Address, asset: Address, price: i128) {
+    pub fn buy_listing(env: Env, buyer: Address, asset: Address, price: i128, qty: i128) {
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
@@ -108,8 +112,10 @@ impl MarketplaceContract {
         let Asset {
             owner: seller,
             price: set_price,
+            quantity,
             listed,
         } = assets.get(asset.clone()).unwrap();
+
         if !listed {
             panic_with_error!(&env, Error::AssetNotListed);
         }
@@ -117,22 +123,23 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
         let token = token::Client::new(&env, &token);
-        if token.balance(&buyer) < price {
+        if token.balance(&buyer) < price * qty {
             panic_with_error!(&env, Error::BalanceTooLow);
         }
-        token.transfer(&buyer, &seller, &price);
+        token.transfer(&buyer, &seller, &(price * qty));
         assets.set(
             asset.clone(),
             Asset {
                 owner: buyer.clone(),
                 price,
+                quantity,
                 listed: false,
             },
         );
         storage.set(&DataKey::Assets, &assets);
 
-        let asset_client = StellarAssetClient::new(&env, &asset);
-        asset_client.set_admin(&buyer);
+        let asset_client = Client::new(&env, &asset);
+        asset_client.transfer(&env.current_contract_address(), &buyer, &qty);
 
         let topics = (Symbol::new(&env, "buy_listing"), (buyer));
         env.events().publish(topics, asset);
@@ -159,6 +166,7 @@ impl MarketplaceContract {
         let Asset {
             owner: set_seller,
             price: set_price,
+            quantity,
             listed,
         } = assets.get(asset.clone()).unwrap();
         if set_seller != seller {
@@ -173,11 +181,12 @@ impl MarketplaceContract {
             Asset {
                 owner: seller.clone(),
                 price: new_price,
+                quantity,
                 listed,
             },
         );
         storage.set(&DataKey::Assets, &assets);
-        let topics = (Symbol::new(&env, "update_price"), (seller));
+        let topics = (Symbol::new(&env, "update"), (seller));
         env.events().publish(topics, asset);
     }
 
@@ -196,6 +205,7 @@ impl MarketplaceContract {
         let Asset {
             owner: set_seller,
             price: set_price,
+            quantity,
             ..
         } = assets.get(asset.clone()).unwrap();
         if set_seller != seller {
@@ -209,6 +219,7 @@ impl MarketplaceContract {
             Asset {
                 owner: seller.clone(),
                 price,
+                quantity,
                 listed: false,
             },
         );
@@ -238,6 +249,7 @@ impl MarketplaceContract {
         let Asset {
             owner: set_seller,
             price: set_price,
+            quantity,
             ..
         } = assets.get(asset.clone()).unwrap();
         if set_seller != seller {
@@ -251,6 +263,7 @@ impl MarketplaceContract {
             Asset {
                 owner: seller.clone(),
                 price: new_price,
+                quantity,
                 listed: true,
             },
         );
