@@ -70,6 +70,7 @@ impl MarketplaceContract {
 
     pub fn get_listing(env: Env, id: u64) -> Option<Asset> {
         let storage = env.storage().persistent();
+        Self::must_be_initialized(&env, &storage);
         let assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         assets.get(id)
     }
@@ -90,9 +91,8 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::InvalidQuantity);
         }
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
 
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let id = Self::current_id(&storage);
@@ -118,6 +118,12 @@ impl MarketplaceContract {
         id
     }
 
+    fn must_be_initialized(env: &Env, storage: &Persistent) {
+        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
+            panic_with_error!(&env, Error::NotInitialized);
+        }
+    }
+
     fn current_id(storage: &Persistent) -> u64 {
         let id: u64 = storage.get(&DataKey::LastID).unwrap();
         storage.set(&DataKey::LastID, &id.checked_add(1).unwrap());
@@ -128,9 +134,9 @@ impl MarketplaceContract {
     pub fn buy_listing(env: Env, buyer: Address, id: u64, qty: i128) {
         buyer.require_auth();
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
+
         let token = storage.get(&DataKey::Token).unwrap();
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
@@ -179,9 +185,9 @@ impl MarketplaceContract {
         }
         seller.require_auth();
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
+
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             id,
@@ -216,9 +222,9 @@ impl MarketplaceContract {
     pub fn pause_listing(env: Env, seller: Address, id: u64) {
         seller.require_auth();
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
+
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address,
@@ -252,9 +258,9 @@ impl MarketplaceContract {
     pub fn unpause_listing(env: Env, seller: Address, id: u64) {
         seller.require_auth();
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
+
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             id,
@@ -288,9 +294,9 @@ impl MarketplaceContract {
     pub fn remove_listing(env: Env, seller: Address, id: u64) {
         seller.require_auth();
         let storage = env.storage().persistent();
-        if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
-            panic_with_error!(&env, Error::NotInitialized);
-        }
+
+        Self::must_be_initialized(&env, &storage);
+
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address: _,

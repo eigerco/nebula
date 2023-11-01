@@ -362,3 +362,73 @@ fn cannot_do_negative_update() {
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
     contract_client.update_price(&seller, &id, &-100)
 }
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_create_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.create_listing(&Address::random(&env), &Address::random(&env), &1, &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_buy_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.buy_listing(&Address::random(&env), &1, &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_get_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.get_listing(&1).unwrap();
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_pause_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.pause_listing(&Address::random(&env), &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_unpause_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.unpause_listing(&Address::random(&env), &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_update_price_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.update_price(&Address::random(&env), &1, &1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn cannot_remove_listing_without_initialize() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register_contract(None, MarketplaceContract);
+    let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
+    client.remove_listing(&Address::random(&env), &1);
+}
