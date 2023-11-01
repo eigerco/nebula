@@ -57,6 +57,26 @@ fn can_create_listing() {
 }
 
 #[test]
+fn create_listing_increments_id() {
+    let (env, client) = setup_test();
+    let admin = Address::random(&env);
+    let seller = Address::random(&env);
+    let token = Address::random(&env);
+
+    let token = create_token_asset(&env, &token);
+    client.init(&token.address, &admin);
+
+    let asset_client_admin = create_token_asset(&env, &seller);
+    asset_client_admin.mint(&seller, &4);
+
+    let id_1 = client.create_listing(&seller, &asset_client_admin.address, &100, &2);
+    let id_2 = client.create_listing(&seller, &asset_client_admin.address, &100, &2);
+
+    assert_eq!(1, id_1);
+    assert_eq!(2, id_2);
+}
+
+#[test]
 fn can_create_listing_and_pause() {
     let (env, client) = setup_test();
     let admin = Address::random(&env);
