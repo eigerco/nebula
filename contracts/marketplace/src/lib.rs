@@ -7,7 +7,7 @@
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error,
     storage::Persistent,
-    token::{self, Client, StellarAssetClient},
+    token::{self, Client},
     Address, Env, Map, Symbol,
 };
 
@@ -183,7 +183,7 @@ impl MarketplaceContract {
             id,
             asset_address,
             owner: set_seller,
-            price,
+            price: _,
             quantity,
             listed,
         } = assets.get(id).unwrap();
@@ -289,7 +289,7 @@ impl MarketplaceContract {
         }
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
-            asset_address,
+            asset_address: _,
             owner: set_seller,
             ..
         } = assets.get(id).unwrap();
@@ -299,9 +299,6 @@ impl MarketplaceContract {
 
         assets.remove(id).unwrap();
         storage.set(&DataKey::Assets, &assets);
-
-        let asset_client = StellarAssetClient::new(&env, &asset_address);
-        asset_client.set_admin(&seller);
 
         let topics = (Symbol::new(&env, "remove_listing"), (seller));
         env.events().publish(topics, id);
