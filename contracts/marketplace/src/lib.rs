@@ -31,6 +31,7 @@ pub enum Error {
     AssetNotListed = 4,
     InvalidAuth = 5,
     NotInitialized = 6,
+    InvalidQuantity = 7,
 }
 
 #[contracttype]
@@ -81,10 +82,13 @@ impl MarketplaceContract {
         price: i128,
         quantity: i128,
     ) -> u64 {
+        seller.require_auth();
         if price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
-        seller.require_auth();
+        if quantity <= 0 {
+            panic_with_error!(&env, Error::InvalidQuantity);
+        }
         let storage = env.storage().persistent();
         if storage.get::<_, ()>(&DataKey::Initialized).is_none() {
             panic_with_error!(&env, Error::NotInitialized);

@@ -117,6 +117,78 @@ fn create_listing_increments_id() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #2)")]
+fn cannot_create_negative_price_listing() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    contract_client.create_listing(&seller, &asset_admin_client.address, &-100, &2);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #2)")]
+fn cannot_create_zero_price_listing() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    contract_client.create_listing(&seller, &asset_admin_client.address, &0, &2);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #7)")]
+fn cannot_create_negative_quantity_listing() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    contract_client.create_listing(&seller, &asset_admin_client.address, &100, &-1);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #7)")]
+fn cannot_create_zero_quantity_listing() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    contract_client.create_listing(&seller, &asset_admin_client.address, &100, &0);
+}
+
+#[test]
 fn can_create_listing_and_pause() {
     let (
         env,
@@ -269,25 +341,6 @@ fn can_remove_a_listing() {
 
     let listing = contract_client.get_listing(&id);
     assert!(listing.is_none());
-}
-
-#[test]
-#[should_panic(expected = "Error(Contract, #2)")]
-fn cannot_create_negative_listing() {
-    let (
-        _env,
-        contract_client,
-        _token_client,
-        _token_admin_client,
-        _asset_client,
-        asset_admin_client,
-        seller,
-        _buyer,
-    ) = setup_test();
-
-    asset_admin_client.mint(&seller, &2);
-
-    contract_client.create_listing(&seller, &asset_admin_client.address, &-100, &2);
 }
 
 #[test]
