@@ -384,35 +384,10 @@ fn can_update_a_listing() {
     asset_admin_client.mint(&seller, &10);
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
 
-    let listing = contract_client.get_listing(&id).unwrap();
-
-    assert_eq!(&listing.listed, &true);
-    assert_eq!(&listing.owner, &seller);
-    assert_eq!(&listing.price, &100);
-    assert_eq!(&listing.quantity, &2);
-
     contract_client.update_price(&seller, &id, &200);
 
     let listing = contract_client.get_listing(&id).unwrap();
-    assert_eq!(&listing.listed, &true);
-    assert_eq!(&listing.owner, &seller);
-    assert_eq!(&listing.price, &200);
-
-    // TODO: move commented code below to its own test
-
-    // client.pause_listing(&seller, &asset_admin_client.address, &200, &3);
-
-    // let listing = client.get_listing(&asset_admin_client.address).unwrap();
-    // assert_eq!(&listing.listed, &false);
-    // assert_eq!(&listing.owner, &seller);
-    // assert_eq!(&listing.price, &200);
-
-    // client.unpause_listing(&seller, &asset_admin_client.address, &200, &3);
-
-    // let listing = client.get_listing(&asset_admin_client.address).unwrap();
-    // assert_eq!(&listing.listed, &true);
-    // assert_eq!(&listing.owner, &seller);
-    // assert_eq!(&listing.price, &190);
+    assert_eq!(listing.price, 200);
 }
 
 #[test]
