@@ -321,6 +321,51 @@ fn can_complete_a_sell_operation() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn cannot_buy_if_not_enough_balance() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        token_admin_client,
+        asset_client,
+        asset_admin_client,
+        seller,
+        buyer,
+    ) = setup_test();
+
+    // Prepare the marketplace
+    asset_admin_client.mint(&seller, &2);
+    let id = contract_client.create_listing(&seller, &asset_client.address, &100, &2);
+    token_admin_client.mint(&buyer, &199);
+
+    // Buy !
+    contract_client.buy_listing(&buyer, &id, &2);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #4)")]
+fn cannot_sell_when_unlisted() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    token_admin_client.mint(&buyer, &400);
+
+    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+    contract_client.pause_listing(&seller, &id);
+    contract_client.buy_listing(&buyer, &id, &2);
+}
+
+#[test]
 fn can_update_a_listing() {
     let (
         _env,
@@ -365,28 +410,6 @@ fn can_update_a_listing() {
     // assert_eq!(&listing.listed, &true);
     // assert_eq!(&listing.owner, &seller);
     // assert_eq!(&listing.price, &190);
-}
-
-#[test]
-#[should_panic(expected = "Error(Contract, #4)")]
-fn cannot_sell_when_unlisted() {
-    let (
-        _env,
-        contract_client,
-        _token_client,
-        token_admin_client,
-        _asset_client,
-        asset_admin_client,
-        seller,
-        buyer,
-    ) = setup_test();
-
-    asset_admin_client.mint(&seller, &2);
-    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    contract_client.pause_listing(&seller, &id);
-
-    token_admin_client.mint(&buyer, &400);
-    contract_client.buy_listing(&buyer, &id, &2);
 }
 
 #[test]
