@@ -208,7 +208,7 @@ impl MarketplaceContract {
             },
         );
         storage.set(&DataKey::Assets, &assets);
-        let topics = (Symbol::new(&env, "update"), (seller));
+        let topics = (Symbol::new(&env, "update_price"), (seller));
         env.events().publish(topics, id);
     }
 

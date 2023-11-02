@@ -371,7 +371,7 @@ fn cannot_sell_when_unlisted() {
 #[test]
 fn can_update_a_listing() {
     let (
-        _env,
+        env,
         contract_client,
         _token_client,
         _token_admin_client,
@@ -386,8 +386,31 @@ fn can_update_a_listing() {
 
     contract_client.update_price(&seller, &id, &200);
 
+    assert_auth(
+        &env.auths(),
+        0,
+        seller.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "update_price"),
+        (seller.clone(), id, 200i128).into_val(&env),
+    );
+
     let listing = contract_client.get_listing(&id).unwrap();
     assert_eq!(listing.price, 200);
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "update_price"), seller.clone()).into_val(&env),
+                id.into_val(&env)
+            ),
+        ]
+    );
+    
 }
 
 #[test]
