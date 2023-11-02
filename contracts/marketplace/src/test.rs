@@ -242,28 +242,6 @@ fn cannot_create_zero_quantity_listing() {
 }
 
 #[test]
-fn pausing_asset_is_reflected_in_listing() {
-    let (
-        _env,
-        contract_client,
-        _token_client,
-        _token_admin_client,
-        _asset_client,
-        asset_admin_client,
-        seller,
-        _buyer,
-    ) = setup_test();
-
-    asset_admin_client.mint(&seller, &2);
-    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-
-    contract_client.pause_listing(&id);
-    let listing = contract_client.get_listing(&id).unwrap();
-
-    assert_eq!(&listing.listed, &false);
-}
-
-#[test]
 fn can_complete_a_sell_operation() {
     let (
         env,
@@ -410,6 +388,95 @@ fn can_update_a_listing() {
             ),
         ]
     );
+}
+
+#[test]
+fn can_pause_a_listing() {
+    let (
+        env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+
+    contract_client.pause_listing(&id);
+
+    assert_auth(
+        &env.auths(),
+        0,
+        seller.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "pause_listing"),
+        (id,).into_val(&env),
+    );
+
+    let listing = contract_client.get_listing(&id).unwrap();
+    assert_eq!(&listing.listed, &false);
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "pause_listing"), seller.clone()).into_val(&env),
+                id.into_val(&env)
+            ),
+        ]
+    )
+}
+
+#[test]
+fn can_unpause_a_listing() {
+    let (
+        env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+
+    contract_client.pause_listing(&id);
+    contract_client.unpause_listing(&id);
+
+    assert_auth(
+        &env.auths(),
+        0,
+        seller.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "unpause_listing"),
+        (id,).into_val(&env),
+    );
+
+    let listing = contract_client.get_listing(&id).unwrap();
+    assert_eq!(&listing.listed, &true);
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "unpause_listing"), seller.clone()).into_val(&env),
+                id.into_val(&env)
+            ),
+        ]
+    )
 }
 
 #[test]
