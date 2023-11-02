@@ -257,7 +257,7 @@ fn pausing_asset_is_reflected_in_listing() {
     asset_admin_client.mint(&seller, &2);
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
 
-    contract_client.pause_listing(&seller, &id);
+    contract_client.pause_listing(&id);
     let listing = contract_client.get_listing(&id).unwrap();
 
     assert_eq!(&listing.listed, &false);
@@ -364,7 +364,7 @@ fn cannot_sell_when_unlisted() {
     token_admin_client.mint(&buyer, &400);
 
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    contract_client.pause_listing(&seller, &id);
+    contract_client.pause_listing(&id);
     contract_client.buy_listing(&buyer, &id);
 }
 
@@ -428,7 +428,7 @@ fn can_remove_a_listing() {
     asset_admin_client.mint(&seller, &2);
 
     let id: u64 = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    contract_client.remove_listing(&seller, &id);
+    contract_client.remove_listing(&id);
 
     let listing = contract_client.get_listing(&id);
     assert!(listing.is_none());
@@ -511,7 +511,7 @@ fn cannot_pause_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.pause_listing(&Address::random(&env), &1);
+    client.pause_listing(&1);
 }
 
 #[test]
@@ -521,7 +521,7 @@ fn cannot_unpause_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.unpause_listing(&Address::random(&env), &1);
+    client.unpause_listing(&1);
 }
 
 #[test]
@@ -541,5 +541,5 @@ fn cannot_remove_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.remove_listing(&Address::random(&env), &1);
+    client.remove_listing(&1);
 }

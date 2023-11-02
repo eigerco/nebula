@@ -213,8 +213,7 @@ impl MarketplaceContract {
 
     /// Allow sellers to pause a listing by specifying their address, the asset's address,
     /// and the price at which it was listed.
-    pub fn pause_listing(env: Env, seller: Address, id: u64) {
-        seller.require_auth();
+    pub fn pause_listing(env: Env, id: u64) {
         let storage = env.storage().persistent();
 
         Self::must_be_initialized(&env, &storage);
@@ -222,35 +221,33 @@ impl MarketplaceContract {
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address,
-            owner: set_seller,
+            owner,
             price,
             quantity,
             ..
         } = assets.get(id).unwrap();
-        if set_seller != seller {
-            panic_with_error!(&env, Error::InvalidAuth);
-        }
+
+        owner.require_auth();
 
         assets.set(
             id,
             Asset {
                 id,
                 asset_address,
-                owner: seller.clone(),
+                owner: owner.clone(),
                 price,
                 quantity,
                 listed: false,
             },
         );
         storage.set(&DataKey::Assets, &assets);
-        let topics = (Symbol::new(&env, "pause_listing"), (seller));
+        let topics = (Symbol::new(&env, "pause_listing"), (owner));
         env.events().publish(topics, id);
     }
 
     /// Allow sellers to un-pause a listing by specifying their address, the asset's address,
     /// and the price at which it is listed.
-    pub fn unpause_listing(env: Env, seller: Address, id: u64) {
-        seller.require_auth();
+    pub fn unpause_listing(env: Env, id: u64) {
         let storage = env.storage().persistent();
 
         Self::must_be_initialized(&env, &storage);
@@ -259,34 +256,32 @@ impl MarketplaceContract {
         let Asset {
             id,
             asset_address,
-            owner: set_seller,
+            owner,
             price,
             quantity,
             ..
         } = assets.get(id).unwrap();
-        if set_seller != seller {
-            panic_with_error!(&env, Error::InvalidAuth);
-        }
+
+        owner.require_auth();
 
         assets.set(
             id,
             Asset {
                 id,
                 asset_address,
-                owner: set_seller,
+                owner: owner.clone(),
                 price,
                 quantity,
                 listed: true,
             },
         );
         storage.set(&DataKey::Assets, &assets);
-        let topics = (Symbol::new(&env, "unpause_listing"), (seller));
+        let topics = (Symbol::new(&env, "unpause_listing"), (owner));
         env.events().publish(topics, id);
     }
     /// Allow sellers to completely remove a listing by specifying their address, the asset's address,
     /// and the price at which it was listed.
-    pub fn remove_listing(env: Env, seller: Address, id: u64) {
-        seller.require_auth();
+    pub fn remove_listing(env: Env, id: u64) {
         let storage = env.storage().persistent();
 
         Self::must_be_initialized(&env, &storage);
@@ -294,17 +289,16 @@ impl MarketplaceContract {
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
             asset_address: _,
-            owner: set_seller,
+            owner,
             ..
         } = assets.get(id).unwrap();
-        if set_seller != seller {
-            panic_with_error!(&env, Error::InvalidAuth);
-        }
+
+        owner.require_auth();
 
         assets.remove(id).unwrap();
         storage.set(&DataKey::Assets, &assets);
 
-        let topics = (Symbol::new(&env, "remove_listing"), (seller));
+        let topics = (Symbol::new(&env, "remove_listing"), (owner));
         env.events().publish(topics, id);
     }
 }
