@@ -456,6 +456,26 @@ fn cannot_do_negative_update() {
 }
 
 #[test]
+#[should_panic(expected = "Error(Contract, #2)")]
+fn cannot_do_zero_update() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    asset_admin_client.mint(&seller, &2);
+
+    let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+    contract_client.update_price(&seller, &id, &0)
+}
+
+#[test]
 #[should_panic(expected = "Error(Contract, #6)")]
 fn cannot_create_listing_without_initialize() {
     let env = Env::default();
