@@ -317,7 +317,10 @@ fn can_complete_a_sell_operation() {
                 id.into_val(&env)
             ),
         ]
-    )
+    );
+
+    // After sell operation, the listing is removed.
+    assert!(contract_client.get_listing(&id).is_none())
 }
 
 #[test]

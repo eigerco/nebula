@@ -162,17 +162,7 @@ impl MarketplaceContract {
             panic_with_error!(&env, Error::BalanceTooLow);
         }
         token.transfer(&buyer, &seller, &(price * quantity));
-        assets.set(
-            id,
-            Asset {
-                id,
-                asset_address: asset_address.clone(),
-                owner: buyer.clone(),
-                price,
-                quantity,
-                listed: false,
-            },
-        );
+        assets.remove(id);
         storage.set(&DataKey::Assets, &assets);
 
         let asset_client = Client::new(&env, &asset_address);
