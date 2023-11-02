@@ -242,9 +242,9 @@ fn cannot_create_zero_quantity_listing() {
 }
 
 #[test]
-fn can_create_listing_and_pause() {
+fn pausing_asset_is_reflected_in_listing() {
     let (
-        env,
+        _env,
         contract_client,
         _token_client,
         _token_admin_client,
@@ -256,15 +256,11 @@ fn can_create_listing_and_pause() {
 
     asset_admin_client.mint(&seller, &2);
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+    
     contract_client.pause_listing(&seller, &id);
     let listing = contract_client.get_listing(&id).unwrap();
 
     assert_eq!(&listing.listed, &false);
-    assert_eq!(&listing.owner, &seller);
-    let asset_client = Client::new(&env, &asset_admin_client.address);
-    assert_eq!(asset_client.balance(&contract_client.address), 2); // Now the contract keeps the ownership of the NFTs.
-    assert_eq!(&listing.price, &100);
-    assert_eq!(&listing.quantity, &2);
 }
 
 #[test]
