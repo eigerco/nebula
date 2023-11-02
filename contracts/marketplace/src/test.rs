@@ -266,7 +266,7 @@ fn pausing_asset_is_reflected_in_listing() {
 #[test]
 fn can_complete_a_sell_operation() {
     let (
-        _env,
+        env,
         contract_client,
         token_client,
         token_admin_client,
@@ -284,6 +284,15 @@ fn can_complete_a_sell_operation() {
     // Buy !
     contract_client.buy_listing(&buyer, &id, &2);
 
+    assert_auth(
+        &env.auths(),
+        0,
+        buyer.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "buy_listing"),
+        (buyer.clone(), id, 2i128).into_val(&env),
+    );
+
     assert_eq!(asset_client.balance(&contract_client.address), 0); // Contract no longer the owner of the NFTS.
     assert_eq!(asset_client.balance(&seller), 0); // Now the seller has no NFTs.
     assert_eq!(asset_client.balance(&buyer), 2); // Now the buyer has the ownership of the NFTs.
@@ -296,6 +305,19 @@ fn can_complete_a_sell_operation() {
         &token_client.balance(&buyer), // Buyer has 200 tokes less.
         &0
     );
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "buy_listing"), buyer.clone()).into_val(&env),
+                id.into_val(&env)
+            ),
+        ]
+    )
 }
 
 #[test]
