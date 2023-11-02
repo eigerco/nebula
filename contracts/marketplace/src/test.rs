@@ -282,7 +282,7 @@ fn can_complete_a_sell_operation() {
     token_admin_client.mint(&buyer, &200);
 
     // Buy !
-    contract_client.buy_listing(&buyer, &id, &2);
+    contract_client.buy_listing(&buyer, &id);
 
     assert_auth(
         &env.auths(),
@@ -290,7 +290,7 @@ fn can_complete_a_sell_operation() {
         buyer.clone(),
         contract_client.address.clone(),
         Symbol::new(&env, "buy_listing"),
-        (buyer.clone(), id, 2i128).into_val(&env),
+        (buyer.clone(), id).into_val(&env),
     );
 
     assert_eq!(asset_client.balance(&contract_client.address), 0); // Contract no longer the owner of the NFTS.
@@ -340,7 +340,7 @@ fn cannot_buy_if_not_enough_balance() {
     token_admin_client.mint(&buyer, &199);
 
     // Buy !
-    contract_client.buy_listing(&buyer, &id, &2);
+    contract_client.buy_listing(&buyer, &id);
 }
 
 #[test]
@@ -362,7 +362,7 @@ fn cannot_sell_when_unlisted() {
 
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
     contract_client.pause_listing(&seller, &id);
-    contract_client.buy_listing(&buyer, &id, &2);
+    contract_client.buy_listing(&buyer, &id);
 }
 
 #[test]
@@ -471,7 +471,7 @@ fn cannot_buy_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.buy_listing(&Address::random(&env), &1, &1);
+    client.buy_listing(&Address::random(&env), &1);
 }
 
 #[test]

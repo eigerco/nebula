@@ -136,7 +136,7 @@ impl MarketplaceContract {
     }
 
     /// Enable buyers to purchase assets by providing the buyer's address, the asset's address, and the agreed-upon price.
-    pub fn buy_listing(env: Env, buyer: Address, id: u64, qty: i128) {
+    pub fn buy_listing(env: Env, buyer: Address, id: u64) {
         buyer.require_auth();
         let storage = env.storage().persistent();
 
@@ -158,10 +158,10 @@ impl MarketplaceContract {
         }
 
         let token = token::Client::new(&env, &token);
-        if token.balance(&buyer) < price * qty {
+        if token.balance(&buyer) < price * quantity {
             panic_with_error!(&env, Error::BalanceTooLow);
         }
-        token.transfer(&buyer, &seller, &(price * qty));
+        token.transfer(&buyer, &seller, &(price * quantity));
         assets.set(
             id,
             Asset {
@@ -176,7 +176,7 @@ impl MarketplaceContract {
         storage.set(&DataKey::Assets, &assets);
 
         let asset_client = Client::new(&env, &asset_address);
-        asset_client.transfer(&env.current_contract_address(), &buyer, &qty);
+        asset_client.transfer(&env.current_contract_address(), &buyer, &quantity);
 
         let topics = (Symbol::new(&env, "buy_listing"), (buyer));
         env.events().publish(topics, id);
