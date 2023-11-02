@@ -4,10 +4,26 @@ extern crate std;
 
 use crate::{MarketplaceContract, MarketplaceContractClient};
 use soroban_sdk::{
-    testutils::Address as _,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events},
     token::{self, Client},
-    Address, Env,
+    vec, Address, Env, IntoVal, Symbol, Val, Vec,
 };
+
+fn assert_auth(
+    auths: &[(Address, AuthorizedInvocation)],
+    idx: usize,
+    auth_addr: Address,
+    call_addr: Address,
+    func: Symbol,
+    args: Vec<Val>,
+) {
+    let auth = auths.get(idx).unwrap();
+    assert_eq!(auth.0, auth_addr);
+    assert_eq!(
+        auth.1.function,
+        AuthorizedFunction::Contract((call_addr, func, args))
+    );
+}
 
 fn setup_test<'a>() -> (
     Env,
@@ -73,7 +89,7 @@ fn can_create_listing() {
         contract_client,
         _token_client,
         _token_admin_client,
-        _asset_client,
+        asset_client,
         asset_admin_client,
         seller,
         _buyer,
@@ -82,16 +98,38 @@ fn can_create_listing() {
     asset_admin_client.mint(&seller, &2); // Seller has 2 NFTs.
 
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
+
+    assert_auth(
+        &env.auths(),
+        0,
+        seller.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "create_listing"),
+        (seller.clone(), asset_admin_client.address, 100i128, 2i128).into_val(&env),
+    );
+
     let listing = contract_client.get_listing(&id).unwrap();
 
     assert_eq!(&listing.id, &1);
     assert_eq!(&listing.listed, &true);
     assert_eq!(&listing.owner, &seller);
 
-    let asset_client = Client::new(&env, &asset_admin_client.address);
     assert_eq!(asset_client.balance(&contract_client.address), 2); // Now the contract has the ownership of the NFTs.
     assert_eq!(&listing.price, &100);
     assert_eq!(&listing.quantity, &2);
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "create_listing"), seller.clone()).into_val(&env),
+                1u64.into_val(&env)
+            ),
+        ]
+    )
 }
 
 #[test]
