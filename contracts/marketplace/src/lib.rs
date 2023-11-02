@@ -110,6 +110,11 @@ impl MarketplaceContract {
         storage.set(&DataKey::Assets, &assets);
 
         let asset_client = Client::new(&env, &asset_address);
+
+        if asset_client.balance(&seller) < quantity {
+            panic_with_error!(&env, Error::BalanceTooLow);
+        }
+
         asset_client.transfer(&seller, &env.current_contract_address(), &quantity);
 
         let topics = (Symbol::new(&env, "create_listing"), (seller));

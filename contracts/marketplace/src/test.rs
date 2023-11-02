@@ -167,9 +167,24 @@ fn cannot_create_negative_price_listing() {
         seller,
         _buyer,
     ) = setup_test();
-
-    asset_admin_client.mint(&seller, &2);
     contract_client.create_listing(&seller, &asset_admin_client.address, &-100, &2);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn cannot_create_listing_if_not_balance() {
+    let (
+        _env,
+        contract_client,
+        _token_client,
+        _token_admin_client,
+        _asset_client,
+        asset_admin_client,
+        seller,
+        _buyer,
+    ) = setup_test();
+
+    contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
 }
 
 #[test]
