@@ -288,7 +288,6 @@ impl MarketplaceContract {
 
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
         let Asset {
-            asset_address: _,
             owner,
             ..
         } = assets.get(id).unwrap();

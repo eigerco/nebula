@@ -482,7 +482,7 @@ fn can_unpause_a_listing() {
 #[test]
 fn can_remove_a_listing() {
     let (
-        _env,
+        env,
         contract_client,
         _token_client,
         _token_admin_client,
@@ -497,8 +497,30 @@ fn can_remove_a_listing() {
     let id: u64 = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
     contract_client.remove_listing(&id);
 
+    assert_auth(
+        &env.auths(),
+        0,
+        seller.clone(),
+        contract_client.address.clone(),
+        Symbol::new(&env, "remove_listing"),
+        (id,).into_val(&env),
+    );
+
     let listing = contract_client.get_listing(&id);
     assert!(listing.is_none());
+
+    let last_events = env.events().all().slice(env.events().all().len() - 1..);
+    assert_eq!(
+        last_events,
+        vec![
+            &env,
+            (
+                contract_client.address.clone(),
+                (Symbol::new(&env, "remove_listing"), seller.clone()).into_val(&env),
+                id.into_val(&env)
+            ),
+        ]
+    )
 }
 
 #[test]
