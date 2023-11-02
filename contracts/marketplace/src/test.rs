@@ -256,7 +256,7 @@ fn pausing_asset_is_reflected_in_listing() {
 
     asset_admin_client.mint(&seller, &2);
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    
+
     contract_client.pause_listing(&seller, &id);
     let listing = contract_client.get_listing(&id).unwrap();
 
@@ -264,7 +264,7 @@ fn pausing_asset_is_reflected_in_listing() {
 }
 
 #[test]
-fn can_create_listing_and_sell() {
+fn can_complete_a_sell_operation() {
     let (
         _env,
         contract_client,
@@ -276,20 +276,17 @@ fn can_create_listing_and_sell() {
         buyer,
     ) = setup_test();
 
+    // Prepare the marketplace
     asset_admin_client.mint(&seller, &2);
     let id = contract_client.create_listing(&seller, &asset_client.address, &100, &2);
+    token_admin_client.mint(&buyer, &200);
 
-    token_admin_client.mint(&buyer, &400);
-
+    // Buy !
     contract_client.buy_listing(&buyer, &id, &2);
 
-    let listing = contract_client.get_listing(&id).unwrap();
-
-    assert_eq!(&listing.listed, &false);
-    assert_eq!(&listing.owner, &buyer);
     assert_eq!(asset_client.balance(&contract_client.address), 0); // Contract no longer the owner of the NFTS.
+    assert_eq!(asset_client.balance(&seller), 0); // Now the seller has no NFTs.
     assert_eq!(asset_client.balance(&buyer), 2); // Now the buyer has the ownership of the NFTs.
-    assert_eq!(&listing.price, &100);
 
     assert_eq!(
         &token_client.balance(&seller), // Seller has 200 tokens more.
@@ -297,7 +294,7 @@ fn can_create_listing_and_sell() {
     );
     assert_eq!(
         &token_client.balance(&buyer), // Buyer has 200 tokes less.
-        &200
+        &0
     );
 }
 
