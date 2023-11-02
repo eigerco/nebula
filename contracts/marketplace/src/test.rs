@@ -384,7 +384,7 @@ fn can_update_a_listing() {
     asset_admin_client.mint(&seller, &10);
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
 
-    contract_client.update_price(&seller, &id, &200);
+    contract_client.update_price(&id, &200);
 
     assert_auth(
         &env.auths(),
@@ -392,7 +392,7 @@ fn can_update_a_listing() {
         seller.clone(),
         contract_client.address.clone(),
         Symbol::new(&env, "update_price"),
-        (seller.clone(), id, 200i128).into_val(&env),
+        (id, 200i128).into_val(&env),
     );
 
     let listing = contract_client.get_listing(&id).unwrap();
@@ -410,7 +410,6 @@ fn can_update_a_listing() {
             ),
         ]
     );
-    
 }
 
 #[test]
@@ -452,7 +451,7 @@ fn cannot_do_negative_update() {
     asset_admin_client.mint(&seller, &2);
 
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    contract_client.update_price(&seller, &id, &-100)
+    contract_client.update_price(&id, &-100)
 }
 
 #[test]
@@ -472,7 +471,7 @@ fn cannot_do_zero_update() {
     asset_admin_client.mint(&seller, &2);
 
     let id = contract_client.create_listing(&seller, &asset_admin_client.address, &100, &2);
-    contract_client.update_price(&seller, &id, &0)
+    contract_client.update_price(&id, &0)
 }
 
 #[test]
@@ -532,7 +531,7 @@ fn cannot_update_price_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.update_price(&Address::random(&env), &1, &1);
+    client.update_price(&1, &1);
 }
 
 #[test]

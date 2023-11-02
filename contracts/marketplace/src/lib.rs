@@ -174,11 +174,11 @@ impl MarketplaceContract {
 
     /// Permit sellers to update the price of a listed asset,
     /// ensuring they provide the correct seller and asset addresses, as well as the old and new prices.
-    pub fn update_price(env: Env, seller: Address, id: u64, new_price: i128) {
+    pub fn update_price(env: Env, id: u64, new_price: i128) {
         if new_price <= 0 {
             panic_with_error!(&env, Error::InvalidAssetPrice);
         }
-        seller.require_auth();
+
         let storage = env.storage().persistent();
 
         Self::must_be_initialized(&env, &storage);
@@ -187,14 +187,13 @@ impl MarketplaceContract {
         let Asset {
             id,
             asset_address,
-            owner: set_seller,
-            price: _,
+            owner: seller,
             quantity,
             listed,
+            ..
         } = assets.get(id).unwrap();
-        if set_seller != seller {
-            panic_with_error!(&env, Error::InvalidAuth);
-        }
+
+        seller.require_auth();
 
         assets.set(
             id,
