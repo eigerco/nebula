@@ -48,16 +48,13 @@ script = '''
 [tasks.accounts]
 dependencies = ["create_account_admin", "create_traders"]
 
-[tasks.get_token]
+[tasks.create_asset]
 plugin = "retry_script"
 script = '''
-soroban lab token id --asset native --network ${network} > /tmp/token_id.txt
-'''
-
-[tasks.get_asset]
-plugin = "retry_script"
-script = '''
-soroban lab token id --asset native --network ${network} > /tmp/asset_id.txt
+  soroban config identity generate asset_issuer_account
+  curl "${friendbot}?addr=$(soroban config identity address asset_issuer_account)"
+  ./asset_test_gen/asset_test_gen -i $(soroban config identity show asset_issuer_account) -d $(soroban config identity show trader_1) -r $(soroban config identity show trader_2),$(soroban config identity show trader_3) > /tmp/asset_address_pair.txt
+  soroban lab token wrap --asset $(cat /tmp/asset_address_pair.txt) --network ${network} > /tmp/asset_address.txt
 '''
 
 [tasks.deploy]
@@ -78,7 +75,7 @@ script = '''
   --network ${network} \
   -- \
   init \
-  --token $(cat /tmp/token_id.txt) \
+  --token $(soroban lab token id --asset native --network testnet) \
   --admin $(soroban config identity address admin)
 '''
 
@@ -93,8 +90,9 @@ script = '''
     -- \
     create_listing \
     --seller $(soroban config identity address trader_1) \
-    --asset $(cat /tmp/asset_id.txt) \
+    --asset $(cat /tmp/asset_address.txt) \
     --price 100 \
+    --quantity 1 > /tmp/asset_id.txt
 '''
 
 [tasks.invoke_get_listing]
@@ -102,11 +100,65 @@ plugin = "retry_script"
 script = '''
   soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
-  --source trader_2 \
+  --source trader_1 \
   --network ${network} \
   -- \
   get_listing \
-  --asset $(cat /tmp/asset_id.txt) \
+  --id $(cat /tmp/asset_id.txt)
+'''
+
+[tasks.invoke_update_price]
+plugin = "retry_script"
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source trader_1 \
+  --network ${network} \
+  -- \
+  update_price \
+  --id $(cat /tmp/asset_id.txt) \
+  --new_price 150 \
+'''
+
+[tasks.invoke_pause_listing]
+plugin = "retry_script"
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source trader_1 \
+  --network ${network} \
+  -- \
+  pause_listing \
+  --id $(cat /tmp/asset_id.txt)
+'''
+
+[tasks.invoke_unpause_listing]
+plugin = "retry_script"
+script = '''
+  soroban contract invoke \
+  --id $(cat /tmp/contract_id.txt) \
+  --source trader_1 \
+  --network ${network} \
+  -- \
+  unpause_listing \
+  --id $(cat /tmp/asset_id.txt)
+'''
+
+[tasks.invoke_register]
+plugin = "retry_script"
+script = '''
+  for TRADER in 1 2 3
+  do
+    echo "Registering trader $TRADER ..."
+
+    soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source trader_$TRADER \
+    --network ${network} \
+    -- \
+    register \
+    --trader $(soroban config identity address trader_$TRADER)
+  done
 '''
 
 [tasks.invoke_buy_listing]
@@ -119,51 +171,30 @@ script = '''
   -- \
   buy_listing \
   --buyer $(soroban config identity address trader_2) \
-  --asset $(cat /tmp/asset_id.txt) \
-  --price 100 \
-'''
-
-[tasks.invoke_update_price]
-plugin = "retry_script"
-script = '''
-  soroban contract invoke \
-  --id $(cat /tmp/contract_id.txt) \
-  --source trader_2 \
-  --network ${network} \
-  -- \
-  update_price \
-  --seller $(soroban config identity address trader_2) \
-  --asset $(cat /tmp/asset_id.txt) \
-  --old_price 100 \
-  --new_price 150 \
-'''
-
-[tasks.invoke_pause_listing]
-plugin = "retry_script"
-script = '''
-  soroban contract invoke \
-  --id $(cat /tmp/contract_id.txt) \
-  --source trader_2 \
-  --network ${network} \
-  -- \
-  pause_listing \
-  --seller $(soroban config identity address trader_2) \
-  --asset $(cat /tmp/asset_id.txt) \
-  --price 150
+  --id $(cat /tmp/asset_id.txt)
 '''
 
 [tasks.invoke_remove_listing]
 plugin = "retry_script"
 script = '''
   soroban contract invoke \
+    --id $(cat /tmp/contract_id.txt) \
+    --source trader_2 \
+    --network ${network} \
+    -- \
+    create_listing \
+    --seller $(soroban config identity address trader_2) \
+    --asset $(cat /tmp/asset_address.txt) \
+    --price 100 \
+    --quantity 1 > /tmp/asset_id.txt
+
+  soroban contract invoke \
   --id $(cat /tmp/contract_id.txt) \
   --source trader_2 \
   --network ${network} \
   -- \
   remove_listing \
-  --seller $(soroban config identity address trader_2) \
-  --asset $(cat /tmp/asset_id.txt) \
-  --price 150
+  --id $(cat /tmp/asset_id.txt)
 '''
 
 
@@ -172,9 +203,11 @@ dependencies = [
   "invoke_init",
   "invoke_create_listing",
   "invoke_get_listing",
-  "invoke_buy_listing",
   "invoke_update_price",
   "invoke_pause_listing",
+  "invoke_unpause_listing",
+  "invoke_register",
+  "invoke_buy_listing",
   "invoke_remove_listing",
 ]
 
@@ -185,7 +218,7 @@ script = '''
 for TRADER in 1 2 3
   do
     soroban contract invoke \
-    --id $(cat /tmp/token_id.txt) \
+    --id $(soroban lab token id --asset native --network ${network}) \
     --network ${network} \
     -- \
     balance \
@@ -236,8 +269,7 @@ console.log('Total fees: ', (fee + adminFee))
 [tasks.run_test]
 dependencies = [
   "accounts",
-  "get_token",
-  "get_asset",
+  "create_asset",
   "deploy",
   "invoke_contract",
   "get_balances",
