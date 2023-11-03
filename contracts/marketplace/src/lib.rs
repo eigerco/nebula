@@ -79,7 +79,7 @@ impl MarketplaceContract {
     pub fn create_listing(
         env: Env,
         seller: Address,
-        asset_address: Address,
+        asset: Address,
         price: i128,
         quantity: i128,
     ) -> u64 {
@@ -100,7 +100,7 @@ impl MarketplaceContract {
             id,
             Asset {
                 id,
-                asset_address: asset_address.clone(),
+                asset_address: asset.clone(),
                 owner: seller.clone(),
                 price,
                 quantity,
@@ -109,7 +109,7 @@ impl MarketplaceContract {
         );
         storage.set(&DataKey::Assets, &assets);
 
-        let asset_client = Client::new(&env, &asset_address);
+        let asset_client = Client::new(&env, &asset);
 
         if asset_client.balance(&seller) < quantity {
             panic_with_error!(&env, Error::BalanceTooLow);
