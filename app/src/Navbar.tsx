@@ -45,7 +45,7 @@ function CustomNavbar() {
               <NavDropdown.Item as={Link} href="/docs/importer">Nebula Importer</NavDropdown.Item>
               <NavDropdown.Item as={Link} href="/docs/publish">Publishing Contacts</NavDropdown.Item>
               <NavDropdown.Divider />
-              <NavDropdown.Item href="https://github.com/eigerco/nebula/crates/">
+              <NavDropdown.Item href="https://github.com/eigerco/nebula">
                 View in Github
               </NavDropdown.Item>
             </NavDropdown>

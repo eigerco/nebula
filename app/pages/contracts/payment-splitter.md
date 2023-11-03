@@ -12,7 +12,7 @@ The payment splitter contract allows you to deploy a contract that sets a group 
 
 ```toml
 [package.metadata.nebula.imports]
-raffle = "ghcr.io/eigerco/nebula/contracts/payment_splitter:latest"
+payment_splitter = "ghcr.io/eigerco/nebula/contracts/payment_splitter:latest"
 ```
 
 ## Contract methods

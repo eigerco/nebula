@@ -26,7 +26,7 @@ The current voting mechanism requires a minimum participation configured at DAO 
 
 ````toml
 [package.metadata.nebula.imports]
-lottery = "ghcr.io/eigerco/nebula/contracts/governance:latest"
+governance = "ghcr.io/eigerco/nebula/contracts/governance:latest"
 ````
 
 ## Contract methods
