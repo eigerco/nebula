@@ -68,6 +68,11 @@ impl MarketplaceContract {
         storage.set(&DataKey::LastID, &1u64);
     }
 
+    /// This is a workaround for an under investigation bug. See https://github.com/eigerco/nebula/issues/41.
+    pub fn register(_: Env, trader: Address) {
+        trader.require_auth();
+    }
+
     pub fn get_listing(env: Env, id: u64) -> Option<Asset> {
         let storage = env.storage().persistent();
         Self::must_be_initialized(&env, &storage);
