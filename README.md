@@ -19,7 +19,7 @@ interoperability of the tools that are planned to be built:
 
 ## Wizard UI
 
-Currently a live, latest version of the wizard can be found [here](https://eigerco.github.io/nebula/).
+Currently a live, latest version of the wizard can be found [here](https://nebula.eiger.co/).
 
 The frontend contains some basic starter code.
 
@@ -35,9 +35,7 @@ To build for deployment:
 ```
 npm run build
 ```
-The dist folder will contain the files ready for static serving.
-
-Theres is a "readme" tab in the frontend that better describes the intentionality.
+The .next folder will contain the files ready for static serving.
 
 ## Contracts
 
