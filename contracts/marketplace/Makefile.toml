@@ -48,14 +48,32 @@ script = '''
 [tasks.accounts]
 dependencies = ["create_account_admin", "create_traders"]
 
-[tasks.create_asset]
-plugin = "retry_script"
+[tasks.generate_asset_issuer_account]
 script = '''
   soroban config identity generate asset_issuer_account
   curl "${friendbot}?addr=$(soroban config identity address asset_issuer_account)"
-  ./asset_test_gen/asset_test_gen -i $(soroban config identity show asset_issuer_account) -d $(soroban config identity show trader_1) -r $(soroban config identity show trader_2),$(soroban config identity show trader_3) > /tmp/asset_address_pair.txt
-  soroban lab token wrap --asset $(cat /tmp/asset_address_pair.txt) --network ${network} > /tmp/asset_address.txt
 '''
+
+[tasks.prepare_create_asset]
+cwd = "./asset_test_gen"
+script = '''
+[ -e stellar-nft-asset ] && rm -r stellar-nft-asset
+mkdir stellar-nft-asset
+cd stellar-nft-asset
+npm init -y
+npm install stellar-sdk
+cp ${CARGO_MAKE_WORKING_DIRECTORY}/create_nft_asset.js create_nft_asset.js
+node create_nft_asset.js $(soroban config identity show asset_issuer_account) -d $(soroban config identity show trader_1) -r $(soroban config identity show trader_2),$(soroban config identity show trader_3) > /tmp/asset_address_pair.txt
+'''
+
+[tasks.wrap_soroban_token]
+script = '''
+soroban lab token wrap --asset $(cat /tmp/asset_address_pair.txt) --network ${network} > /tmp/asset_address.txt
+'''
+
+[tasks.create_asset]
+dependencies = ["generate_asset_issuer_account", "prepare_create_asset", "wrap_soroban_token"]
+
 
 [tasks.deploy]
 plugin = "retry_script"
