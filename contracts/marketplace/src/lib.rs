@@ -368,12 +368,20 @@ impl MarketplaceContract {
         Self::must_be_initialized(&env, &storage);
 
         let mut assets: AssetStorage = storage.get(&DataKey::Assets).unwrap();
-        let Asset { owner, .. } = assets.get(id).unwrap();
+        let Asset {
+            owner,
+            asset_address,
+            quantity,
+            ..
+        } = assets.get(id).unwrap();
 
         owner.require_auth();
 
         assets.remove(id).unwrap();
         storage.set(&DataKey::Assets, &assets);
+
+        let asset_client = Client::new(&env, &asset_address);
+        asset_client.transfer(&env.current_contract_address(), &owner, &quantity);
 
         let topics = (Symbol::new(&env, "remove_listing"), (owner));
         env.events().publish(topics, id);

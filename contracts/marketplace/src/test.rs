@@ -486,7 +486,7 @@ fn can_remove_a_listing() {
         contract_client,
         _token_client,
         _token_admin_client,
-        _asset_client,
+        asset_client,
         asset_admin_client,
         seller,
         _buyer,
@@ -508,6 +508,10 @@ fn can_remove_a_listing() {
 
     let listing = contract_client.get_listing(&id);
     assert!(listing.is_none());
+
+    // Ownership is returned to the original owners (sellers)
+    assert_eq!(0, asset_client.balance(&contract_client.address));
+    assert_eq!(2, asset_client.balance(&seller));
 
     let last_events = env.events().all().slice(env.events().all().len() - 1..);
     assert_eq!(
