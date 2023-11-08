@@ -126,7 +126,7 @@ impl MarketplaceContract {
     /// - `env` - The environment for this contract.
     /// - `seller` - The address of the account that wants to sell. Authorization will be enforced.
     /// - `asset` - The address of the NFT to be listed. It should accomplish the token interface. See https://soroban.stellar.org/docs/reference/interfaces/token-interface .
-    /// - `price` - The price of the listing, in the trading token specified in the ['init'] function.
+    /// - `price` - The price of each element of the listing, in the trading token specified in the ['init'] function.
     /// - `quantity` - The amount of the same NFT that is being sold.
     pub fn create_listing(
         env: Env,
