@@ -5,6 +5,8 @@
 //!
 //! It accepts any token that accomplished the token interface for trading. See https://soroban.stellar.org/docs/reference/interfaces/token-interface
 //!
+//! Actually it expects the trustlines to be in-place among NFTs and buyers. There is a work in progress and more information regarding this here: https://github.com/eigerco/nebula/issues/103 .
+//! 
 //! See public function contracts documentation for further explanations regarding the available
 //! actions.
 #![no_std]

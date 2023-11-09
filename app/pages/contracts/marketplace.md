@@ -2,6 +2,8 @@
 
 The marketplace contract enables the creation and management of listings for various assets. Users can buy, update, pause, and remove listings.
 
+Actually it expects the trustlines to be in-place among NFTs and buyers. There is a work in progress and more information regarding this here: https://github.com/eigerco/nebula/issues/103 .
+
 ## Features
 
 - Create and manage listings for assets.
