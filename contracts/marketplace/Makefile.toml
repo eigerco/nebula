@@ -63,7 +63,7 @@ cd stellar-nft-asset
 npm init -y
 npm install stellar-sdk
 cp ${CARGO_MAKE_WORKING_DIRECTORY}/create_nft_asset.js create_nft_asset.js
-node create_nft_asset.js $(soroban config identity show asset_issuer_account) -d $(soroban config identity show trader_1) -r $(soroban config identity show trader_2),$(soroban config identity show trader_3) > /tmp/asset_address_pair.txt
+node create_nft_asset.js $(soroban config identity show asset_issuer_account) $(soroban config identity show trader_1) $(soroban config identity show trader_2),$(soroban config identity show trader_3) > /tmp/asset_address_pair.txt
 '''
 
 [tasks.wrap_soroban_token]

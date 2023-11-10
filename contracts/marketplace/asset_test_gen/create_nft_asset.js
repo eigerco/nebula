@@ -1,64 +1,92 @@
-var StellarSdk = require("stellar-sdk");
-var server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
+// [0] string
+//         The asset distributor seed. i.e: SBUW3DVYLKLY5ZUJD5PL2ZHOFWJSVWGJA47F6FLO66UUFZLUUA2JVU5U
+// [1] string
+//         The asset issuer seed. i.e: SDR4C2CKNCVK4DWMTNI2IXFJ6BE3A6J3WVNCGR6Q3SCMJDTSVHMJGC6U
+// [2] string
+//         Other possible receivers seeds of the asset. Comma separated list of seeds. i.e: SBUW...,SBUW3..
+const args = process.argv.slice(2);
 
-// Keys for accounts to issue and receive the new asset
-var issuingKeys = StellarSdk.Keypair.fromSecret(
-  "SCZANGBA5YHTNYVVV4C3U252E2B6P6F5T3U6MM63WBSBZATAQI3EBTQ4",
-);
-var receivingKeys = StellarSdk.Keypair.fromSecret(
-  "SDSAVCRE5JRAI7UFAVLE5IMIZRD6N6WOJUWKY4GFN34LOBEEUS4W2T2D",
-);
+const StellarSdk = require("stellar-sdk");
+const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
+// // Keys for accounts to issue and receive the new asset
+const issuerKeyPair = StellarSdk.Keypair.fromSecret(args[0]);
+const distributorKeyPair = StellarSdk.Keypair.fromSecret(args[1]);
+const otherReceiversTrustLines = (args[2] || "").split(",");
+const NFT_CODE = "EigerNFT";
 
+// const signingPairs = [issuerKeyPair, distributorKeyPair];
 // Create an object to represent the new asset
-var astroDollar = new StellarSdk.Asset("AstroDollar", issuingKeys.publicKey());
+const eigerNft = new StellarSdk.Asset(NFT_CODE, issuerKeyPair.publicKey());
+async function main() {
+  const fee = await server.fetchBaseFee();
+  server
+    .loadAccount(issuerKeyPair.publicKey())
+    .then(function (receiver) {
+      let transaction = new StellarSdk.TransactionBuilder(receiver, {
+        networkPassphrase: StellarSdk.Networks.TESTNET,
+        fee,
+      })
+        .addOperation(
+          StellarSdk.Operation.manageData({
+            name: "nftsource",
+            value: "https://www.eiger.co",
+            source: issuerKeyPair.publicKey(),
+          })
+        )
+        .addOperation(
+          StellarSdk.Operation.setOptions({
+            masterWeight: 0,
+            source: issuerKeyPair.publicKey(),
+          })
+        )
+        .addOperation(
+          StellarSdk.Operation.changeTrust({
+            asset: eigerNft,
+            limit: "0.0000001",
+            source: distributorKeyPair.publicKey(),
+          })
+        )
+        .addOperation(
+          StellarSdk.Operation.payment({
+            destination: distributorKeyPair.publicKey(),
+            asset: eigerNft,
+            amount: "0.0000001",
+            source: issuerKeyPair.publicKey(),
+          })
+        );
+      for (const line of otherReceiversTrustLines) {
+        const curKeyPair = StellarSdk.Keypair.fromSecret(line);
+        transaction = transaction.addOperation(
+          StellarSdk.Operation.changeTrust({
+            source: curKeyPair.publicKey(),
+            asset: eigerNft,
+          })
+        );
+        signingPairs.push(curKeyPair);
+      }
+      transaction = transaction
+        // // setTimeout is required for a transaction
+        .setTimeout(30)
+        .build();
+      for (const pair of signingPairs) {
+        transaction.sign(pair);
+      }
 
-// First, the receiving account must trust the asset
-server
-  .loadAccount(receivingKeys.publicKey())
-  .then(function (receiver) {
-    var transaction = new StellarSdk.TransactionBuilder(receiver, {
-      fee: 100,
-      networkPassphrase: StellarSdk.Networks.TESTNET,
+      return submitTransaction(transaction);
     })
-      // The `changeTrust` operation creates (or alters) a trustline
-      // The `limit` parameter below is optional
-      .addOperation(
-        StellarSdk.Operation.changeTrust({
-          asset: astroDollar,
-          limit: "1000",
-        }),
-      )
-      // setTimeout is required for a transaction
-      .setTimeout(100)
-      .build();
-    transaction.sign(receivingKeys);
-    return server.submitTransaction(transaction);
-  })
-  .then(console.log)
+    .then(console.log)
+    .catch((e) => console.error(e.response.data));
+}
 
-  // Second, the issuing account actually sends a payment using the asset
-  .then(function () {
-    return server.loadAccount(issuingKeys.publicKey());
-  })
-  .then(function (issuer) {
-    var transaction = new StellarSdk.TransactionBuilder(issuer, {
-      fee: 100,
-      networkPassphrase: StellarSdk.Networks.TESTNET,
-    })
-      .addOperation(
-        StellarSdk.Operation.payment({
-          destination: receivingKeys.publicKey(),
-          asset: astroDollar,
-          amount: "10",
-        }),
-      )
-      // setTimeout is required for a transaction
-      .setTimeout(100)
-      .build();
-    transaction.sign(issuingKeys);
-    return server.submitTransaction(transaction);
-  })
-  .then(console.log)
-  .catch(function (error) {
-    console.error("Error!", error);
-  });
+async function submitTransaction(transaction) {
+  try {
+    await server.submitTransaction(transaction);
+    console.log("The asset has been issued to the receiver");
+  } catch (error) {
+    console.log(
+      `${error}. More details: \n${JSON.stringify(error.response.data)}`
+    );
+  }
+}
+
+main();
