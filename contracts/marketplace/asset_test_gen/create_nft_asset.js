@@ -14,7 +14,7 @@ const distributorKeyPair = StellarSdk.Keypair.fromSecret(args[1]);
 const otherReceiversTrustLines = (args[2] || "").split(",");
 const NFT_CODE = "EigerNFT";
 
-// const signingPairs = [issuerKeyPair, distributorKeyPair];
+const signingPairs = [issuerKeyPair, distributorKeyPair];
 // Create an object to represent the new asset
 const eigerNft = new StellarSdk.Asset(NFT_CODE, issuerKeyPair.publicKey());
 async function main() {
@@ -74,18 +74,15 @@ async function main() {
 
       return submitTransaction(transaction);
     })
-    .then(console.log)
-    .catch((e) => console.error(e.response.data));
+    .catch(console.error);
 }
 
 async function submitTransaction(transaction) {
   try {
     await server.submitTransaction(transaction);
-    console.log("The asset has been issued to the receiver");
+    console.log(`${NFT_CODE}:${issuerKeyPair.publicKey()}`);
   } catch (error) {
-    console.log(
-      `${error}. More details: \n${JSON.stringify(error.response.data)}`
-    );
+    throw error;
   }
 }
 
