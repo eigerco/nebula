@@ -1,15 +1,17 @@
 # Marketplace Contract
 
-The marketplace contract enables the creation and management of listings for various assets. Users can buy, update, pause, and remove listings. This contract also supports a fee or commission for transactions.
+The marketplace contract enables the creation and management of listings for various assets. Users can buy, update, pause, and remove listings.
+
+Actually it expects the trustlines to be in-place among NFTs and buyers. There is a work in progress and more information regarding this here: https://github.com/eigerco/nebula/issues/103 .
 
 ## Features
 
 - Create and manage listings for assets.
 - Buy assets listed in the marketplace.
 - Update listing prices.
-- Pause listings temporarily.
-- Remove listings from the marketplace.
-- Supports a fee or commission for transactions.
+- Pause listings. So no buy operation can be performed.
+- Unpause listings. So resuming buying operations.
+- Remove listings from the marketplace. Returning the balance to the original owners (sellers).
 
 ## Using the contract
 
@@ -25,8 +27,7 @@ soroban contract invoke \
   -- \
   init \
   --token ${token_address}\
-  --admin ${admin_address} \
-  --percentage 1
+  --admin ${admin_address}
 ```
 ### Creating a Listing
 
@@ -41,7 +42,8 @@ soroban contract invoke \
   create_listing \
   --seller ${trader_address}  \
   --asset ${asset_address} \
-  --price 100
+  --price 100 \
+  --quantity 1
 ```
 
 ### Getting a Listing
@@ -55,7 +57,7 @@ soroban contract invoke \
   --network ${network} \
   -- \
   get_listing \
-  --asset ${asset_address}
+  --id ${id}
 ```
 
 ### Buying a Listing
@@ -70,11 +72,10 @@ soroban contract invoke \
   -- \
   buy_listing \
   --buyer ${trader_address} \
-  --asset ${asset_address} \
-  --price 100
+  --id ${id}
 ```
 
-### Updating the Price of a Listing
+### Updating the price of a listing
 
 Update the price of a listing with this command:
 
@@ -86,13 +87,11 @@ soroban contract invoke \
   --network ${network} \
   -- \
   update_price \
-  --seller ${trader_address} \
-  --asset ${asset_address} \
-  --old_price 100 \
+  --id ${id} \
   --new_price 150
 ```
 
-### Pausing a Listing
+### Pausing a listing
 
 Temporarily deactivate a listing with the following command:
 
@@ -103,12 +102,24 @@ soroban contract invoke \
   --network ${network} \
   -- \
   pause_listing \
-  --seller ${trader_address} \
-  --asset ${asset_address} \
-  --price 150
+  --id ${id}
 ```
 
-### Removing a Listing
+### Unpausing a listing
+
+Temporarily deactivate a listing with the following command:
+
+```shell
+soroban contract invoke \
+  --id ${contract_id} \
+  --source trader_2 \
+  --network ${network} \
+  -- \
+  unpause_listing \
+  --id ${id}
+```
+
+### Removing a listing
 
 Remove a listing from the marketplace with this command:
 
@@ -119,9 +130,7 @@ soroban contract invoke \
   --network ${network} \
   -- \
   remove_listing \
-  --seller ${trader_address} \
-  --asset ${asset_address} \
-  --price 150
+  --id ${id} \
 ```
 This updated documentation provides an overview of the features of the marketplace contract and instructions on how to use its various methods for listing, buying, updating, pausing, and removing assets from the marketplace.
 
