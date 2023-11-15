@@ -85,7 +85,7 @@ pub fn import_all_contracts() {
     });
     std::fs::create_dir_all(&contracts_dir)
         .expect("[importer] Contracts path could not be resolved");
-    sync_contracts(&config, &contracts_dir).expect("[importer] Could not sync contracts.");
+    sync_contracts(&config, &"/tmp".into()).expect("[importer] Could not sync contracts.");
 }
 
 /// Syncs contracts to a specific path
