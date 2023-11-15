@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [raffle, voting]
+        contract: [raffle, voting, governance, marketplace, payment_splitter, lottery]
 
     permissions:
       # Required to create GH releases
