@@ -85,7 +85,7 @@ pub fn import_all_contracts() {
     });
     std::fs::create_dir_all(&contracts_dir)
         .expect("[importer] Contracts path could not be resolved");
-    sync_contracts(&config, &"/tmp".into()).expect("[importer] Could not sync contracts.");
+    sync_contracts(&config, &contracts_dir).expect("[importer] Could not sync contracts.");
 }
 
 /// Syncs contracts to a specific path
@@ -140,6 +140,15 @@ async fn find_and_sync_contract(
             let mut client = client.lock().await;
             let reference = contract.reference();
             pull_wasm(&mut client, &RegistryAuth::Anonymous, &reference, &path).await;
+            let path_str = path.to_str().unwrap().to_string();
+            let name = syn::Ident::new(&name, Span::call_site());
+
+            let code = quote::quote! {
+                pub (crate) mod #name {
+                    soroban_sdk::contractimport!(file = #path_str);
+                }
+            };
+            generate_file(&dest_path, code.to_string().as_bytes());
         }
         Err(e) => throw_warning!("{e:?}"),
     };
