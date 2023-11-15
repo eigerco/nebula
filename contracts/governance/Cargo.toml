@@ -12,5 +12,14 @@ crate-type = ["cdylib"]
 soroban-sdk = { workspace = true }
 shared = { path= "../shared"}
 
+[build-dependencies]
+nebula = { path = "../../" }
+
+
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+
+# Adds nebula oci contract import
+[package.metadata.nebula.imports]
+voting = "ghcr.io/eigerco/nebula/contracts/voting:latest"
+

@@ -42,10 +42,8 @@ use soroban_sdk::{
     token, vec, Address, BytesN, Env, IntoVal, Map, Symbol, Val,
 };
 
-#[allow(clippy::too_many_arguments)]
-mod voting_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/voting.wasm");
-}
+// Imports the OCI contracts
+include!(concat!(env!("OUT_DIR"), "/nebula_importer.rs"));
 
 mod participant;
 
@@ -123,7 +121,7 @@ impl GovernanceContract {
         }
 
         // Deploy the voting contract (A dependency of this one)
-        let voting_contract_hash = env.deployer().upload_contract_wasm(voting_contract::WASM);
+        let voting_contract_hash = env.deployer().upload_contract_wasm(voting::WASM);
         let deployer = env.deployer().with_current_contract(salt);
         let voting_contract_address = deployer.deploy(voting_contract_hash);
 
