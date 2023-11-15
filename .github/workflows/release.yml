@@ -39,7 +39,10 @@ jobs:
           args: -p nebula-publish --release
 
       - name: Build Wasm module
-        run: cargo build -p ${{ matrix.contract }} --release --target=wasm32-unknown-unknown --verbose
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: -p ${{ matrix.contract }} --target=wasm32-unknown-unknown --release
 
       - run: mv target/wasm32-unknown-unknown/release/${{ matrix.contract }}.wasm ${{ matrix.contract }}.wasm
 
