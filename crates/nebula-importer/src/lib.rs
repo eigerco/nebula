@@ -85,11 +85,11 @@ pub fn import_all_contracts() {
     });
     std::fs::create_dir_all(&contracts_dir)
         .expect("[importer] Contracts path could not be resolved");
-    sync_contracts(&config, &contracts_dir).expect("[importer] Could not sync contracts.");
+    sync_contracts(config, &contracts_dir).expect("[importer] Could not sync contracts.");
 }
 
 /// Syncs contracts to a specific path
-pub fn sync_contracts(config: &Config, cache: &PathBuf) -> anyhow::Result<()> {
+pub fn sync_contracts(config: &Config, cache: &Path) -> anyhow::Result<()> {
     let client = Client::new(oci_distribution::client::ClientConfig {
         protocol: oci_distribution::client::ClientProtocol::Https,
         ..Default::default()
@@ -105,7 +105,7 @@ pub fn sync_contracts(config: &Config, cache: &PathBuf) -> anyhow::Result<()> {
             .block_on(runtime.spawn(find_and_sync_contract(
                 name.clone(),
                 contract.clone(),
-                cache.clone(),
+                cache.to_path_buf(),
                 client.clone(),
             )))
             .context(format!("Loading contract: {:?}", contract))?;
@@ -140,6 +140,15 @@ async fn find_and_sync_contract(
             let mut client = client.lock().await;
             let reference = contract.reference();
             pull_wasm(&mut client, &RegistryAuth::Anonymous, &reference, &path).await;
+            let path_str = path.to_str().unwrap().to_string();
+            let name = syn::Ident::new(&name, Span::call_site());
+
+            let code = quote::quote! {
+                pub (crate) mod #name {
+                    soroban_sdk::contractimport!(file = #path_str);
+                }
+            };
+            generate_file(&dest_path, code.to_string().as_bytes());
         }
         Err(e) => throw_warning!("{e:?}"),
     };
@@ -154,10 +163,8 @@ pub(crate) async fn pull_wasm(
     let image_content = client
         .pull(reference, auth, vec![manifest::WASM_LAYER_MEDIA_TYPE])
         .await
-        .expect(&format!(
-            "Cannot pull Wasm module from {}",
-            reference.to_string()
-        ))
+        .unwrap_or_else(|_| panic!("Cannot pull Wasm module from {}",
+            reference))
         .layers
         .into_iter()
         .next()
