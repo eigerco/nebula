@@ -18,7 +18,7 @@ export class ProjectManager extends BroadcastChannel {
 
   wasm: Blob | undefined;
 
-  public createInitialFileStructure() {
+  public createDefaultFileStructure() {
     let rustFile = {
       id: 3,
       name: "lib.rs",
@@ -43,6 +43,18 @@ export class ProjectManager extends BroadcastChannel {
     };
 
     this.projectFiles["children"] = [srcFile, cargoFile];
+  }
+
+  public createEmbedFileStructure() {
+    let rustFile = {
+      id: 2,
+      name: "lib.rs",
+      content: this.contractContent(),
+      children: [],
+    };
+    this.projectFileRefs.set(1, rustFile);
+
+    this.projectFiles["children"] = [rustFile];
   }
 
   public getNodes() {
@@ -81,6 +93,10 @@ pub struct HelloContract;
 #[contractimpl]
 impl HelloContract {
   pub fn hello(env: Env, to: Symbol) -> Vec<Symbol> {
+    vec![&env, symbol_short!("Hello"), to]
+  }
+
+  pub fn good_bye(env: Env, admin: Address, to: Symbol, from: u32) -> Vec<Symbol> {
     vec![&env, symbol_short!("Hello"), to]
   }
 }

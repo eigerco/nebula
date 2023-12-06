@@ -16,7 +16,7 @@ const Template: StoryFn<typeof Editor> = (args: EditorProps) => (
   <Editor {...args} />
 );
 
-const PrimaryWithDefault = (props: EditorProps) => {
+const WithDefault = (props: EditorProps) => {
   return (
     <div style={{ height: "90vh" }}>
       <Editor {...props} />
@@ -25,16 +25,24 @@ const PrimaryWithDefault = (props: EditorProps) => {
 };
 
 export const Primary: StoryObj = {
-  render: () => <PrimaryWithDefault {...defaultArgs} />,
+  render: () => <WithDefault {...defaultArgs} />,
 };
 
 const defaultArgs = {
-    manager: new ProjectManager("Workspace1"),
-    actions: [],
-    editable: false,
-    fileId: 1
-  }
+  manager: new ProjectManager("Workspace1"),
+  actions: [],
+  editable: false,
+  fileId: 1,
+};
 
 Primary.args = {
-  ...defaultArgs
+  ...defaultArgs,
+};
+
+export const SingleFile: StoryObj = {
+  render: () => {
+    let manager = new ProjectManager("Workspace2");
+    manager.createEmbedFileStructure();
+    return <WithDefault {...defaultArgs} manager={manager} editable={false} />;
+  },
 };
