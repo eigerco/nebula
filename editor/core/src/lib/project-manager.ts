@@ -1,4 +1,3 @@
-import { flattenTree } from "react-accessible-treeview";
 import { ProjectFile } from "../types/file";
 
 export class ProjectManager extends BroadcastChannel {
@@ -8,13 +7,12 @@ export class ProjectManager extends BroadcastChannel {
 
   name: string = "";
   projectFiles: ProjectFile = {
-    name: "",
+    name: this.name,
     id: 0,
     content: "",
     children: [],
   };
   projectFileRefs: Map<number, ProjectFile> = new Map();
-  currentFileId = 3;
 
   wasm: Blob | undefined;
 
@@ -23,7 +21,6 @@ export class ProjectManager extends BroadcastChannel {
       id: 3,
       name: "lib.rs",
       content: this.contractContent(),
-      children: [],
     };
     this.projectFileRefs.set(3, rustFile);
 
@@ -31,7 +28,6 @@ export class ProjectManager extends BroadcastChannel {
       id: 2,
       name: "cargo.toml",
       content: this.cargoContent(),
-      children: [],
     };
     this.projectFileRefs.set(2, cargoFile);
 
@@ -57,13 +53,10 @@ export class ProjectManager extends BroadcastChannel {
     this.projectFiles["children"] = [rustFile];
   }
 
-  public getNodes() {
-    return flattenTree(this.projectFiles);
-  }
-
-  public setCurrentFileId(id: number) {
-    this.currentFileId = id;
-    this.postMessage({ event: "setCurrentFile", id: id });
+  // react-accessible-treeview
+  // useFlattenTree
+  public getProjectFiles() {
+    return this.projectFiles;
   }
 
   public getFileContent(id: number): string | undefined {
@@ -83,23 +76,44 @@ export class ProjectManager extends BroadcastChannel {
   }
 
   private contractContent(): string {
-    return `
-#![no_std]
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Symbol, Vec};
+    return `#![no_std]
+use soroban_sdk::{contractimpl, Env, Symbol};
 
-#[contract]
-pub struct HelloContract;
+const COUNTER: Symbol = Symbol::short("COUNTER");
+
+pub struct IncrementContract;
 
 #[contractimpl]
-impl HelloContract {
-  pub fn hello(env: Env, to: Symbol) -> Vec<Symbol> {
-    vec![&env, symbol_short!("Hello"), to]
-  }
+impl IncrementContract {
+    /// Increment increments an internal counter, and returns the value.
+    pub fn increment(env: Env) -> u32 {
+        // Get the current count.
+        let mut count: u32 = env
+            .storage()
+            .get(&COUNTER)
+            .unwrap_or(Ok(0)) // If no value set, assume 0.
+            .unwrap(); // Panic if the value of COUNTER is not u32.
 
-  pub fn good_bye(env: Env, admin: Address, to: Symbol, from: u32) -> Vec<Symbol> {
-    vec![&env, symbol_short!("Hello"), to]
-  }
+        // Increment the count.
+        count += 1;
+
+        // Save the count.
+        env.storage().set(&COUNTER, &count);
+
+        // Publish an event about the increment occuring.
+        // The event has two topics:
+        //   - The "COUNTER" symbol.
+        //   - The "increment" symbol.
+        // The event data is the count.
+        env.events()
+            .publish((COUNTER, Symbol::short("increment")), count);
+
+        // Return the count to the caller.
+        count
+    }
 }
+
+mod test;
     `;
   }
 

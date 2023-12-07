@@ -2,11 +2,11 @@ import React from "react";
 import { objectValuesToControls } from "../../storybook-utils";
 import { Meta, StoryObj } from "@storybook/react";
 import { StoryFn } from "@storybook/react";
-import { Editor, EditorProps } from "../index";
+import { Command, Editor, EditorProps } from "../index";
 import { ProjectManager } from "../../project-manager";
 
 const meta: Meta<typeof Editor> = {
-  title: "Default",
+  title: "Editor",
   component: Editor,
   argTypes: {},
 };
@@ -18,7 +18,7 @@ const Template: StoryFn<typeof Editor> = (args: EditorProps) => (
 
 const WithDefault = (props: EditorProps) => {
   return (
-    <div style={{ height: "90vh" }}>
+    <div style={{ height: "100vh" }}>
       <Editor {...props} />
     </div>
   );
@@ -28,11 +28,16 @@ export const Primary: StoryObj = {
   render: () => <WithDefault {...defaultArgs} />,
 };
 
-const defaultArgs = {
+const defaultArgs: EditorProps = {
   manager: new ProjectManager("Workspace1"),
-  actions: [],
-  editable: false,
-  fileId: 1,
+  onEvent: (command: Command) => {
+    console.log(command);
+  },
+  config: {
+    editable: true,
+    multiFile: true,
+  },
+  fileId: 3,
 };
 
 Primary.args = {
@@ -43,6 +48,21 @@ export const SingleFile: StoryObj = {
   render: () => {
     let manager = new ProjectManager("Workspace2");
     manager.createEmbedFileStructure();
-    return <WithDefault {...defaultArgs} manager={manager} editable={false} />;
+    return <WithDefault {...defaultArgs} manager={manager} fileId={1} config={{editable: false, multiFile: false}} />;
+  },
+};
+
+export const MultiFile: StoryObj = {
+  render: () => {
+    let manager = new ProjectManager("Workspace3");
+    manager.createDefaultFileStructure();
+    return (
+      <WithDefault
+        {...defaultArgs}
+        manager={manager}
+        config={{ editable: true, multiFile: true }}
+        fileId={3}
+      />
+    );
   },
 };
