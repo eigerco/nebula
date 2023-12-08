@@ -286,7 +286,7 @@ fn users_can_buy_tickets() {
         &10,
     );
 
-    let ticket_buyer = Address::random(&test_scenario.env);
+    let ticket_buyer = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer, &101);
     let ticket = vec![&test_scenario.env, 3, 5, 10, 20, 33];
@@ -315,7 +315,7 @@ fn users_can_buy_tickets() {
 fn tickets_cannot_be_bought_for_not_initialized_lottery() {
     let test_scenario = setup_test_scenario();
 
-    let ticket_buyer = Address::random(&test_scenario.env);
+    let ticket_buyer = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer, &101);
     let ticket = vec![&test_scenario.env, 3, 5, 10, 20, 33];
@@ -338,8 +338,8 @@ fn tickets_cannot_be_bought_for_finished_lottery() {
         &2,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
-    let ticket_buyer2 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
+    let ticket_buyer2 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &200);
     test_scenario.test_token_client.mint(&ticket_buyer2, &101);
@@ -368,7 +368,7 @@ fn ticket_should_have_the_same_number_of_numbers_as_defined_in_lottery() {
         &10,
     );
 
-    let ticket_buyer = Address::random(&test_scenario.env);
+    let ticket_buyer = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer, &101);
     test_scenario.client.buy_ticket(&ticket_buyer, &vec![&test_scenario.env, 3, 5, 10, 20]);
@@ -389,7 +389,7 @@ fn all_ticket_numbers_should_be_in_the_specified_range() {
         &10,
     );
 
-    let ticket_buyer = Address::random(&test_scenario.env);
+    let ticket_buyer = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer, &101);
     test_scenario.client.buy_ticket(&ticket_buyer, &vec![&test_scenario.env, 1, 5, 10, 20, 51]);
@@ -409,8 +409,8 @@ fn play_lottery_works_as_expected() {
         &2,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
-    let ticket_buyer2 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
+    let ticket_buyer2 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
     test_scenario.test_token_client.mint(&ticket_buyer2, &101);
@@ -467,8 +467,8 @@ fn lottery_cannot_be_played_if_finished() {
         &2,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
-    let ticket_buyer2 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
+    let ticket_buyer2 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &200);
     test_scenario.test_token_client.mint(&ticket_buyer2, &101);
@@ -496,8 +496,8 @@ fn play_lottery_with_many_prizes_works_as_expected() {
         &2,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
-    let ticket_buyer2 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
+    let ticket_buyer2 = Address::generate(&test_scenario.env);
 
     // Transfer some funds to the buyer
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
@@ -548,7 +548,7 @@ fn lottery_cannot_be_played_without_min_participants() {
         &2,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
 
@@ -570,7 +570,7 @@ fn correct_lottery_results_are_returned() {
         &1,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
 
@@ -602,7 +602,7 @@ fn should_not_return_results_for_wrong_lottery_number() {
         &1,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
 
@@ -627,7 +627,7 @@ fn should_not_return_results_for_not_played_lottery() {
         &1,
     );
 
-    let ticket_buyer1 = Address::random(&test_scenario.env);
+    let ticket_buyer1 = Address::generate(&test_scenario.env);
 
     test_scenario.test_token_client.mint(&ticket_buyer1, &101);
 
@@ -660,9 +660,9 @@ fn get_winners_return_correct_winners() {
     let env = Env::default();
     let result = draw_numbers::<TestRandomNumberGenerator>(&env, 50, 5, 666);
     let thresholds = map![&env, (5, 30), (4, 15), (3, 10)];
-    let player1 = Address::random(&env);
-    let player2 = Address::random(&env);
-    let player3 = Address::random(&env);
+    let player1 = Address::generate(&env);
+    let player2 = Address::generate(&env);
+    let player3 = Address::generate(&env);
     let tickets = map![
         &env,
         (player1.clone(), vec![&env, vec![&env, 22, 14, 35, 44, 29]]),
@@ -683,9 +683,9 @@ fn count_total_prizes_percentage_counts_correctly() {
     let env = Env::default();
     let (result, tickets, thresholds) = setup_additional_test_data(
         &env,
-        Address::random(&env),
-        Address::random(&env),
-        Address::random(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
     );
 
     let winners = get_winners(&env, &result, &tickets, &thresholds);
@@ -698,15 +698,15 @@ fn thresholds_are_properly_recalculated() {
     let env = Env::default();
     let (result, mut tickets, mut thresholds) = setup_additional_test_data(
         &env,
-        Address::random(&env),
-        Address::random(&env),
-        Address::random(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
     );
 
-    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 35, 44, 29]]);
-    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 1, 44, 29]]);
-    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 35, 1, 2]]);
-    tickets.set(Address::random(&env), vec![&env, vec![&env, 22, 14, 3, 1, 2]]);
+    tickets.set(Address::generate(&env), vec![&env, vec![&env, 22, 14, 35, 44, 29]]);
+    tickets.set(Address::generate(&env), vec![&env, vec![&env, 22, 14, 1, 44, 29]]);
+    tickets.set(Address::generate(&env), vec![&env, vec![&env, 22, 14, 35, 1, 2]]);
+    tickets.set(Address::generate(&env), vec![&env, vec![&env, 22, 14, 3, 1, 2]]);
 
     // there are:
     // - 4 tickets with 5 hits
@@ -727,9 +727,9 @@ fn thresholds_are_properly_recalculated() {
 #[test]
 fn prizes_are_properly_calculated_and_assigned() {
     let env = Env::default();
-    let p1 = Address::random(&env);
-    let p2 = Address::random(&env);
-    let p3 = Address::random(&env);
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    let p3 = Address::generate(&env);
 
     let (result, tickets, mut thresholds) = setup_additional_test_data(&env, p1.clone(), p2.clone(), p3.clone());
     let winners = get_winners(&env, &result, &tickets, &thresholds);
@@ -773,7 +773,7 @@ fn setup_test_scenario<'a>() -> TestScenario<'a> {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, LotteryContract);
     let client = LotteryContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let token_addr = env.register_stellar_asset_contract(token_admin.clone());
     let test_token_client = token::StellarAssetClient::new(&env, &token_addr);
     let token_client = token::Client::new(&env, &token_addr);
