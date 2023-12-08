@@ -42,14 +42,14 @@ fn setup_test<'a>() -> (
     let contract_client: MarketplaceContractClient<'_> =
         MarketplaceContractClient::new(&env, &contract_id);
 
-    let seller = Address::random(&env);
-    let buyer = Address::random(&env);
+    let seller = Address::generate(&env);
+    let buyer = Address::generate(&env);
 
-    let token_admin_client = create_token_asset(&env, &Address::random(&env));
+    let token_admin_client = create_token_asset(&env, &Address::generate(&env));
     let token_client = token::Client::new(&env, &token_admin_client.address);
 
-    contract_client.init(&token_client.address, &Address::random(&env));
-    let asset_admin_client = create_token_asset(&env, &Address::random(&env));
+    contract_client.init(&token_client.address, &Address::generate(&env));
+    let asset_admin_client = create_token_asset(&env, &Address::generate(&env));
     let asset_client = token::Client::new(&env, &asset_admin_client.address);
 
     (
@@ -77,7 +77,7 @@ fn cannot_initialize_marketplace_twice() {
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
 
-    let address = Address::random(&env); // Address just for satisfying interfaces.
+    let address = Address::generate(&env); // Address just for satisfying interfaces.
     client.init(&address, &address);
     client.init(&address, &address);
 }
@@ -574,7 +574,7 @@ fn cannot_create_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.create_listing(&Address::random(&env), &Address::random(&env), &1, &1);
+    client.create_listing(&Address::generate(&env), &Address::generate(&env), &1, &1);
 }
 
 #[test]
@@ -584,7 +584,7 @@ fn cannot_buy_listing_without_initialize() {
     env.mock_all_auths();
     let contract_id = env.register_contract(None, MarketplaceContract);
     let client: MarketplaceContractClient<'_> = MarketplaceContractClient::new(&env, &contract_id);
-    client.buy_listing(&Address::random(&env), &1);
+    client.buy_listing(&Address::generate(&env), &1);
 }
 
 #[test]

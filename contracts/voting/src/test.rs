@@ -80,7 +80,7 @@ fn setup_test<'a>() -> (Env, ProposalVotingContractClient<'a>, Address) {
     let env = Env::default();
     let contract_id = env.register_contract(None, ProposalVotingContract);
     let client = ProposalVotingContractClient::new(&env, &contract_id);
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     client.init(&admin, &3600, &50_00, &1000, &false);
 
     (env, client, admin)
@@ -251,7 +251,7 @@ fn cannot_vote_if_voting_time_exceeded() {
     let (mut env, _, _) = setup_test();
 
     let comment = BytesN::random(&env);
-    let proposer = Address::random(&env);
+    let proposer = Address::generate(&env);
 
     let mut proposal = Proposal {
         id: 1,
@@ -266,7 +266,7 @@ fn cannot_vote_if_voting_time_exceeded() {
 
     advance_ledger_time_in(3600, &mut env);
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env), 1);
+    let result = proposal.vote(env.ledger().timestamp(), Address::generate(&env), 1);
 
     assert_eq!(Err(Error::VotingClosed), result)
 }
@@ -277,11 +277,11 @@ fn cannot_vote_if_total_voters_reached() {
 
     let mut voters = Map::<Address, bool>::new(&env);
 
-    voters.set(Address::random(&env), true); // Dummy voters
-    voters.set(Address::random(&env), true); // Dummy voters
+    voters.set(Address::generate(&env), true); // Dummy voters
+    voters.set(Address::generate(&env), true); // Dummy voters
 
     let comment = BytesN::random(&env);
-    let proposer = Address::random(&env);
+    let proposer = Address::generate(&env);
 
     let mut proposal = Proposal {
         id: 1,
@@ -294,7 +294,7 @@ fn cannot_vote_if_total_voters_reached() {
         total_participation: 2,
     };
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env), 1);
+    let result = proposal.vote(env.ledger().timestamp(), Address::generate(&env), 1);
     assert_eq!(Err(Error::VotingClosed), result)
 }
 
@@ -320,7 +320,7 @@ fn proposal_calculate_approval_rate(
     let voters = Map::<Address, bool>::new(&env);
 
     let comment = BytesN::random(&env);
-    let proposer = Address::random(&env);
+    let proposer = Address::generate(&env);
 
     let proposal = Proposal {
         id: 1,
@@ -359,7 +359,7 @@ fn proposal_comment_is_accessible() {
     let (env, _, _) = setup_test();
     env.mock_all_auths();
     let payload = ProposalPayload::Comment(BytesN::random(&env));
-    let proposer = Address::random(&env);
+    let proposer = Address::generate(&env);
 
     let proposal = Proposal {
         id: 112,
@@ -382,15 +382,15 @@ fn proposal_total_participation_can_be_set_from_balance() {
 
     let mut voters = Map::<Address, bool>::new(&env);
 
-    let voter_1 = Address::random(&env);
-    let voter_2 = Address::random(&env);
+    let voter_1 = Address::generate(&env);
+    let voter_2 = Address::generate(&env);
 
     voters.set(voter_1.clone(), true); // Only voter_1 votes in favour.
 
     let mut proposal = Proposal {
         id: 112,
         payload: ProposalPayload::Comment(BytesN::random(&env)),
-        proposer: Address::random(&env),
+        proposer: Address::generate(&env),
         voting_end_time: 123123,
         target_approval_rate_bps: 5000, // Half the participation is enough to approve.
         // Participation data is in zero values, as it will be calculated from provided balance.
@@ -417,8 +417,8 @@ fn set_participation_from_balance_checks_all_local_addresses_exist_in_balance() 
 
     let mut voters = Map::<Address, bool>::new(&env);
 
-    let voter_1 = Address::random(&env);
-    let voter_2 = Address::random(&env);
+    let voter_1 = Address::generate(&env);
+    let voter_2 = Address::generate(&env);
 
     voters.set(voter_1.clone(), true); // Only voter_1 votes in favour.
     voters.set(voter_2.clone(), true); // Only voter_1 votes in favour.
@@ -426,7 +426,7 @@ fn set_participation_from_balance_checks_all_local_addresses_exist_in_balance() 
     let mut proposal = Proposal {
         id: 112,
         payload: ProposalPayload::Comment(BytesN::random(&env)),
-        proposer: Address::random(&env),
+        proposer: Address::generate(&env),
         voting_end_time: 123123,
         target_approval_rate_bps: 5000, // Half the participation is enough to approve.
 
@@ -474,8 +474,8 @@ fn proposals_can_be_updated_only_by_admin() {
         &ProposalPayload::Comment(BytesN::random(&env)),
     );
 
-    let voter_1 = Address::random(&env);
-    let voter_2 = Address::random(&env);
+    let voter_1 = Address::generate(&env);
+    let voter_2 = Address::generate(&env);
 
     client.vote(&voter_1, &1);
     client.vote(&voter_2, &1);
@@ -513,7 +513,7 @@ fn proposals_can_be_updated_only_if_they_exist_first() {
     let proposal = Proposal {
         id: 112,
         payload: ProposalPayload::Comment(BytesN::random(&env)),
-        proposer: Address::random(&env),
+        proposer: Address::generate(&env),
         voting_end_time: 123123,
         target_approval_rate_bps: 5000,
         participation: 0,
@@ -530,10 +530,10 @@ fn non_admin_user_cannot_vote_if_admin_mode_is_on() {
 
     let contract_id = env.register_contract(None, ProposalVotingContract);
     let client = ProposalVotingContractClient::new(&env, &contract_id);
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     client.init(&admin, &3600, &50_00, &1000, &true);
 
-    let proposer = Address::random(&env);
+    let proposer = Address::generate(&env);
     client.create_proposal(
         &proposer,
         &1,

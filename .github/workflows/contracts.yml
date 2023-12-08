@@ -82,7 +82,7 @@ jobs:
         uses: baptiste0928/cargo-install@v2
         with:
           crate: soroban-cli
-          version: "^20.0.0-rc2"
+          version: "^20.0.0"
 
       - name: Download wasm-files
         uses: actions/download-artifact@v3
