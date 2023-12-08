@@ -66,3 +66,23 @@ export const MultiFile: StoryObj = {
     );
   },
 };
+
+
+export const LiveExample: StoryObj = {
+  render: () => {
+    let manager = new ProjectManager("Workspace3");
+    manager.createEmbedFileStructure();
+    const onEvent = (command: Command) => {
+      //TODO: Call api
+    }
+    return (
+      <WithDefault
+        {...defaultArgs}
+        manager={manager}
+        onEvent={onEvent}
+        config={{ editable: false, multiFile: false }}
+        fileId={1}
+      />
+    );
+  },
+};
