@@ -253,7 +253,7 @@ fn play_raffle_works() {
             &env,
             (
                 contract_id.clone(),
-                (Symbol::new(&env, "winner"), &ticket_buyer_2).into_val(&env),
+                (Symbol::new(&env, "winner"), &ticket_buyer_1).into_val(&env),
                 200i128.into_val(&env)
             )
         ]
