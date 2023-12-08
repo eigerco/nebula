@@ -143,7 +143,7 @@ export class Editor extends React.Component<EditorProps> {
       this.props.manager.updateFileContent(this.props.fileId, val);
       this.provider?.dispose();
       this.provider = this.monaco?.languages.registerCodeLensProvider("rust", {
-        provideCodeLenses: () => {
+        provideCodeLenses: (model, token) => {
           return this.getInvokes();
         },
         resolveCodeLens: (model: any, codeLens: any, token: any) => {
@@ -181,6 +181,7 @@ export class Editor extends React.Component<EditorProps> {
       lineNumbers: config.multiFile ? "on" : "off",
       folding: config.multiFile,
       contextmenu: config.multiFile,
+      scrollBeyondLastLine: false 
     };
     const code = this.props.manager.getFileContent(this.props.fileId) || "";
     return (

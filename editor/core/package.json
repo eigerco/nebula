@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "@stellar/stellar-sdk": "^11.0.1",
     "react": "18.2.0",
     "react-accessible-treeview": "^2.8.0",
     "react-bootstrap": "^2.9.1",
