@@ -1,4 +1,4 @@
-# Nebula
+# Nebula - A Soroban contract library
 
 <p align="center">
 <img src="app/public/logo.png" alt="nebula-logo" width="300"/>
