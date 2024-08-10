@@ -1,10 +1,11 @@
-# Nebula
+# Nebula - A Soroban contract library
 
 <p align="center">
 <img src="app/public/logo.png" alt="nebula-logo" width="300"/>
 </p>
 
-Nebula is a tool for easing development of [Soroban](https://soroban.stellar.org/docs) smart contracts. Its integrated by a Wizard and a set of pre-coded, community audited smart contracts. 
+Nebula is a tool for easing development of [Soroban](https://soroban.stellar.org/docs) smart contracts. By providing pre-built templates, new components and complex contracts that developers can 
+use with 0 setup we supercharge the growth of the community and the Soroban ecosystem. Its integrated with a user interface and a set of pre-coded, community audited smart contracts. 
 It aims to play in a cohesive way with the existing [Stellar](https://stellar.org/) ecosystem.
 
 ## Status of this project
