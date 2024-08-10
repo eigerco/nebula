@@ -54,3 +54,9 @@ $ cargo test
 
 * [Initial raffle contract](https://github.com/eigerco/nebula/issues/5#issuecomment-1644065962)
 * [Initial voting contract](https://github.com/eigerco/nebula/issues/5#issuecomment-1645208546)
+
+## About [Eiger](https://www.eiger.co)
+
+We are engineers. We contribute to various ecosystems by building low level implementations and core components. We built these Soroban contracts early in its development to help newcomers to the Stellar ecosystem.
+Contact us at hello@eiger.co
+Follow us on [X/Twitter](https://x.com/eiger_co)
