@@ -191,11 +191,11 @@ mod tests {
             jail.create_file(
                 "Cargo.toml",
                 r#"
-                [package.metadata.nebula.imports]
+                [imports]
                 token = "ghcr.io/eigerco/nebula/contracts/token"
             "#,
             )?;
-            let config: Config = Figment::new()
+            let _config: Config = Figment::new()
                 .merge(Toml::file("Cargo.toml"))
                 .extract()
                 .unwrap();

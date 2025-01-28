@@ -19,7 +19,7 @@ fn cannot_be_initialized_twice() {
     sc.env.mock_all_auths();
 
     sc.contract_client.init(
-        &Address::random(&sc.env),
+        &Address::generate(&sc.env),
         &sc.token_admin_client.address,
         &864000,
         &5000,
@@ -30,15 +30,15 @@ fn cannot_be_initialized_twice() {
 fn setup_scenario<'a>() -> Scenario<'a> {
     let env = Env::default();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
 
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let token_addr = env.register_stellar_asset_contract(token_admin.clone());
     let token_admin_client = token::StellarAssetClient::new(&env, &token_addr);
     let token_client = token::Client::new(&env, &token_addr);
 
-    let curator = Address::random(&env);
+    let curator = Address::generate(&env);
 
     contract_client.init(
         &curator.clone(),
@@ -78,7 +78,7 @@ fn participant_can_join() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
@@ -147,7 +147,7 @@ fn participant_cant_join_without_enough_funds() {
     let sc = setup_scenario();
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
     sc.contract_client.join(&participant_addr, &200);
@@ -160,7 +160,7 @@ fn participant_cant_join_with_negative_stake() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
     sc.contract_client.join(&participant_addr, &-1);
@@ -173,7 +173,7 @@ fn participant_cant_join_with_zero_stake() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant_addr, &199);
 
     sc.contract_client.join(&participant_addr, &0);
@@ -185,7 +185,7 @@ fn participant_can_leave_withdrawing_all_funds() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
@@ -239,7 +239,7 @@ fn participant_can_withdraw_partial_funds() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
@@ -282,7 +282,7 @@ fn participant_cannot_withdraw_more_partial_funds_than_it_has() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
@@ -297,7 +297,7 @@ fn participant_can_deposit_extra_funds() {
 
     sc.env.mock_all_auths();
 
-    let participant_addr = Address::random(&sc.env);
+    let participant_addr = Address::generate(&sc.env);
     // Add funds to client address (as participant)
     sc.token_admin_client.mint(&participant_addr, &1000);
 
@@ -340,7 +340,7 @@ fn non_existent_participant_cannot_stake() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.withdraw(&Address::random(&sc.env), &1);
+    sc.contract_client.withdraw(&Address::generate(&sc.env), &1);
 }
 
 #[test]
@@ -350,7 +350,7 @@ fn non_existent_participant_cannot_leave() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.leave(&Address::random(&sc.env));
+    sc.contract_client.leave(&Address::generate(&sc.env));
 }
 
 #[test]
@@ -360,7 +360,7 @@ fn non_existent_participant_cannot_withdraw() {
 
     sc.env.mock_all_auths();
 
-    sc.contract_client.leave(&Address::random(&sc.env));
+    sc.contract_client.leave(&Address::generate(&sc.env));
 }
 
 #[test]
@@ -369,7 +369,7 @@ fn curator_can_whitelist_participant() {
 
     sc.env.mock_all_auths();
 
-    let participant = &Address::random(&sc.env);
+    let participant = &Address::generate(&sc.env);
     sc.token_admin_client.mint(participant, &1000);
 
     sc.contract_client.join(participant, &200);
@@ -405,7 +405,7 @@ fn not_existent_participant_cannot_create_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = &Address::random(&sc.env);
+    let participant = &Address::generate(&sc.env);
     let hash = BytesN::random(&sc.env);
 
     sc.contract_client
@@ -419,7 +419,7 @@ fn non_whitelisted_participant_cannot_create_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = &Address::random(&sc.env);
+    let participant = &Address::generate(&sc.env);
     sc.token_admin_client.mint(participant, &1000);
 
     sc.contract_client.join(participant, &200);
@@ -434,7 +434,7 @@ fn whitelisted_participant_can_create_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = Address::random(&sc.env);
+    let participant = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
     sc.contract_client.join(&participant, &200);
@@ -468,7 +468,7 @@ fn whitelisted_participant_can_vote_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = Address::random(&sc.env);
+    let participant = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
     sc.contract_client.join(&participant, &200);
@@ -500,7 +500,7 @@ fn non_whitelisted_participant_cant_vote_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = Address::random(&sc.env);
+    let participant = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
     sc.contract_client.join(&participant, &200);
@@ -515,7 +515,7 @@ fn non_whitelisted_participant_cant_execute_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant = Address::random(&sc.env);
+    let participant = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant, &1000);
 
     sc.contract_client.join(&participant, &200);
@@ -530,8 +530,8 @@ fn only_author_can_execute_proposals() {
 
     sc.env.mock_all_auths();
 
-    let participant_1 = Address::random(&sc.env);
-    let participant_2 = Address::random(&sc.env);
+    let participant_1 = Address::generate(&sc.env);
+    let participant_2 = Address::generate(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
     sc.token_admin_client.mint(&participant_2, &1000);
@@ -563,8 +563,8 @@ fn whitelisted_participant_can_execute_standard_proposal() {
 
     sc.env.mock_all_auths();
 
-    let participant_1 = Address::random(&sc.env);
-    let participant_2 = Address::random(&sc.env);
+    let participant_1 = Address::generate(&sc.env);
+    let participant_2 = Address::generate(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
     sc.token_admin_client.mint(&participant_2, &1000);
@@ -622,7 +622,7 @@ fn proposals_can_only_be_executed_once() {
 
     sc.env.mock_all_auths();
 
-    let participant_1 = Address::random(&sc.env);
+    let participant_1 = Address::generate(&sc.env);
     sc.token_admin_client.mint(&participant_1, &1000);
     sc.contract_client.join(&participant_1, &800);
     sc.contract_client.whitelist(&participant_1);
@@ -659,7 +659,7 @@ fn execute_a_code_upgrade_proposal_flow() {
         .deployer()
         .upload_contract_wasm(Bytes::from_slice(&sc.env, &bytes));
 
-    let participant_1 = Address::random(&sc.env);
+    let participant_1 = Address::generate(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
 
@@ -686,7 +686,7 @@ fn execute_a_curator_change_flow() {
 
     sc.env.mock_all_auths();
 
-    let participant_1 = Address::random(&sc.env);
+    let participant_1 = Address::generate(&sc.env);
 
     sc.token_admin_client.mint(&participant_1, &1000);
 
@@ -713,9 +713,9 @@ fn join_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.join(&Address::random(&env), &200);
+    contract_client.join(&Address::generate(&env), &200);
 }
 
 #[test]
@@ -724,9 +724,9 @@ fn stake_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.stake(&Address::random(&env), &200);
+    contract_client.stake(&Address::generate(&env), &200);
 }
 
 #[test]
@@ -735,9 +735,9 @@ fn leave_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.leave(&Address::random(&env));
+    contract_client.leave(&Address::generate(&env));
 }
 
 #[test]
@@ -746,9 +746,9 @@ fn withdraw_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.withdraw(&Address::random(&env), &100);
+    contract_client.withdraw(&Address::generate(&env), &100);
 }
 
 #[test]
@@ -757,9 +757,9 @@ fn whitelist_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.whitelist(&Address::random(&env));
+    contract_client.whitelist(&Address::generate(&env));
 }
 
 #[test]
@@ -768,10 +768,10 @@ fn new_proposal_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
     contract_client.new_proposal(
-        &Address::random(&env),
+        &Address::generate(&env),
         &1,
         &shared::voting::ProposalPayload::Comment(BytesN::random(&env)),
     );
@@ -783,9 +783,9 @@ fn vote_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.vote(&Address::random(&env), &1);
+    contract_client.vote(&Address::generate(&env), &1);
 }
 
 #[test]
@@ -794,7 +794,7 @@ fn execute_proposal_can_only_be_called_when_initiliazed() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(Some(&Address::random(&env)), GovernanceContract);
+    let contract_id = env.register_contract(Some(&Address::generate(&env)), GovernanceContract);
     let contract_client = GovernanceContractClient::new(&env, &contract_id);
-    contract_client.execute_proposal(&Address::random(&env), &1);
+    contract_client.execute_proposal(&Address::generate(&env), &1);
 }

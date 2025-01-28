@@ -18,6 +18,6 @@ impl RandomNumberGeneratorTrait for RandomNumberGenerator {
     }
 
     fn number(&mut self, env: &Env, max_range: u32) -> u32 {
-        env.prng().u64_in_range(1..=max_range as u64) as u32
+        env.prng().gen_range::<u64>(1..=max_range as u64) as u32
     }
 }

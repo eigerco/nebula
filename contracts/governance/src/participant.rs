@@ -128,7 +128,7 @@ mod test {
     #[test]
     fn participant_can_only_increase_positive_amounts() {
         let env = Env::default();
-        let mut p = Participant::new(Address::random(&env));
+        let mut p = Participant::new(Address::generate(&env));
         assert_eq!(Err(Error::InvalidAmount), p.increase_balance(0));
         assert_eq!(Err(Error::InvalidAmount), p.increase_balance(-1));
         p.increase_balance(1).unwrap();
@@ -137,7 +137,7 @@ mod test {
     #[test]
     fn participant_can_only_decrease_positive_amounts() {
         let env = Env::default();
-        let mut p = Participant::new(Address::random(&env));
+        let mut p = Participant::new(Address::generate(&env));
         p.increase_balance(5).unwrap();
 
         assert_eq!(Err(Error::InvalidAmount), p.decrease_balance(0));
@@ -148,7 +148,7 @@ mod test {
     #[test]
     fn participant_cannot_decrease_more_than_it_has() {
         let env = Env::default();
-        let mut p = Participant::new(Address::random(&env));
+        let mut p = Participant::new(Address::generate(&env));
         p.increase_balance(1).unwrap();
         assert_eq!(Err(Error::InsufficientFunds), p.decrease_balance(2));
     }

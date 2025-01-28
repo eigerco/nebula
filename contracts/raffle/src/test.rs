@@ -17,7 +17,7 @@ fn admin_is_identified_on_init() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let target_token = create_token_contract(&env, &Address::random(&env));
+    let target_token = create_token_contract(&env, &Address::generate(&env));
 
     client.init(&client.address, &target_token.address, &2, &100);
 
@@ -61,7 +61,7 @@ fn raffle_cannot_be_initialized_twice() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &100);
@@ -76,7 +76,7 @@ fn raffle_cannot_be_initialized_without_winners() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &0, &100);
@@ -90,7 +90,7 @@ fn raffle_cannot_be_initialized_with_ticket_price_zero() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &0);
@@ -127,12 +127,12 @@ fn buy_ticket_works_as_expected() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &2, &100);
 
-    let ticket_buyer = Address::random(&env);
+    let ticket_buyer = Address::generate(&env);
 
     // Transfer some funds to the buyer
     test_token_client.mint(&ticket_buyer, &101);
@@ -161,12 +161,12 @@ fn buy_ticket_panics_if_buyer_has_not_enough_funds() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &2, &100);
 
-    let ticket_buyer = Address::random(&env);
+    let ticket_buyer = Address::generate(&env);
 
     // Transfer some funds to the buyer
     test_token_client.mint(&ticket_buyer, &100);
@@ -182,12 +182,12 @@ fn buy_ticket_panics_if_invoked_after_raffle_is_played() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &100);
 
-    let ticket_buyer = Address::random(&env);
+    let ticket_buyer = Address::generate(&env);
 
     // Transfer some funds to the buyer
     test_token_client.mint(&ticket_buyer, &400);
@@ -220,13 +220,13 @@ fn play_raffle_works() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &100);
 
-    let ticket_buyer_1 = Address::random(&env);
-    let ticket_buyer_2 = Address::random(&env);
+    let ticket_buyer_1 = Address::generate(&env);
+    let ticket_buyer_2 = Address::generate(&env);
 
     // Transfer some funds to the buyer
     test_token_client.mint(&ticket_buyer_1, &101);
@@ -253,7 +253,7 @@ fn play_raffle_works() {
             &env,
             (
                 contract_id.clone(),
-                (Symbol::new(&env, "winner"), &ticket_buyer_2).into_val(&env),
+                (Symbol::new(&env, "winner"), &ticket_buyer_1).into_val(&env),
                 200i128.into_val(&env)
             )
         ]
@@ -268,13 +268,13 @@ fn play_raffle_cannot_be_invoked_twice() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &100);
 
-    let ticket_buyer_1 = Address::random(&env);
-    let ticket_buyer_2 = Address::random(&env);
+    let ticket_buyer_1 = Address::generate(&env);
+    let ticket_buyer_2 = Address::generate(&env);
 
     // Transfer some funds to the buyer
     test_token_client.mint(&ticket_buyer_1, &101);
@@ -295,7 +295,7 @@ fn raffle_cannot_be_played_if_not_enough_participants() {
 
     let contract_id = env.register_contract(None, RaffleContract);
     let client = RaffleContractClient::new(&env, &contract_id);
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
     client.init(&client.address, &test_token_client.address, &1, &100);

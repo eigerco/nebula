@@ -92,7 +92,7 @@ fn cannot_vote_if_voting_time_exceeded() {
 
     advance_ledger_time_in(3600, &mut env);
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env));
+    let result = proposal.vote(env.ledger().timestamp(), Address::generate(&env));
 
     assert_eq!(Err(Error::VotingClosed), result)
 }
@@ -103,8 +103,8 @@ fn cannot_vote_if_total_voters_reached() {
 
     let mut voters = Map::<Address, bool>::new(&env);
 
-    voters.set(Address::random(&env), true); // Dummy voters
-    voters.set(Address::random(&env), true); // Dummy voters
+    voters.set(Address::generate(&env), true); // Dummy voters
+    voters.set(Address::generate(&env), true); // Dummy voters
 
     let mut proposal = Proposal {
         voting_end_time: env.ledger().timestamp() + 3600,
@@ -114,7 +114,7 @@ fn cannot_vote_if_total_voters_reached() {
         total_voters: 2,
     };
 
-    let result = proposal.vote(env.ledger().timestamp(), Address::random(&env));
+    let result = proposal.vote(env.ledger().timestamp(), Address::generate(&env));
     assert_eq!(Err(Error::VotingClosed), result)
 }
 
@@ -140,7 +140,7 @@ fn proposal_calculate_approval_rate(
     let mut voters = Map::<Address, bool>::new(&env);
 
     for _ in 0..votes {
-        voters.set(Address::random(&env), true); // Dummy voters
+        voters.set(Address::generate(&env), true); // Dummy voters
     }
 
     let proposal = Proposal {

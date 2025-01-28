@@ -22,10 +22,10 @@ fn setup_test<'a>() -> (Env, PaymentSplitterContractClient<'a>) {
 fn cannot_initialize_twice() {
     let (env, client) = setup_test();
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let token = create_token_contract(&env, &admin);
-    let recipient_1 = Address::random(&env);
-    let recipient_2 = Address::random(&env);
+    let recipient_1 = Address::generate(&env);
+    let recipient_2 = Address::generate(&env);
     client.init(
         &admin,
         &token.address,
@@ -45,11 +45,11 @@ fn create_token_contract<'a>(e: &Env, admin: &Address) -> token::StellarAssetCli
 #[test]
 fn splits_works() {
     let (env, client) = setup_test();
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    let recipient_1 = Address::random(&env);
-    let recipient_2 = Address::random(&env);
+    let recipient_1 = Address::generate(&env);
+    let recipient_2 = Address::generate(&env);
 
     client.init(
         &token_admin,
@@ -80,11 +80,11 @@ fn splits_works() {
 #[should_panic(expected = "Error(Contract, #4)")]
 fn splits_fails_if_not_enough_money() {
     let (env, client) = setup_test();
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let test_token_client = create_token_contract(&env, &token_admin);
 
-    let recipient_1 = Address::random(&env);
-    let recipient_2 = Address::random(&env);
+    let recipient_1 = Address::generate(&env);
+    let recipient_2 = Address::generate(&env);
 
     client.init(
         &token_admin,
